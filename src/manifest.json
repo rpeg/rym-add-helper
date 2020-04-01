@@ -1,37 +1,37 @@
 {
-    "name": "RYM Parser",
-    "description" : "Extension for auto-filling RYM release submission forms",
-    "version": "1.0",
-    "manifest_version": 2,
-    "browser_action": {
-        "default_icon": "favicon.png",
-        "default_popup": "index.html",
-        "default_title": "RYM Parser"
-    },
-    "background": {
-        "scripts": ["background.js"],
-        "persistent": false
-    },
-    "permissions": [
-        "storage", 
-        "tabs",
-        "activeTab",
-        "declarativeContent"
-    ],
-    "content-scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["jquery-3.4.1.min.js", "content.js"]
-        }
-    ],
-    "commands": {
-      "_execute_browser_action": {
-        "suggested_key": {
-          "default": "Ctrl+Shift+F",
-          "mac": "MacCtrl+Shift+F"
-        },
-        "description": "Opens hello.html"
-      }
+  "name": "RYM Add Helper",
+  "description" : "Extension for auto-filling RYM release submission forms",
+  "version": "1.0",
+  "manifest_version": 2,
+  "browser_action": {
+    "default_icon": "favicon.png",
+    "default_popup": "index.html",
+    "default_title": "RYM Add Helper"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "permissions": [
+    "storage", 
+    "tabs",
+    "activeTab",
+    "declarativeContent"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["style.css"],
+      "js": ["content.js"]
     }
-  
+  ],
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "MacCtrl+Shift+F"
+      },
+      "description": "Opens hello.html"
+    }
   }
+}
