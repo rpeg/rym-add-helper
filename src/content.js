@@ -1,14 +1,50 @@
 const HOVER_CLASS = 'rym__hover';
 
+const fields = [
+  'title',
+  'release type',
+  'date',
+  'issue',
+  'disc size',
+  'label',
+  'catalog #',
+  'countries issued',
+  'tracks',
+];
 
-document.addEventListener('mouseover', (e) => {
-  e.srcElement.classList.add(HOVER_CLASS);
-}, false);
+const events = [
+  {
+    type: 'mouseover',
+    listener: (e) => {
+      e.srcElement.classList.add(HOVER_CLASS);
+    },
+    options: false,
+  },
+  {
+    type: 'mouseout',
+    listener: (e) => {
+      e.srcElement.classList.remove(HOVER_CLASS);
+    },
+    options: false,
+  },
+  {
+    type: 'click',
+    listener: (e) => {
+      e.preventDefault();
+      return false;
+    },
+    options: false,
+  },
+];
 
-document.addEventListener('mouseout', (e) => {
-  e.srcElement.classList.remove(HOVER_CLASS);
-}, false);
+const onToggle = (active) => {
+  events.forEach((ev) => (active
+    ? document.addEventListener(ev.type, ev.listener, ev.options)
+    : document.removeEventListener(ev.type, ev.listener, ev.options)));
+};
 
-document.addEventListener('click', (e) => {
-
-}, false);
+chrome.runtime.onMessage.addListener(
+  (request) => {
+    onToggle(request.isActive);
+  },
+);

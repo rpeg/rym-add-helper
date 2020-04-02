@@ -1,15 +1,21 @@
+let isActive = false;
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ hide: true }, () => {
     console.log('rym extension on');
   });
 });
 
-chrome.runtime.onMessage.addListener((message, callback) => {
-  if (message == 'runContentScript') {
-    chrome.tabs.executeScript({
-      file: 'content.js',
+chrome.browserAction.onClicked.addListener(() => {
+  console.log('clicked');
+
+  isActive = !isActive;
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, { isActive }, (response) => {
+      console.log('test res');
     });
-  }
+  });
 });
 
 window.onload = () => {

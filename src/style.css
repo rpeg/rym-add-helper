@@ -1,3 +1,4 @@
 .rym__hover {
-    border: 5px solid #FFFF00;
+    border: 2px solid #FFFF00;
+    cursor: pointer;
 }
