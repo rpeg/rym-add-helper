@@ -12,9 +12,8 @@ chrome.browserAction.onClicked.addListener(() => {
   isActive = !isActive;
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { isActive }, (response) => {
-      console.log('test res');
-    });
+    chrome.browserAction.setIcon({ path: `icons/${isActive ? 'on' : 'off'}_48.png`, tabId: tabs[0].id });
+    chrome.tabs.sendMessage(tabs[0].id, { isActive });
   });
 });
 

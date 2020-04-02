@@ -1,3 +1,5 @@
+import finder from '@medv/finder';
+
 const HOVER_CLASS = 'rym__hover';
 
 const fields = [
@@ -31,6 +33,10 @@ const events = [
     type: 'click',
     listener: (e) => {
       e.preventDefault();
+
+      const selector = finder(e.target);
+      console.log(selector);
+
       return false;
     },
     options: false,
@@ -38,6 +44,7 @@ const events = [
 ];
 
 const onToggle = (active) => {
+  console.log(`events turned ${active ? 'on' : 'off'}`);
   events.forEach((ev) => (active
     ? document.addEventListener(ev.type, ev.listener, ev.options)
     : document.removeEventListener(ev.type, ev.listener, ev.options)));

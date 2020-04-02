@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf dist && webpack && npm run copy:dist",
+    "start": "node_modules/.bin/webpack src/app.js -o bundle.js && webpack-dev-server",
+    "copy:dist": "cp ./src/manifest.json ./dist"
   },
   "keywords": [
     "rym",
@@ -13,11 +15,19 @@
   "author": "Sean Johnson",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "7.9.0",
+    "@babel/plugin-transform-react-jsx": "7.9.4",
+    "@babel/preset-env": "7.9.0",
+    "babel-loader": "8.1.0",
     "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
-    "eslint-plugin-import": "2.20.2"
+    "eslint-plugin-import": "2.20.2",
+    "webpack": "4.42.1",
+    "webpack-cli": "3.3.11"
   },
   "dependencies": {
-    "lodash": "4.17.15"
+    "@medv/finder": "1.1.2",
+    "lodash": "4.17.15",
+    "preact": "10.3.4"
   }
 }
