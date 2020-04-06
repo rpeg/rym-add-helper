@@ -31,5 +31,9 @@
       "css": ["style.css"],
       "js": ["content.js"]
     }
+  ],
+  "web_accessible_resources": [
+    "main.js",
+    "index.js"
   ]
 }

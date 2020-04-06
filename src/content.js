@@ -1,57 +1,21 @@
-// import finder from '@medv/finder';
+/* eslint-disable strict */
 
-const HOVER_CLASS = 'rym__hover';
+'use strict';
 
-const fields = [
-  'title',
-  'release type',
-  'date',
-  'issue',
-  'disc size',
-  'label',
-  'catalog #',
-  'countries issued',
-  'tracks',
-];
+// inject main into content script
+const script = document.createElement('script');
+script.setAttribute('type', 'module');
+script.setAttribute('src', chrome.extension.getURL('main.js'));
+const head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+head.insertBefore(script, head.lastChild);
 
-const events = [
-  {
-    type: 'mouseover',
-    listener: (e) => {
-      e.srcElement.classList.add(HOVER_CLASS);
-    },
-    options: false,
-  },
-  {
-    type: 'mouseout',
-    listener: (e) => {
-      e.srcElement.classList.remove(HOVER_CLASS);
-    },
-    options: false,
-  },
-  {
-    type: 'click',
-    listener: (e) => {
-      e.preventDefault();
-
-      // const selector = finder(e.target);
-      // console.log(selector);
-
-      return false;
-    },
-    options: false,
-  },
-];
-
-const onToggle = (active) => {
-  console.log(`events turned ${active ? 'on' : 'off'}`);
-  events.forEach((ev) => (active
-    ? document.addEventListener(ev.type, ev.listener, ev.options)
-    : document.removeEventListener(ev.type, ev.listener, ev.options)));
-};
+// route messages between modules and background script
+window.addEventListener('message', (message) => {
+  chrome.runtime.sendMessage(message);
+}, false);
 
 chrome.runtime.onMessage.addListener(
   (request) => {
-    onToggle(request.isActive);
+    window.postMessage(request);
   },
 );

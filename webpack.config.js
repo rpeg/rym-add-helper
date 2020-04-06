@@ -1,8 +1,8 @@
 module.exports = {
   mode: 'production',
-  entry: './src/index.jsx',
+  entry: './src/index.js',
   output: {
-    filename: 'content.js',
+    filename: 'index.js',
     path: `${__dirname}/dist`,
   },
   module: {
@@ -14,15 +14,12 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
-            plugins: [
-              ['@babel/plugin-transform-react-jsx', { pragma: 'h' }],
-            ],
           },
         },
       },
     ],
   },
   resolve: {
-    extensions: ['.js', '.jsx'],
+    extensions: ['.js'],
   },
 };

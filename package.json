@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rm -rf dist && webpack && npm run copy:dist",
-    "start": "node_modules/.bin/webpack src/app.js -o bundle.js && webpack-dev-server",
-    "copy:dist": "cp -r ./src/icons ./src/background.js ./src/manifest.json ./src/style.css ./dist"
+    "start": "node_modules/.bin/webpack src/index.js -o bundle.js && webpack-dev-server",
+    "copy:dist": "cp -r ./src/icons ./src/background.js ./src/main.js ./src/content.js ./src/manifest.json ./src/style.css ./dist"
   },
   "keywords": [
     "rym",
@@ -16,7 +16,6 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "7.9.0",
-    "@babel/plugin-transform-react-jsx": "7.9.4",
     "@babel/preset-env": "7.9.0",
     "babel-loader": "8.1.0",
     "eslint": "6.8.0",
@@ -27,7 +26,6 @@
   },
   "dependencies": {
     "@medv/finder": "1.1.2",
-    "lodash": "4.17.15",
-    "preact": "10.3.4"
+    "lodash": "4.17.15"
   }
 }
