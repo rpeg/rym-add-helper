@@ -33,7 +33,6 @@
     }
   ],
   "web_accessible_resources": [
-    "main.js",
-    "index.js"
+    "main.js"
   ]
 }

@@ -2,11 +2,11 @@
   "name": "rym-add-helper",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "build": "rm -rf dist && webpack && npm run copy:dist",
     "start": "node_modules/.bin/webpack src/index.js -o bundle.js && webpack-dev-server",
-    "copy:dist": "cp -r ./src/icons ./src/background.js ./src/main.js ./src/content.js ./src/manifest.json ./src/style.css ./dist"
+    "copy:dist": "cp -r ./src/icons ./src/background.js ./src/content.js ./src/manifest.json ./src/style.css ./dist"
   },
   "keywords": [
     "rym",
@@ -18,14 +18,20 @@
     "@babel/core": "7.9.0",
     "@babel/preset-env": "7.9.0",
     "babel-loader": "8.1.0",
+    "clean-webpack-plugin": "3.0.0",
+    "copy-webpack-plugin": "5.1.1",
     "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
     "eslint-plugin-import": "2.20.2",
+    "html-webpack-plugin": "4.0.4",
     "webpack": "4.42.1",
-    "webpack-cli": "3.3.11"
+    "webpack-cli": "3.3.11",
+    "write-file-webpack-plugin": "4.5.1"
   },
   "dependencies": {
     "@medv/finder": "1.1.2",
-    "lodash": "4.17.15"
+    "fs": "0.0.1-security",
+    "lodash": "4.17.15",
+    "path": "0.12.7"
   }
 }

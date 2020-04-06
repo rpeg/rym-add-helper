@@ -1,6 +1,7 @@
-import { finder } from './index';
+import finder from '@medv/finder';
 
-const HOVER_CLASS = 'rym__hover';
+const BASE_CLASS = 'rym__';
+const HOVER_CLASS = `${BASE_CLASS}hover`;
 
 const fields = [
   'title',
@@ -34,7 +35,10 @@ const events = [
     listener: (e) => {
       e.preventDefault();
 
-      const selector = finder(e.target);
+      const selector = finder(e.target, {
+        className: (name) => !name.startsWith(BASE_CLASS),
+      });
+
       console.log(selector);
 
       return false;
@@ -50,6 +54,6 @@ const onToggle = (active) => {
     : document.removeEventListener(ev.type, ev.listener, ev.options)));
 };
 
-window.addEventListener('message', (message) => {
-  onToggle(message.isActive);
+window.addEventListener('message', ({ data }) => {
+  onToggle(data.isActive);
 }, false);
