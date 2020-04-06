@@ -2,7 +2,7 @@ module.exports = {
   mode: 'production',
   entry: './src/index.jsx',
   output: {
-    filename: '[name].js',
+    filename: 'content.js',
     path: `${__dirname}/dist`,
   },
   module: {

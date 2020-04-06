@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rm -rf dist && webpack && npm run copy:dist",
     "start": "node_modules/.bin/webpack src/app.js -o bundle.js && webpack-dev-server",
-    "copy:dist": "cp ./src/manifest.json ./dist"
+    "copy:dist": "cp -r ./src/icons ./src/background.js ./src/manifest.json ./src/style.css ./dist"
   },
   "keywords": [
     "rym",

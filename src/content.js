@@ -1,4 +1,4 @@
-import finder from '@medv/finder';
+// import finder from '@medv/finder';
 
 const HOVER_CLASS = 'rym__hover';
 
@@ -34,8 +34,8 @@ const events = [
     listener: (e) => {
       e.preventDefault();
 
-      const selector = finder(e.target);
-      console.log(selector);
+      // const selector = finder(e.target);
+      // console.log(selector);
 
       return false;
     },
