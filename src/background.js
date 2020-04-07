@@ -16,11 +16,3 @@ chrome.browserAction.onClicked.addListener(() => {
     chrome.tabs.sendMessage(tabs[0].id, { isActive });
   });
 });
-
-window.onload = () => {
-  console.log('onload');
-  chrome.storage.sync.get('hide', (data) => {
-    // if (data.hide) addListeners()
-    // else removeListeners();
-  });
-};

@@ -15,7 +15,7 @@ const fields = [
   'tracks',
 ];
 
-const events = [
+const domEvents = [
   {
     type: 'mouseover',
     listener: (e) => {
@@ -47,11 +47,16 @@ const events = [
   },
 ];
 
+const initGuide = () => {
+  // set iframe contents
+};
+
 const onToggle = (active) => {
-  console.log(`events turned ${active ? 'on' : 'off'}`);
-  events.forEach((ev) => (active
+  domEvents.forEach((ev) => (active
     ? document.addEventListener(ev.type, ev.listener, ev.options)
     : document.removeEventListener(ev.type, ev.listener, ev.options)));
+
+  initGuide();
 };
 
 window.addEventListener('message', ({ data }) => {

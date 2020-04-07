@@ -1,9 +1,5 @@
-const webpack = require('webpack');
 const path = require('path');
-const fileSystem = require('fs');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WriteFilePlugin = require('write-file-webpack-plugin');
 
 const alias = {};
