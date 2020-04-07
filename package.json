@@ -30,6 +30,7 @@
   "dependencies": {
     "@medv/finder": "1.1.2",
     "jquery": "3.4.1",
-    "lodash": "4.17.15"
+    "lodash": "4.17.15",
+    "rxjs": "6.5.5"
   }
 }

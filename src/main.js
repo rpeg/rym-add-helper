@@ -1,6 +1,7 @@
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
+import { Observable } from 'rxjs';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
@@ -17,20 +18,31 @@ const FIELDS = [
 ];
 
 const guideHtml = `
-<div>
+<div id="rym__guide-inner>
     <h1 id="rym__header">RYM Add Helper</h1>
-    <p id="rym__desc">Test</p>
+    <p id="rym__desc">Select ${FIELDS[0]}</p>
 </div>
 `;
 
-let lastSelectedElm = '';
+const parseMap = {};
+const domainElmMap = {};
+
+const isSelecting = true;
+
+let updateSelectedElm;
+const selectedElmObservable = Observable.create((observer) => {
+  updateSelectedElm = (value) => {
+    observer.next(value);
+  };
+});
 
 const domEvents = [
   {
     type: 'mouseover',
     listener: _.throttle((e) => {
-      if (!e.srcElement.className.contains(BASE_CLASS)
-       && !e.srcElement.idName.contains(BASE_CLASS)) {
+      if (isSelecting
+       && !e.srcElement.className.contains(BASE_CLASS)
+       && !e.srcElement.id.contains(BASE_CLASS)) {
         e.srcElement.classList.add(HOVER_CLASS);
       }
     }, 200),
@@ -48,12 +60,7 @@ const domEvents = [
     listener: (e) => {
       e.preventDefault();
 
-      lastSelectedElm = finder(e.target, {
-        className: (name) => !name.startsWith(BASE_CLASS),
-        idName: (name) => !name.startsWith(BASE_CLASS),
-      });
-
-      console.log(lastSelectedElm);
+      updateSelectedElm(e.target);
 
       return false;
     },
@@ -61,20 +68,50 @@ const domEvents = [
   },
 ];
 
+/**
+ * Walk user step-by-step through each metadata field.
+ */
+const guideUser = (container) => {
+  const desc = container.contents().find('#rym__desc');
+
+  let fieldIndex = 0;
+
+  const subscription = selectedElmObservable.subscribe((elm) => {
+    console.log(elm);
+
+    const selector = finder(elm, {
+      className: (name) => !name.startsWith(BASE_CLASS),
+      idName: (name) => !name.startsWith(BASE_CLASS),
+    });
+
+    domainElmMap[FIELDS[fieldIndex]] = selector;
+    parseMap[FIELDS[fieldIndex]] = elm.innerText;
+
+    console.log(elm.innerText);
+
+    fieldIndex += 1;
+
+    if (fieldIndex < FIELDS.length) {
+      desc.text(`Select ${FIELDS[fieldIndex]}`);
+    } else {
+      subscription.unsubscribe();
+    }
+  });
+};
+
 const initGuide = () => {
   $(document).ready(() => {
     const container = $('<div />').appendTo('body');
     container.attr('id', 'rym__guide');
     container.html(guideHtml);
 
-    const field = container.contents().find('#rym__desc');
-    field.text(FIELDS[0]);
+    guideUser(container);
   });
 };
 
 const removeHtml = () => {
-  const iframe = document.getElementById('rym__guide');
-  if (iframe) iframe.parentNode.removeChild(iframe);
+  const container = document.getElementById('rym__guide');
+  if (container) container.parentNode.removeChild(container);
 };
 
 const onToggle = (active) => {
@@ -89,6 +126,7 @@ const onToggle = (active) => {
   }
 };
 
+// receive messages from content script
 window.addEventListener('message', ({ data }) => {
   onToggle(data.isActive);
 }, false);
