@@ -29,11 +29,10 @@
     {
       "matches": ["<all_urls>"],
       "css": ["style.css"],
-      "js": ["content.js", "external/jquery-3.4.1.min.js"]
+      "js": ["content.js"]
     }
   ],
   "web_accessible_resources": [
-    "main.js",
-    "guide.html"
+    "main.js"
   ]
 }

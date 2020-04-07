@@ -2,3 +2,10 @@
     border: 2px solid #FFFF00;
     cursor: pointer;
 }
+
+#rym__guide {
+    z-index: 999;
+    position: fixed;
+    background-color: white;
+    box-shadow: darkslategrey;
+}
