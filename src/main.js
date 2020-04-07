@@ -1,30 +1,70 @@
+/* eslint-disable no-use-before-define */
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
 import { Observable } from 'rxjs';
 
+import Transformers from './utils/transformers';
+
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
-const FIELDS = [
-  'title',
-  'release type',
-  'date',
-  'issue',
-  'disc size',
-  'label',
-  'catalog #',
-  'countries issued',
-  'tracks',
-];
 const GUIDE_HTML = `
-<div id="rym__guide-inner>
-    <h1 id="rym__header">RYM Add Helper</h1>
-    <p id="rym__desc">Select ${FIELDS[0]}</p>
-</div>
+  <div id="rym__guide-inner" style="top: 0; left: 0">
+      <h1 id="rym__header">RYM Add Helper</h1>
+      <p id="rym__desc">Select ${fields[0].name}</p>
+      <ul id="rym__data></ul>
+  </div>
 `;
 
-const parseMap = {};
-const domainElmMap = {};
+const fields = [
+  {
+    name: 'artist',
+    displayLabel: 'artist',
+    transformers: [
+      Transformers.capitalizationTransformer,
+    ],
+  },
+  {
+    name: 'title',
+    displayLabel: 'title',
+    transformers: [
+      Transformers.capitalizationTransformer,
+    ],
+  },
+  {
+    name: 'releaseType',
+    displayLabel: 'release type',
+  },
+  {
+    name: 'date',
+    displayLabel: 'date',
+    transformers: [
+      Transformers.dateTransformer,
+    ],
+  },
+  {
+    name: 'label',
+    displayLabel: 'label',
+  },
+  {
+    name: 'catalogId',
+    displayLabel: 'catalog #',
+  },
+  {
+    name: 'country',
+    displayLabel: 'country',
+  },
+  {
+    name: 'tracks',
+    displayLabel: 'tracklist',
+    transformers: [
+      Transformers.metaTransformer(Transformers.capitalizationTransformer),
+    ],
+  },
+];
+
+const formData = {};
+const cssData = {};
 
 const isSelecting = true;
 
@@ -68,13 +108,11 @@ const domEvents = [
   },
 ];
 
-/**
- * Walk user step-by-step through each metadata field.
- */
+// walk user step-by-step through each metadata field
 const guideUser = (container) => {
   const desc = container.contents().find('#rym__desc');
 
-  let fieldIndex = 0;
+  let i = 0;
 
   const subscription = selectedElmObservable.subscribe((elm) => {
     console.log(elm);
@@ -84,19 +122,21 @@ const guideUser = (container) => {
       idName: (name) => !name.startsWith(BASE_CLASS),
     });
 
-    domainElmMap[FIELDS[fieldIndex]] = selector;
-    parseMap[FIELDS[fieldIndex]] = elm.innerText;
+    cssData[fields[i].name] = selector;
+    formData[fields[i].name] = elm.innerText;
 
     console.log(elm.innerText);
 
-    fieldIndex += 1;
+    i += 1;
 
-    if (fieldIndex < FIELDS.length) {
-      desc.text(`Select ${FIELDS[fieldIndex]}`);
+    if (i < fields.length) {
+      desc.text(`Select ${fields[i]}`);
     } else {
-      console.log(domainElmMap);
-      console.log(parseMap);
+      console.log(cssData);
+      console.log(formData);
+
       subscription.unsubscribe();
+      onGuideComplete();
     }
   });
 };
@@ -108,6 +148,12 @@ const initGuide = () => {
     container.html(GUIDE_HTML);
 
     guideUser(container);
+  });
+};
+
+const onGuideComplete = () => {
+  window.postMessage({
+    formData,
   });
 };
 

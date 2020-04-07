@@ -1,14 +1,12 @@
+const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
+
 let isActive = false;
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ hide: true }, () => {
-    console.log('rym extension on');
-  });
+  chrome.storage.sync.set({ hide: true });
 });
 
 chrome.browserAction.onClicked.addListener(() => {
-  console.log('clicked');
-
   isActive = !isActive;
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -16,3 +14,12 @@ chrome.browserAction.onClicked.addListener(() => {
     chrome.tabs.sendMessage(tabs[0].id, { isActive });
   });
 });
+
+// after user completes selection, open rym tab and fill out form with passed data
+chrome.runtime.onMessage.addListener(
+  ({ formData }) => {
+    chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
+      chrome.tabs.sendMessage(tab.id, { formData });
+    });
+  },
+);

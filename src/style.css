@@ -3,10 +3,14 @@
     cursor: pointer;
 }
 
-#rym__guide {
-    z-index: 999;
+#rym__guide-inner {
+    z-index: 10000;
     position: fixed;
+    top: 10;
+    left: 10;
+
     color: black;
     background-color: white;
-    box-shadow: darkslategrey;
+    box-shadow: 10px 10px 8px darkslategrey;
+    border: 1px solid darkslategrey;
 }
