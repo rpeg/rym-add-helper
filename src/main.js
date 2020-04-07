@@ -16,8 +16,7 @@ const FIELDS = [
   'countries issued',
   'tracks',
 ];
-
-const guideHtml = `
+const GUIDE_HTML = `
 <div id="rym__guide-inner>
     <h1 id="rym__header">RYM Add Helper</h1>
     <p id="rym__desc">Select ${FIELDS[0]}</p>
@@ -41,8 +40,9 @@ const domEvents = [
     type: 'mouseover',
     listener: _.throttle((e) => {
       if (isSelecting
-       && !e.srcElement.className.contains(BASE_CLASS)
-       && !e.srcElement.id.contains(BASE_CLASS)) {
+        && e.srcElement
+        && e.srcElement.classList
+        && !e.srcElement.classList.contains(BASE_CLASS)) {
         e.srcElement.classList.add(HOVER_CLASS);
       }
     }, 200),
@@ -94,6 +94,8 @@ const guideUser = (container) => {
     if (fieldIndex < FIELDS.length) {
       desc.text(`Select ${FIELDS[fieldIndex]}`);
     } else {
+      console.log(domainElmMap);
+      console.log(parseMap);
       subscription.unsubscribe();
     }
   });
@@ -103,7 +105,7 @@ const initGuide = () => {
   $(document).ready(() => {
     const container = $('<div />').appendTo('body');
     container.attr('id', 'rym__guide');
-    container.html(guideHtml);
+    container.html(GUIDE_HTML);
 
     guideUser(container);
   });
