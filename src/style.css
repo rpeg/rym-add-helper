@@ -3,14 +3,26 @@
     cursor: pointer;
 }
 
-#rym__guide-inner {
+#rym__form {
     z-index: 10000;
     position: fixed;
-    top: 10;
-    left: 10;
+    max-height: 600px;
 
     color: black;
     background-color: white;
-    box-shadow: 10px 10px 8px darkslategrey;
+    box-shadow: darkslategrey -5px 5px 15px;
     border: 1px solid darkslategrey;
+}
+
+#rym__form-inner {
+    margin: 30px;
+}
+
+#rym__prompt-contaner {
+    z-index: 10000;
+    position: fixed;
+    width: 100%;
+    left: 10%;
+    right: 10%;
+    bottom: 10%;
 }

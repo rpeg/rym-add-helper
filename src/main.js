@@ -1,3 +1,4 @@
+/* eslint-disable no-multi-assign */
 /* eslint-disable no-use-before-define */
 import finder from '@medv/finder';
 import _ from 'lodash';
@@ -9,10 +10,19 @@ import Transformers from './utils/transformers';
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 const GUIDE_HTML = `
-  <div id="rym__guide-inner" style="top: 0; left: 0">
+  <div id="rym__form" style="top: 0; right: 0">
+    <div id="rym__form-inner">
       <h1 id="rym__header">RYM Add Helper</h1>
-      <p id="rym__desc">Select ${fields[0].name}</p>
-      <ul id="rym__data></ul>
+      <h4>RYM Artist ID:</h4>
+      <input type="text" id="rym__artistid" />
+      <br />
+      <h4>Data:</h4>
+      <ul id="rym__data" />
+      <button id="rym__submit" type="button">Submit</button>
+    </div>
+  </div>
+  <div id="rym__prompt-contaner">
+    <p id="rym__prompt" />
   </div>
 `;
 
@@ -20,16 +30,12 @@ const fields = [
   {
     name: 'artist',
     displayLabel: 'artist',
-    transformers: [
-      Transformers.capitalizationTransformer,
-    ],
+    transformer: Transformers.capitalizationTransformer,
   },
   {
     name: 'title',
     displayLabel: 'title',
-    transformers: [
-      Transformers.capitalizationTransformer,
-    ],
+    transformer: Transformers.capitalizationTransformer,
   },
   {
     name: 'releaseType',
@@ -38,9 +44,7 @@ const fields = [
   {
     name: 'date',
     displayLabel: 'date',
-    transformers: [
-      Transformers.dateTransformer,
-    ],
+    transformer: Transformers.dateTransformer,
   },
   {
     name: 'label',
@@ -55,18 +59,28 @@ const fields = [
     displayLabel: 'country',
   },
   {
-    name: 'tracks',
-    displayLabel: 'tracklist',
-    transformers: [
-      Transformers.metaTransformer(Transformers.capitalizationTransformer),
-    ],
+    name: 'trackNumber',
+    displayLabel: 'a track number',
+    multiple: true,
+  },
+  {
+    name: 'trackTitle',
+    displayLabel: 'a track title',
+    multiple: true,
+    transformer: Transformers.capitalizationTransformer,
+  },
+  {
+    name: 'trackTime',
+    displayLabel: 'a track time',
+    multiple: true,
+    transformer: Transformers.timeTransformer,
   },
 ];
 
 const formData = {};
 const cssData = {};
 
-const isSelecting = true;
+const isSelecting = false;
 
 let updateSelectedElm;
 const selectedElmObservable = Observable.create((observer) => {
@@ -100,7 +114,9 @@ const domEvents = [
     listener: (e) => {
       e.preventDefault();
 
-      updateSelectedElm(e.target);
+      if (e.srcElement.classList.contains(HOVER_CLASS)) {
+        updateSelectedElm(e.target);
+      }
 
       return false;
     },
@@ -108,29 +124,37 @@ const domEvents = [
   },
 ];
 
-// walk user step-by-step through each metadata field
 const guideUser = (container) => {
-  const desc = container.contents().find('#rym__desc');
+  const prompt = container.contents().find('#rym__prompt');
+  const dataList = container.contents().find('#rym__data');
+
+  prompt.text(`Select ${fields[0].displayLabel}`);
 
   let i = 0;
 
   const subscription = selectedElmObservable.subscribe((elm) => {
     console.log(elm);
 
+    const { name, displayLabel, transformer } = fields[i];
+
     const selector = finder(elm, {
-      className: (name) => !name.startsWith(BASE_CLASS),
-      idName: (name) => !name.startsWith(BASE_CLASS),
+      className: (n) => !n.startsWith(BASE_CLASS),
+      idName: (n) => !n.startsWith(BASE_CLASS),
     });
 
-    cssData[fields[i].name] = selector;
-    formData[fields[i].name] = elm.innerText;
-
     console.log(elm.innerText);
+
+    cssData[name] = selector;
+    const data = formData[name] = transformer
+      ? transformer(elm.innerText)
+      : elm.innerText;
+
+    $(`data-${name}`).append(data);
 
     i += 1;
 
     if (i < fields.length) {
-      desc.text(`Select ${fields[i]}`);
+      prompt.text(`Select ${displayLabel}`);
     } else {
       console.log(cssData);
       console.log(formData);
@@ -147,7 +171,18 @@ const initGuide = () => {
     container.attr('id', 'rym__guide');
     container.html(GUIDE_HTML);
 
+    initForm(container);
     guideUser(container);
+  });
+};
+
+const initForm = (container) => {
+  const dataList = container.contents().find('#rym__data');
+
+  fields.forEach(({ displayLabel, name }) => {
+    $(`<li id="data-${name}"><b>${displayLabel}</b>: </li>`).appendTo(dataList);
+
+    // TODO click listeners?
   });
 };
 
@@ -155,11 +190,6 @@ const onGuideComplete = () => {
   window.postMessage({
     formData,
   });
-};
-
-const removeHtml = () => {
-  const container = document.getElementById('rym__guide');
-  if (container) container.parentNode.removeChild(container);
 };
 
 const onToggle = (active) => {
@@ -174,7 +204,11 @@ const onToggle = (active) => {
   }
 };
 
-// receive messages from content script
+const removeHtml = () => {
+  const container = document.getElementById('rym__guide');
+  if (container) container.parentNode.removeChild(container);
+};
+
 window.addEventListener('message', ({ data }) => {
   onToggle(data.isActive);
 }, false);

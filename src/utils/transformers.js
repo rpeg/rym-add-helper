@@ -36,10 +36,15 @@ const dateTransformer = (date) => {
 
 };
 
+const timeTransformer = (time) => {
+
+};
+
 const metaTransformer = (transformer, iterable) => iterable.map((el) => transformer(el));
 
 export default {
   capitalizationTransformer,
   dateTransformer,
+  timeTransformer,
   metaTransformer,
 };
