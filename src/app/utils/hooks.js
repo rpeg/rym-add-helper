@@ -2,9 +2,9 @@
 /* eslint-disable import/prefer-default-export */
 import { useEffect } from 'preact';
 
-export const useWindowEvent = (event, callback) => {
+export const useWindowEvent = (event, callback, enabled) => {
   useEffect(() => {
-    window.addEventListener(event, callback);
+    if (enabled) window.addEventListener(event, callback);
     return () => window.removeEventListener(event, callback);
-  }, [event, callback]);
+  }, [event, callback, enabled]);
 };

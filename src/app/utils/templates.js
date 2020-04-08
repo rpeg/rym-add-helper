@@ -7,9 +7,9 @@ const Templates = {
     label: '.content:nth-child(3) > a',
     catalogId: '.content:nth-child(3)',
     country: '.content:nth-child(7) > a',
-    trackNumber: '.tracklist_track > .track > .tracklist_track_pos',
+    trackPosition: '.tracklist_track > .track > .tracklist_track_pos',
     trackTitle: '.tracklist_track > .track > .tracklist_track_title',
-    trackTime: '.tracklist_track > .track > .tracklist_track_duration',
+    trackDuration: '.tracklist_track > .track > .tracklist_track_duration',
   },
 };
 
