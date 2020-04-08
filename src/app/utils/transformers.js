@@ -16,7 +16,7 @@ const DO_NOT_CAPITALIZE = [
  * and will require parts-of-speech NLP to be fully adequate.
  */
 
-const capitalizationTransformer = (text) => {
+const textTransformer = (text) => {
   const words = text.split(' ').map((w) => w.trim());
 
   return words.map((word, i) => {
@@ -43,7 +43,7 @@ const timeTransformer = (time) => {
 const metaTransformer = (transformer, iterable) => iterable.map((el) => transformer(el));
 
 export default {
-  capitalizationTransformer,
+  textTransformer,
   dateTransformer,
   timeTransformer,
   metaTransformer,

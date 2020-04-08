@@ -26,14 +26,14 @@ const App = () => {
       selector: '',
       promptLabel: 'artist',
       formLabel: 'artist',
-      transformer: Transformers.capitalizationTransformer,
+      transformer: Transformers.textTransformer,
     },
     {
       name: 'title',
       selector: '',
       promptLabel: 'title',
       formLabel: 'title',
-      transformer: Transformers.capitalizationTransformer,
+      transformer: Transformers.textTransformer,
     },
     {
       name: 'releaseType',
@@ -78,7 +78,7 @@ const App = () => {
       selector: '',
       promptLabel: 'a track title',
       formLabel: 'track title',
-      transformer: Transformers.capitalizationTransformer,
+      transformer: Transformers.textTransformer,
       mapTo: 'tracks',
     },
     {
@@ -113,6 +113,9 @@ const App = () => {
     return false;
   }, isFormDisplayed);
 
+  /**
+   * Update state with clicked-on element's css selector.
+   */
   useEffect(() => {
     const selector = finder(selectedElm, {
       className: (n) => !n.startsWith(BASE_CLASS),
@@ -163,8 +166,15 @@ const App = () => {
     if (artistInputRef.innerText) {
       setIsInvalidMessageDisplayed(false);
 
+      const formData = data
+        .filter((d) => !d.mapTo)
+        .map((d) => ({
+          name: d.name,
+          data: d.data,
+        }));
+
       window.postMessage({
-        formData: { ...data },
+        formData,
       });
     } else {
       setIsInvalidMessageDisplayed(true);
@@ -201,11 +211,11 @@ const App = () => {
           <br />
           <h4>Data:</h4>
           <ul id="rym__data">
-            {Object.values(data).map((v) => (
+            {(data).map((field) => (
               <li>
-                <p><b>{`${v.formLabel}:`}</b></p>
+                <p><b>{`${field.formLabel}:`}</b></p>
                 {' '}
-                {v.data || ''}
+                {field.data || ''}
               </li>
             ))}
           </ul>
