@@ -19,66 +19,77 @@ const App = () => {
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [promptLabel, setPromptLabel] = useState('');
   const [selectedElm, setSelectedElm] = useState(null);
-  const [data, setData] = useState({
-    artist: {
+  const [dataIndex, setDataIndex] = useState(0);
+  const [data, setData] = useState([
+    {
+      name: 'artist',
       selector: '',
       promptLabel: 'artist',
       formLabel: 'artist',
       transformer: Transformers.capitalizationTransformer,
     },
-    title: {
+    {
+      name: 'title',
       selector: '',
       promptLabel: 'title',
       formLabel: 'title',
       transformer: Transformers.capitalizationTransformer,
     },
-    releaseType: {
+    {
+      name: 'releaseType',
       selector: '',
       promptLabel: 'release type',
       formLabel: 'type',
     },
-    date: {
+    {
+      name: 'date',
       selector: '',
       promptLabel: 'release date',
       formLabel: 'date',
       transformer: Transformers.dateTransformer,
     },
-    label: {
+    {
+      label: 'label',
       selector: '',
       promptLabel: 'label',
       formLabel: 'label',
     },
-    catalogId: {
+    {
+      name: 'catalogId',
       selector: '',
       promptLabel: 'catalog #',
       formLabel: 'catalog #',
     },
-    country: {
+    {
+      name: 'country',
       selector: '',
       promptLabel: 'country',
       formLabel: 'country',
     },
-    trackPosition: {
+    {
+      name: 'trackPosition',
       selector: '',
       promptLabel: 'a track position',
       formLabel: 'track position',
       mapTo: 'tracks',
     },
-    trackTitle: {
+    {
+      name: 'trackTitle',
       selector: '',
       promptLabel: 'a track title',
       formLabel: 'track title',
       transformer: Transformers.capitalizationTransformer,
       mapTo: 'tracks',
     },
-    trackDuration: {
+    {
+      name: 'trackDuration',
       selector: '',
       promptLabel: 'a track duration',
       formLabel: 'track duration',
       transformer: Transformers.timeTransformer,
       mapTo: 'tracks',
     },
-  });
+  ]);
 
   const artistInputRef = useRef(null);
 
@@ -102,29 +113,48 @@ const App = () => {
     return false;
   }, isFormDisplayed);
 
-  const parseData = () => {
-    const d = { ...data };
+  useEffect(() => {
+    const selector = finder(selectedElm, {
+      className: (n) => !n.startsWith(BASE_CLASS),
+      idName: (n) => !n.startsWith(BASE_CLASS),
+    });
 
-    Object.entries(data).forEach(([k, v]) => {
-      if (v.selector) {
-        const match = $(v.selector);
-        const transformer = d[k].transformer || ((val) => val);
+    setData([
+      ...data.slice(0, dataIndex),
+      {
+        ...data[dataIndex],
+        selector,
+      },
+      ...data.slice(dataIndex),
+    ]);
+
+    setDataIndex(dataIndex + 1);
+  }, selectedElm);
+
+  const parseData = () => {
+    const d = [...data];
+
+    (d).forEach((field) => {
+      if (field.selector) {
+        const match = $(field.selector);
+        const transformer = field.transformer || ((val) => val);
 
         console.log(match);
 
         if (match instanceof Array) {
-          d[v.mapTo][k].data = match.map((m) => transformer(m.text()));
+          d.find((f) => f.name === field.mapTo).data = match.map((m) => transformer(m.text()));
         } else {
-          d[k].data = transformer(match.text());
+          // eslint-disable-next-line no-param-reassign
+          field.data = transformer(match.text());
         }
       }
     });
 
-    setData({ ...d });
+    setData([...d]);
   };
 
   const guideUser = () => {
-    Object.values(data).forEach((d) => {
+    (data).forEach((d) => {
       setPromptLabel(d.promptLabel);
     });
   };
@@ -134,7 +164,7 @@ const App = () => {
       setIsInvalidMessageDisplayed(false);
 
       window.postMessage({
-        formData: data,
+        formData: { ...data },
       });
     } else {
       setIsInvalidMessageDisplayed(true);
@@ -144,10 +174,10 @@ const App = () => {
   const template = Templates[document.location.hostname];
 
   if (template) {
-    const d = {};
+    const d = [...data];
 
     Object.entries(template).forEach(([k, v]) => {
-      d[k].selector = v;
+      d.find((f) => f.name === k).selector = v;
     });
 
     setData(d);
@@ -167,13 +197,13 @@ const App = () => {
           <h4>RYM Artist ID:</h4>
           <input type="text" id="rym__artistid" ref={artistInputRef} />
           {isInvalidMessageDisplayed
-           && <h4 style={{ color: 'red' }}>* Required</h4>}
+           && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
           <br />
           <h4>Data:</h4>
           <ul id="rym__data">
             {Object.values(data).map((v) => (
               <li>
-                <b>{`${v.formLabel}:`}</b>
+                <p><b>{`${v.formLabel}:`}</b></p>
                 {' '}
                 {v.data || ''}
               </li>
