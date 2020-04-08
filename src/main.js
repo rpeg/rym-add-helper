@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-multi-assign */
 /* eslint-disable no-use-before-define */
 import finder from '@medv/finder';
@@ -6,11 +7,12 @@ import $ from 'jquery';
 import { Observable } from 'rxjs';
 
 import Transformers from './utils/transformers';
+import Templates from './utils/templates';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 const GUIDE_HTML = `
-  <div id="rym__form" style="top: 0; right: 0">
+  <div id="rym__form" class="rym__" style="top: 0; right: 0">
     <div id="rym__form-inner">
       <h1 id="rym__header">RYM Add Helper</h1>
       <h4>RYM Artist ID:</h4>
@@ -29,59 +31,61 @@ const GUIDE_HTML = `
 const fields = [
   {
     name: 'artist',
-    displayLabel: 'artist',
+    promptLabel: 'artist',
+    formLabel: 'artist',
     transformer: Transformers.capitalizationTransformer,
   },
   {
     name: 'title',
-    displayLabel: 'title',
+    promptLabel: 'title',
+    formLabel: 'title',
     transformer: Transformers.capitalizationTransformer,
   },
   {
     name: 'releaseType',
-    displayLabel: 'release type',
+    promptLabel: 'release type',
+    formLabel: 'type',
   },
   {
     name: 'date',
-    displayLabel: 'date',
+    promptLabel: 'release date',
+    formLabel: 'date',
     transformer: Transformers.dateTransformer,
   },
   {
     name: 'label',
-    displayLabel: 'label',
+    promptLabel: 'label',
+    formLabel: 'label',
   },
   {
     name: 'catalogId',
-    displayLabel: 'catalog #',
+    promptLabel: 'catalog #',
+    formLabel: 'catalog #',
   },
   {
     name: 'country',
-    displayLabel: 'country',
+    promptLabel: 'country',
+    formLabel: 'country',
   },
   {
     name: 'trackNumber',
-    displayLabel: 'a track number',
-    multiple: true,
+    promptLabel: 'a track number',
   },
   {
     name: 'trackTitle',
-    displayLabel: 'a track title',
-    multiple: true,
+    promptLabel: 'a track title',
     transformer: Transformers.capitalizationTransformer,
   },
   {
     name: 'trackTime',
-    displayLabel: 'a track time',
-    multiple: true,
+    promptLabel: 'a track time',
     transformer: Transformers.timeTransformer,
   },
 ];
 
-const formData = {};
 const cssData = {};
-
-const isSelecting = false;
-
+const formData = {};
+const isSelecting = true;
 let updateSelectedElm;
 const selectedElmObservable = Observable.create((observer) => {
   updateSelectedElm = (value) => {
@@ -126,16 +130,14 @@ const domEvents = [
 
 const guideUser = (container) => {
   const prompt = container.contents().find('#rym__prompt');
-  const dataList = container.contents().find('#rym__data');
-
-  prompt.text(`Select ${fields[0].displayLabel}`);
+  prompt.text(`Select ${fields[0].promptLabel}`);
 
   let i = 0;
 
   const subscription = selectedElmObservable.subscribe((elm) => {
     console.log(elm);
 
-    const { name, displayLabel, transformer } = fields[i];
+    const { name, promptLabel, transformer } = fields[i];
 
     const selector = finder(elm, {
       className: (n) => !n.startsWith(BASE_CLASS),
@@ -145,16 +147,16 @@ const guideUser = (container) => {
     console.log(elm.innerText);
 
     cssData[name] = selector;
-    const data = formData[name] = transformer
+    formData[name] = transformer
       ? transformer(elm.innerText)
       : elm.innerText;
 
-    $(`data-${name}`).append(data);
+    // $(`data-${name}`).append(data);
 
     i += 1;
 
     if (i < fields.length) {
-      prompt.text(`Select ${displayLabel}`);
+      prompt.text(`Select ${promptLabel}`);
     } else {
       console.log(cssData);
       console.log(formData);
@@ -172,18 +174,42 @@ const initGuide = () => {
     container.html(GUIDE_HTML);
 
     initForm(container);
-    guideUser(container);
+
+    // load in premade template if applicable
+    const domainTemplate = Templates[document.location.hostname];
+    if (domainTemplate) {
+      console.log('template found');
+      parseTemplate(domainTemplate);
+    } else {
+      guideUser(container);
+    }
   });
 };
 
 const initForm = (container) => {
   const dataList = container.contents().find('#rym__data');
 
-  fields.forEach(({ displayLabel, name }) => {
-    $(`<li id="data-${name}"><b>${displayLabel}</b>: </li>`).appendTo(dataList);
+  fields.filter((f) => f.formLabel).forEach(({ promptLabel, name }) => {
+    $(`<li id="data-${name}"><b>${promptLabel}</b>: </li>`).appendTo(dataList);
 
     // TODO click listeners?
   });
+};
+
+const parseTemplate = (template) => {
+  Object.entries(template).forEach(([k, v]) => {
+    cssData[k] = v;
+
+    const match = $(v);
+    console.log(match);
+    if (match instanceof Array) {
+      console.log(match.map((m) => m.text()));
+    } else {
+      console.log(match.text());
+    }
+  });
+
+  onGuideComplete();
 };
 
 const onGuideComplete = () => {

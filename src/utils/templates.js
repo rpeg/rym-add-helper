@@ -1,6 +1,5 @@
-const templates = [
-  {
-    domain: 'discogs.com',
+const Templates = {
+  'www.discogs.com': {
     artist: '#profile_title a',
     title: '#profile_title > span:nth-child(2)',
     releaseType: '.content:nth-child(5)',
@@ -8,8 +7,10 @@ const templates = [
     label: '.content:nth-child(3) > a',
     catalogId: '.content:nth-child(3)',
     country: '.content:nth-child(7) > a',
-    tracks: '#tracklist > .section_content',
+    trackNumber: '.tracklist_track > .track > .tracklist_track_pos',
+    trackTitle: '.tracklist_track > .track > .tracklist_track_title',
+    trackTime: '.tracklist_track > .track > .tracklist_track_duration',
   },
-];
+};
 
-export default templates;
+export default Templates;
