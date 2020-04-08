@@ -2,8 +2,6 @@ const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const WriteFilePlugin = require('write-file-webpack-plugin');
 
-const alias = {};
-
 const fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'];
 
 const options = {
@@ -30,10 +28,26 @@ const options = {
         loader: 'html-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.jsx?$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: [
+              ['@babel/plugin-transform-react-jsx', { pragma: 'h' }],
+            ],
+          },
+        },
+      },
     ],
   },
   resolve: {
-    alias,
+    alias: {
+      react: 'preact/compat',
+    },
+    extensions: ['.js', '.jsx'],
   },
   plugins: [
     // clean the build folder

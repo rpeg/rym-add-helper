@@ -34,7 +34,9 @@
   ],
   "web_accessible_resources": [
     "main.js",
-    "utils/transformers.js",
-    "utils/templates.js"
+    "app/app.jsx",
+    "app/utils/hooks.js",
+    "app/utils/transformers.js",
+    "app/utils/templates.js"
   ]
 }
