@@ -114,9 +114,11 @@ const App = () => {
   }, isFormDisplayed);
 
   /**
-   * Update state with clicked-on element's css selector.
+   * Update data with clicked-on element's css selector; iterate data index
    */
   useEffect(() => {
+    if (!selectedElm) return;
+
     const selector = finder(selectedElm, {
       className: (n) => !n.startsWith(BASE_CLASS),
       idName: (n) => !n.startsWith(BASE_CLASS),
@@ -132,12 +134,18 @@ const App = () => {
     ]);
 
     setDataIndex(dataIndex + 1);
-  }, selectedElm);
+  }, [selectedElm]);
+
+  useEffect(() => {
+    if (dataIndex >= data.length) {
+      setIsSelecting(false);
+    }
+  }, [dataIndex]);
 
   const parseData = () => {
     const d = [...data];
 
-    (d).forEach((field) => {
+    d.forEach((field) => {
       if (field.selector) {
         const match = $(field.selector);
         const transformer = field.transformer || ((val) => val);
@@ -156,14 +164,15 @@ const App = () => {
     setData([...d]);
   };
 
-  const guideUser = () => {
-    (data).forEach((d) => {
-      setPromptLabel(d.promptLabel);
-    });
+  const initGuide = () => {
+    setPromptLabel(data[0].promptLabel);
+    setIsSelecting(true);
   };
 
   const submitForm = () => {
-    if (artistInputRef.innerText) {
+    const id = artistInputRef.value;
+
+    if (id) {
       setIsInvalidMessageDisplayed(false);
 
       const formData = data
@@ -174,7 +183,10 @@ const App = () => {
         }));
 
       window.postMessage({
-        formData,
+        formData: {
+          id,
+          ...formData,
+        },
       });
     } else {
       setIsInvalidMessageDisplayed(true);
@@ -187,15 +199,17 @@ const App = () => {
     const d = [...data];
 
     Object.entries(template).forEach(([k, v]) => {
-      d.find((f) => f.name === k).selector = v;
+      const field = d.find((f) => f.name === k);
+      if (field) field.selector = v;
     });
 
     setData(d);
     parseData();
+    setDataIndex(data.length);
     setIsFormDisplayed(true);
   } else {
+    initGuide();
     setIsFormDisplayed(true);
-    guideUser();
   }
 
   return (
@@ -211,8 +225,19 @@ const App = () => {
           <br />
           <h4>Data:</h4>
           <ul id="rym__data">
-            {(data).map((field) => (
-              <li>
+            {(data).map((field, i) => (
+              <li style={{
+                display: 'inline',
+              }}
+              >
+                <img
+                  src="../assets/edit.png"
+                  alt="edit"
+                  onClick={() => {
+                    setDataIndex(i);
+                    setIsSelecting(true);
+                  }}
+                />
                 <p><b>{`${field.formLabel}:`}</b></p>
                 {' '}
                 {field.data || ''}
@@ -222,11 +247,13 @@ const App = () => {
           <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
         </div>
       </div>
-      <div id="rym__prompt-contaner">
+      {isSelecting && promptLabel && (
+      <div id="rym__prompt-container">
         <h3 id="rym__prompt">
           {`Select ${promptLabel}`}
         </h3>
       </div>
+      )}
     </>
     )
   );

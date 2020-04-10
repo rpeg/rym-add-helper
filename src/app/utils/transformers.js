@@ -23,7 +23,7 @@ const textTransformer = (text) => {
     let temp = word;
 
     if (i === 0 || i === words.length - 1 || ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
-      temp = word[0].toUpperCase() + word.slice(1);
+      temp = word.slice(0, 1).toUpperCase() + word.slice(1);
     } else if (DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
       temp = word.toLowerCase();
     }
@@ -32,13 +32,9 @@ const textTransformer = (text) => {
   }).join(' ');
 };
 
-const dateTransformer = (date) => {
+const dateTransformer = (date) => date;
 
-};
-
-const timeTransformer = (time) => {
-
-};
+const timeTransformer = (time) => time;
 
 const metaTransformer = (transformer, iterable) => iterable.map((el) => transformer(el));
 

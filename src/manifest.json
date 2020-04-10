@@ -37,6 +37,7 @@
     "app/app.jsx",
     "app/utils/hooks.js",
     "app/utils/transformers.js",
-    "app/utils/templates.js"
+    "app/utils/templates.js",
+    "app/assets/edit.png"
   ]
 }

@@ -1,6 +1,7 @@
-
+/* eslint-disable no-unused-vars */
 /* eslint-disable import/prefer-default-export */
-import { useEffect } from 'preact';
+import { h } from 'preact';
+import { useEffect } from 'preact/hooks';
 
 export const useWindowEvent = (event, callback, enabled) => {
   useEffect(() => {
