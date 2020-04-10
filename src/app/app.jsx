@@ -150,8 +150,6 @@ const App = () => {
         const match = $(field.selector);
         const transformer = field.transformer || ((val) => val);
 
-        console.log(match);
-
         if (match instanceof Array) {
           d.find((f) => f.name === field.mapTo).data = match.map((m) => transformer(m.text()));
         } else {
