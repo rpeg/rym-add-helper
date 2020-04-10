@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable func-names */
 /* eslint-disable react/react-in-jsx-scope */
 /* eslint-disable no-unused-vars */
 import { h, render, Component } from 'preact';
@@ -12,6 +14,8 @@ import Templates from './utils/templates';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
+
+/** @jsx h */
 
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
@@ -49,6 +53,7 @@ const App = () => {
       transformer: Transformers.dateTransformer,
     },
     {
+      name: 'label',
       label: 'label',
       selector: '',
       promptLabel: 'label',
@@ -71,23 +76,23 @@ const App = () => {
       selector: '',
       promptLabel: 'a track position',
       formLabel: 'track position',
-      mapTo: 'tracks',
+      multiple: true,
     },
     {
       name: 'trackTitle',
       selector: '',
       promptLabel: 'a track title',
       formLabel: 'track title',
+      multiple: true,
       transformer: Transformers.textTransformer,
-      mapTo: 'tracks',
     },
     {
       name: 'trackDuration',
       selector: '',
       promptLabel: 'a track duration',
       formLabel: 'track duration',
+      multiple: true,
       transformer: Transformers.timeTransformer,
-      mapTo: 'tracks',
     },
   ]);
 
@@ -145,18 +150,14 @@ const App = () => {
   const parseData = () => {
     const d = [...data];
 
-    d.forEach((field) => {
-      if (field.selector) {
-        const match = $(field.selector);
-        const transformer = field.transformer || ((val) => val);
+    d.filter((field) => field.selector).forEach((field) => {
+      const matches = $(field.selector).toArray();
 
-        if (match instanceof Array) {
-          d.find((f) => f.name === field.mapTo).data = match.map((m) => transformer(m.text()));
-        } else {
-          // eslint-disable-next-line no-param-reassign
-          field.data = transformer(match.text());
-        }
-      }
+      const transformer = field.transformer || function (val) { return val; };
+
+      const transformedData = matches.map((m) => transformer(m.innerText.trim()));
+
+      field.data = field.multiple ? transformedData : transformedData.join(' ');
     });
 
     setData([...d]);
@@ -165,6 +166,8 @@ const App = () => {
   const initGuide = () => {
     setPromptLabel(data[0].promptLabel);
     setIsSelecting(true);
+
+    console.log('guide init');
   };
 
   const submitForm = () => {
@@ -205,6 +208,8 @@ const App = () => {
     parseData();
     setDataIndex(data.length);
     setIsFormDisplayed(true);
+
+    console.log(data);
   } else {
     initGuide();
     setIsFormDisplayed(true);
