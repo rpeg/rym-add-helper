@@ -1,14 +1,21 @@
-const HOVER_CLASS = 'rym__hover';
+/* eslint-disable strict */
 
+'use strict';
 
-document.addEventListener('mouseover', (e) => {
-  e.srcElement.classList.add(HOVER_CLASS);
+// inject main into content script
+const script = document.createElement('script');
+script.setAttribute('type', 'module');
+script.setAttribute('src', chrome.extension.getURL('main.js'));
+const head = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+head.insertBefore(script, head.lastChild);
+
+// route messages between modules and background script
+window.addEventListener('message', (message) => {
+  chrome.runtime.sendMessage(message);
 }, false);
 
-document.addEventListener('mouseout', (e) => {
-  e.srcElement.classList.remove(HOVER_CLASS);
-}, false);
-
-document.addEventListener('click', (e) => {
-
-}, false);
+chrome.runtime.onMessage.addListener(
+  (request) => {
+    window.postMessage(request);
+  },
+);

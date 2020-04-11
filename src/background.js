@@ -1,21 +1,25 @@
+const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
+
+let isActive = false;
+
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({ hide: true }, () => {
-    console.log('rym extension on');
+  chrome.storage.sync.set({ hide: true });
+});
+
+chrome.browserAction.onClicked.addListener(() => {
+  isActive = !isActive;
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.browserAction.setIcon({ path: `icons/${isActive ? 'on' : 'off'}_48.png`, tabId: tabs[0].id });
+    chrome.tabs.sendMessage(tabs[0].id, { isActive });
   });
 });
 
-chrome.runtime.onMessage.addListener((message, callback) => {
-  if (message == 'runContentScript') {
-    chrome.tabs.executeScript({
-      file: 'content.js',
+// after user completes selection, open rym tab and fill out form with passed data
+chrome.runtime.onMessage.addListener(
+  ({ formData }) => {
+    chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
+      chrome.tabs.sendMessage(tab.id, { formData });
     });
-  }
-});
-
-window.onload = () => {
-  console.log('onload');
-  chrome.storage.sync.get('hide', (data) => {
-    // if (data.hide) addListeners()
-    // else removeListeners();
-  });
-};
+  },
+);
