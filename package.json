@@ -39,7 +39,6 @@
     "@types/react": "16.9.34",
     "jquery": "3.4.1",
     "lodash": "4.17.15",
-    "preact": "10.4.0",
-    "prop-types": "15.7.2"
+    "preact": "10.4.0"
   }
 }

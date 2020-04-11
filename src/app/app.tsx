@@ -12,7 +12,6 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
-import PropTypes, { bool } from 'prop-types';
 
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -28,7 +27,6 @@ interface Field {
   formLabel: string,
   data: string | Array<string>,
   transformers?: Array<Function>,
-  mapTo?: Field,
 }
 
 /**
@@ -153,12 +151,18 @@ const fields = [
   trackDurations,
 ];
 
-const isElmInForm = (e) => e && e.srcElement
-  && e.srcElement.offsetParent
-  && e.srcElement.offsetParent.classList
-  && [...e.srcElement.offsetParent.classList].includes(BASE_CLASS);
+const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement)
+  && (e.srcElement as HTMLTextAreaElement).offsetParent
+  && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
+  && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
 
-const TrackList = ({ positions, titles, durations }) => {
+type TrackListProps = {
+  positions: Array<string>,
+  titles: Array<string>,
+  durations: Array<string>,
+}
+
+const TrackList = ({ positions, titles, durations }: TrackListProps) => {
   const maxIndex = _.min([
     positions.length,
     titles.length,
@@ -176,31 +180,30 @@ const TrackList = ({ positions, titles, durations }) => {
   );
 };
 
-
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
-  const [data, setData] = useState([fields]);
+  const [data, setData] = useState(fields);
 
-  const artistInputRef = useRef(null);
+  const artistInputRef = useRef<HTMLInputElement>(null);
 
-  useWindowEvent('mouseover', _.throttle((e) => {
+  useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
     if (isSelecting && !isElmInForm(e)) {
-      e.srcElement.classList.add(HOVER_CLASS);
+      (e.srcElement as HTMLTextAreaElement).classList.add(HOVER_CLASS);
     }
   }, 200), isFormDisplayed);
 
-  useWindowEvent('mouseout', (e) => {
-    e.srcElement.classList.remove(HOVER_CLASS);
+  useWindowEvent('mouseout', (e: MouseEvent) => {
+    (e.srcElement as HTMLTextAreaElement).classList.remove(HOVER_CLASS);
   }, isFormDisplayed);
 
-  useWindowEvent('click', (e) => {
+  useWindowEvent('click', (e: MouseEvent) => {
     e.preventDefault();
 
-    if (e.srcElement.classList.contains(HOVER_CLASS)) {
+    if ((e.srcElement as HTMLTextAreaElement).classList.contains(HOVER_CLASS)) {
       setSelectedElm(e.target);
     }
 
@@ -247,7 +250,7 @@ const App = () => {
 
       Object.entries(template).forEach(([k, v]) => {
         const field = d.find((f) => f.name === k);
-        if (field) field.selector = v;
+        if (field) field.selector = v as string;
       });
 
       setData(d);
@@ -282,13 +285,12 @@ const App = () => {
   };
 
   const submitForm = () => {
-    const id = artistInputRef.value;
+    const id = artistInputRef.current.value;
 
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
       const formData = data
-        .filter((d) => !d.mapTo)
         .map((d) => ({
           name: d.name,
           data: d.data,
@@ -299,7 +301,7 @@ const App = () => {
           id,
           ...formData,
         },
-      });
+      }, '*'); // TODO communicate with background
     } else {
       setIsInvalidMessageDisplayed(true);
     }
@@ -327,16 +329,16 @@ const App = () => {
                   }}
                 /> */}
                 <p><b>{`${field.formLabel}:`}</b></p>
-                <input type="text" value={field.multiple ? field.data[0] : field.data} />
+                <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
               </li>
             ))}
             <hr />
             <li>
               <p><b>Tracks:</b></p>
               <TrackList
-                positions={data.find((f) => f.name === 'trackPositions').data}
-                titles={data.find((f) => f.name === 'trackTitles').data}
-                durations={data.find((f) => f.name === 'durations').data}
+                positions={data.find((f) => f.name === trackPositions.name).data as Array<string>}
+                titles={data.find((f) => f.name === trackTitles.name).data as Array<string>}
+                durations={data.find((f) => f.name === trackDurations.name).data as Array<string>}
               />
             </li>
           </ul>
