@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
+import PropTypes from 'prop-types';
 
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -25,6 +26,36 @@ const isElmInForm = (e) => e && e.srcElement
   && e.srcElement.offsetParent.classList
   && [...e.srcElement.offsetParent.classList].includes(BASE_CLASS);
 
+const TrackList = ({ positions, titles, durations }) => {
+  const maxIndex = _.min(
+    positions.length,
+    titles.length,
+    durations.length,
+  );
+
+  return (
+    <ul>
+      {_.range(0, maxIndex).map((i) => (
+        <li>
+          {`${positions[i]}|${titles[i]}|${durations[i]}`}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+TrackList.propTypes = {
+  positions: PropTypes.arrayOf(PropTypes.string),
+  titles: PropTypes.arrayOf(PropTypes.string),
+  durations: PropTypes.arrayOf(PropTypes.string),
+};
+
+TrackList.defaultProps = {
+  positions: [],
+  titles: [],
+  durations: [],
+};
+
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -36,12 +67,14 @@ const App = () => {
       name: 'artist',
       selector: '',
       formLabel: 'artist',
+      data: '',
       transformer: Transformers.textTransformer,
     },
     {
       name: 'title',
       selector: '',
       formLabel: 'title',
+      data: '',
       transformer: Transformers.textTransformer,
     },
     {
@@ -49,6 +82,7 @@ const App = () => {
       selector: '',
       promptLabel: 'type',
       formLabel: 'type',
+      data: '',
       transformer: Transformers.releaseTypeTransformer,
     },
     {
@@ -56,12 +90,14 @@ const App = () => {
       selector: '',
       promptLabel: 'format',
       formLabel: 'format',
+      data: '',
     },
     {
       name: 'discSize',
       selector: '',
       promptLabel: 'disc size',
       formLabel: 'disc size',
+      data: '',
       transformer: Transformers.discSizeTransformer,
     },
     {
@@ -69,6 +105,7 @@ const App = () => {
       selector: '',
       promptLabel: 'release date',
       formLabel: 'date',
+      data: null,
       transformer: Transformers.dateTransformer,
     },
     {
@@ -77,12 +114,14 @@ const App = () => {
       selector: '',
       promptLabel: 'label',
       formLabel: 'label',
+      data: '',
     },
     {
       name: 'catalogId',
       selector: '',
       promptLabel: 'catalog #',
       formLabel: 'catalog #',
+      data: '',
       transformer: Transformers.catalogIdTransformer,
     },
     {
@@ -90,27 +129,31 @@ const App = () => {
       selector: '',
       promptLabel: 'country',
       formLabel: 'country',
+      data: '',
     },
     {
-      name: 'trackPosition',
+      name: 'trackPositions',
       selector: '',
       promptLabel: 'a track position',
-      formLabel: 'ex. track position',
+      formLabel: 'a track position',
+      data: [],
       multiple: true,
     },
     {
-      name: 'trackTitle',
+      name: 'trackTitles',
       selector: '',
       promptLabel: 'a track title',
-      formLabel: 'ex. track title',
+      formLabel: 'a track title',
+      data: [],
       multiple: true,
       transformer: Transformers.textTransformer,
     },
     {
-      name: 'trackDuration',
+      name: 'trackDurations',
       selector: '',
       promptLabel: 'a track duration',
-      formLabel: 'ex. track duration',
+      formLabel: 'a track duration',
+      data: [],
       multiple: true,
       transformer: Transformers.timeTransformer,
     },
@@ -196,16 +239,20 @@ const App = () => {
     const d = [...data];
 
     d.filter((field) => field.selector).forEach((field) => {
-      const matches = $(field.selector).toArray();
-
-      const transformer = field.transformer || function (val) { return val; };
-
-      const transformedData = matches.map((m) => transformer(m.innerText.trim()));
-
-      field.data = field.multiple ? transformedData : transformedData.join(' ');
+      field.data = parseField(field);
     });
 
     setData([...d]);
+  };
+
+  const parseField = (field) => {
+    const matches = $(field.selector).toArray();
+
+    const transformer = field.transformer || function (val) { return val; };
+
+    const transformedData = matches.map((m) => transformer(m.innerText.trim()));
+
+    return field.multiple ? transformedData : transformedData.join(' ');
   };
 
   const submitForm = () => {
@@ -244,10 +291,7 @@ const App = () => {
           <hr />
           <ul id="rym__data">
             {(data).map((field, i) => (
-              <li style={{
-                display: 'inline',
-              }}
-              >
+              <li>
                 {/* <img
                   src="../assets/edit.png"
                   alt="edit"
@@ -260,6 +304,15 @@ const App = () => {
                 <input type="text" value={field.multiple ? field.data[0] : field.data} />
               </li>
             ))}
+            <hr />
+            <li>
+              <p><b>Tracks:</b></p>
+              <TrackList
+                positions={data.find((f) => f.name === 'trackPositions').data}
+                titles={data.find((f) => f.name === 'trackTitles').data}
+                durations={data.find((f) => f.name === 'durations').data}
+              />
+            </li>
           </ul>
           <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
         </div>
