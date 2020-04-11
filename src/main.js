@@ -4,6 +4,4 @@
 import { h, render } from 'preact';
 import App from './app/app';
 
-/** @jsx h */
-
 render(<App />, document.body);

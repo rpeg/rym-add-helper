@@ -1,33 +1,12 @@
-const path = require('path');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const WriteFilePlugin = require('write-file-webpack-plugin');
-
-const fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'];
-
-const options = {
+module.exports = {
   mode: 'production',
-  entry: path.join(__dirname, 'src', 'main.js'),
+  entry: './src/main.js',
   output: {
-    path: path.join(__dirname, 'dist'),
-    filename: 'main.js',
+    filename: '[name].js',
+    path: `${__dirname}/dist`,
   },
   module: {
     rules: [
-      {
-        test: /\.css$/,
-        loader: 'style-loader!css-loader',
-        exclude: /node_modules/,
-      },
-      {
-        test: new RegExp(`.(${fileExtensions.join('|')})$`),
-        loader: 'file-loader?name=[name].[ext]',
-        exclude: /node_modules/,
-      },
-      {
-        test: /\.html$/,
-        loader: 'html-loader',
-        exclude: /node_modules/,
-      },
       {
         test: /\.jsx?$/,
         exclude: /(node_modules)/,
@@ -44,18 +23,6 @@ const options = {
     ],
   },
   resolve: {
-    alias: {
-      react: 'preact/compat',
-      'react-dom/test-utils': 'preact/test-utils',
-      'react-dom': 'preact/compat',
-    },
     extensions: ['.js', '.jsx'],
   },
-  plugins: [
-    // clean the build folder
-    new CleanWebpackPlugin(),
-    new WriteFilePlugin(),
-  ],
 };
-
-module.exports = options;

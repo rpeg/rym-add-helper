@@ -2,7 +2,9 @@
 /* eslint-disable func-names */
 /* eslint-disable react/react-in-jsx-scope */
 /* eslint-disable no-unused-vars */
-import { h, render, Component } from 'preact';
+import {
+  h, render, Component, Fragment,
+} from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import finder from '@medv/finder';
 import _ from 'lodash';
@@ -16,6 +18,7 @@ const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 
 /** @jsx h */
+/** @jsxFrag Fragment */
 
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
