@@ -9,8 +9,9 @@ module.exports = {
   globals: {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly',
-    "chrome": true,
+    'chrome': true,
   },
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaFeatures: {
       jsx: true,
@@ -20,7 +21,9 @@ module.exports = {
   },
   plugins: [
     'react',
+    '@typescript-eslint',
   ],
   rules: {
-  },
+    "react/jsx-filename-extension": [1, { "extensions": [".tsx", ".jsx" ] }],
+  }
 };

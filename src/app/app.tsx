@@ -12,7 +12,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
-import PropTypes from 'prop-types';
+import PropTypes, { bool } from 'prop-types';
 
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -21,17 +21,149 @@ import Templates from './utils/templates';
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 
+interface Field {
+  name: string,
+  selector: string,
+  promptLabel: string,
+  formLabel: string,
+  data: string | Array<string>,
+  transformers?: Array<Function>,
+  mapTo?: Field,
+}
+
+/**
+ * Fields
+ */
+const artist : Field = {
+  name: 'artist',
+  selector: '',
+  formLabel: 'artist',
+  promptLabel: 'artist',
+  data: '',
+  transformers: [Transformers.textTransformer],
+};
+
+const title : Field = {
+  name: 'title',
+  selector: '',
+  formLabel: 'title',
+  promptLabel: 'title',
+  data: '',
+  transformers: [Transformers.textTransformer],
+};
+
+const type : Field = {
+  name: 'type',
+  selector: '',
+  promptLabel: 'type',
+  formLabel: 'type',
+  data: '',
+  transformers: [Transformers.releaseTypeTransformer],
+};
+
+const format : Field = {
+  name: 'format',
+  selector: '',
+  formLabel: 'format',
+  promptLabel: 'format',
+  data: '',
+};
+
+const discSize : Field = {
+  name: 'discSize',
+  selector: '',
+  promptLabel: 'disc size',
+  formLabel: 'disc size',
+  data: '',
+  transformers: [Transformers.discSizeTransformer],
+};
+
+const date : Field = {
+  name: 'date',
+  selector: '',
+  promptLabel: 'date',
+  formLabel: 'date',
+  data: '',
+  transformers: [Transformers.dateTransformer],
+};
+
+const label : Field = {
+  name: 'label',
+  selector: '',
+  formLabel: 'label',
+  promptLabel: 'label',
+  data: '',
+};
+
+const catalogId : Field = {
+  name: 'catalogId',
+  selector: '',
+  promptLabel: 'catalog #',
+  formLabel: 'catalog #',
+  data: '',
+  transformers: [Transformers.catalogIdTransformer],
+};
+
+const country : Field = {
+  name: 'country',
+  selector: '',
+  formLabel: 'country',
+  promptLabel: 'country',
+  data: '',
+};
+
+const trackPositions : Field = {
+  name: 'trackPositions',
+  selector: '',
+  promptLabel: 'a track position',
+  formLabel: 'a track position',
+  data: [],
+};
+
+const trackTitles : Field = {
+  name: 'trackTitles',
+  selector: '',
+  promptLabel: 'a track title',
+  formLabel: 'a track title',
+  data: [],
+  transformers: [Transformers.textTransformer],
+};
+
+const trackDurations : Field = {
+  name: 'trackDurations',
+  selector: '',
+  promptLabel: 'a track duration',
+  formLabel: 'a track duration',
+  data: [],
+  transformers: [Transformers.timeTransformer],
+};
+
+const fields = [
+  artist,
+  title,
+  type,
+  format,
+  discSize,
+  date,
+  label,
+  catalogId,
+  country,
+  trackPositions,
+  trackTitles,
+  trackDurations,
+];
+
 const isElmInForm = (e) => e && e.srcElement
   && e.srcElement.offsetParent
   && e.srcElement.offsetParent.classList
   && [...e.srcElement.offsetParent.classList].includes(BASE_CLASS);
 
 const TrackList = ({ positions, titles, durations }) => {
-  const maxIndex = _.min(
+  const maxIndex = _.min([
     positions.length,
     titles.length,
     durations.length,
-  );
+  ]);
 
   return (
     <ul>
@@ -44,17 +176,6 @@ const TrackList = ({ positions, titles, durations }) => {
   );
 };
 
-TrackList.propTypes = {
-  positions: PropTypes.arrayOf(PropTypes.string),
-  titles: PropTypes.arrayOf(PropTypes.string),
-  durations: PropTypes.arrayOf(PropTypes.string),
-};
-
-TrackList.defaultProps = {
-  positions: [],
-  titles: [],
-  durations: [],
-};
 
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
@@ -62,102 +183,7 @@ const App = () => {
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
-  const [data, setData] = useState([
-    {
-      name: 'artist',
-      selector: '',
-      formLabel: 'artist',
-      data: '',
-      transformer: Transformers.textTransformer,
-    },
-    {
-      name: 'title',
-      selector: '',
-      formLabel: 'title',
-      data: '',
-      transformer: Transformers.textTransformer,
-    },
-    {
-      name: 'type',
-      selector: '',
-      promptLabel: 'type',
-      formLabel: 'type',
-      data: '',
-      transformer: Transformers.releaseTypeTransformer,
-    },
-    {
-      name: 'format',
-      selector: '',
-      promptLabel: 'format',
-      formLabel: 'format',
-      data: '',
-    },
-    {
-      name: 'discSize',
-      selector: '',
-      promptLabel: 'disc size',
-      formLabel: 'disc size',
-      data: '',
-      transformer: Transformers.discSizeTransformer,
-    },
-    {
-      name: 'date',
-      selector: '',
-      promptLabel: 'release date',
-      formLabel: 'date',
-      data: null,
-      transformer: Transformers.dateTransformer,
-    },
-    {
-      name: 'label',
-      label: 'label',
-      selector: '',
-      promptLabel: 'label',
-      formLabel: 'label',
-      data: '',
-    },
-    {
-      name: 'catalogId',
-      selector: '',
-      promptLabel: 'catalog #',
-      formLabel: 'catalog #',
-      data: '',
-      transformer: Transformers.catalogIdTransformer,
-    },
-    {
-      name: 'country',
-      selector: '',
-      promptLabel: 'country',
-      formLabel: 'country',
-      data: '',
-    },
-    {
-      name: 'trackPositions',
-      selector: '',
-      promptLabel: 'a track position',
-      formLabel: 'a track position',
-      data: [],
-      multiple: true,
-    },
-    {
-      name: 'trackTitles',
-      selector: '',
-      promptLabel: 'a track title',
-      formLabel: 'a track title',
-      data: [],
-      multiple: true,
-      transformer: Transformers.textTransformer,
-    },
-    {
-      name: 'trackDurations',
-      selector: '',
-      promptLabel: 'a track duration',
-      formLabel: 'a track duration',
-      data: [],
-      multiple: true,
-      transformer: Transformers.timeTransformer,
-    },
-  ]);
+  const [data, setData] = useState([fields]);
 
   const artistInputRef = useRef(null);
 
