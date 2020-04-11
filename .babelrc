@@ -4,5 +4,6 @@
       "pragma": "h",
       "pragmaFrag": "Fragment" 
     }]
-  ]
+  ],
+  "presets": ["@babel/preset-typescript"]
 }

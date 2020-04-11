@@ -13,23 +13,22 @@ const DO_NOT_CAPITALIZE = [
   'etc.',
 ];
 
-const ReleaseTypes = {
-  album: 'album',
-  comp: 'comp',
-  ep: 'ep',
-  single: 'single',
-  mixtape: 'mixtape',
-  mix: 'mix',
-  bootleg: 'bootleg',
-  video: 'video',
-};
+enum ReleaseTypes {
+  Album = 'Album',
+  Comp = 'Comp',
+  EP = 'EP',
+  Single = 'Single',
+  Mixtape = 'Mixtape',
+  Mix = 'Mix',
+  Bootleg = 'Bootleg',
+  Video = 'Video'
+}
 
 /**
  * TODO: many of RYM's alphabetization rules are not formalizable from syntax alone,
  * and will require parts-of-speech NLP to be fully adequate.
  */
-
-const textTransformer = (text) => {
+const textTransformer = (text: string) => {
   const words = text.split(' ').map((w) => w.trim());
 
   return words.map((word, i) => {
@@ -50,30 +49,27 @@ const textTransformer = (text) => {
  * with the catalog id placed directly in the elm's inner text. Ergo, there is no direct
  * selector for the catalog id in most cases. This regex assumes the catalog id is the last
  * text of elm and consists of alphanumeric characters and spaces.
- * @param {String} str
  */
-const catalogIdTransformer = (str) => _.last(str.match(/[\d\s\w.]+/ig)).trim();
+const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.]+/ig)).trim();
 
-const releaseTypeTransformer = (str) => {
-  if (/album/ig.test(str)) return ReleaseTypes.album;
-  if (/comp/ig.test(str)) return ReleaseTypes.comp;
-  if (/ep/ig.test(str)) return ReleaseTypes.ep;
-  if (/(single)|(7")/ig.test(str)) return ReleaseTypes.single;
-  if (/mixtape/ig.test(str)) return ReleaseTypes.mixtape;
-  if (/mix/ig.test(str)) return ReleaseTypes.mix;
-  if (/(bootleg)|(unauth)/ig.test(str)) return ReleaseTypes.bootleg;
-  if (/(video)|(dvd)|(vhs)/ig.test(str)) return ReleaseTypes.video;
+const releaseTypeTransformer = (str: string) => {
+  if (/album/ig.test(str)) return ReleaseTypes.Album;
+  if (/comp/ig.test(str)) return ReleaseTypes.Comp;
+  if (/ep/ig.test(str)) return ReleaseTypes.EP;
+  if (/(single)|(7")/ig.test(str)) return ReleaseTypes.Single;
+  if (/mixtape/ig.test(str)) return ReleaseTypes.Mixtape;
+  if (/mix/ig.test(str)) return ReleaseTypes.Mix;
+  if (/(bootleg)|(unauth)/ig.test(str)) return ReleaseTypes.Bootleg;
+  if (/(video)|(dvd)|(vhs)/ig.test(str)) return ReleaseTypes.Video;
 
-  return '';
+  return ReleaseTypes.Album;
 };
 
-const discSizeTransformer = (str) => _.head(str.match(/\d{1,2}"/));
+const discSizeTransformer = (str: string) => _.head(str.match(/\d{1,2}"/));
 
-const dateTransformer = (date) => date;
+const dateTransformer = (date: string) => date;
 
-const timeTransformer = (time) => time;
-
-const metaTransformer = (transformer, iterable) => iterable.map((el) => transformer(el));
+const timeTransformer = (time: string) => time;
 
 export default {
   textTransformer,
@@ -82,5 +78,4 @@ export default {
   discSizeTransformer,
   dateTransformer,
   timeTransformer,
-  metaTransformer,
 };

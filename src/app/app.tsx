@@ -1,8 +1,3 @@
-/* eslint-disable no-use-before-define */
-/* eslint-disable no-param-reassign */
-/* eslint-disable func-names */
-/* eslint-disable react/react-in-jsx-scope */
-/* eslint-disable no-unused-vars */
 /** @jsx h */
 /** @jsxFrag Fragment */
 import {
@@ -16,18 +11,10 @@ import $ from 'jquery';
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
+import { Field, Template } from './types';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
-
-interface Field {
-  name: string,
-  selector: string,
-  promptLabel: string,
-  formLabel: string,
-  data: string | Array<string>,
-  transformers?: Array<Function>,
-}
 
 /**
  * Fields
@@ -243,7 +230,7 @@ const App = () => {
    * Load template if available for host
    */
   useEffect(() => {
-    const template = Templates[document.location.hostname];
+    const template = Templates[document.location.hostname] as Template;
 
     if (template) {
       const d = [...data];
@@ -268,20 +255,22 @@ const App = () => {
     const d = [...data];
 
     d.filter((field) => field.selector).forEach((field) => {
+      // eslint-disable-next-line no-param-reassign
       field.data = parseField(field);
     });
 
     setData([...d]);
   };
 
-  const parseField = (field) => {
-    const matches = $(field.selector).toArray();
+  const parseField = (field: Field) => {
+    const matches: Array<HTMLElement> = $(field.selector).toArray();
 
-    const transformer = field.transformer || function (val) { return val; };
+    const transformers = field.transformers || [function (val: any) { return val; }];
 
-    const transformedData = matches.map((m) => transformer(m.innerText.trim()));
+    const transformedData = matches.map((m) => transformers
+      .reduce((acc, f) => f(acc), m.innerText.trim()));
 
-    return field.multiple ? transformedData : transformedData.join(' ');
+    return field.data instanceof Array ? transformedData : transformedData.join(' ');
   };
 
   const submitForm = () => {
@@ -290,18 +279,16 @@ const App = () => {
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
-      const formData = data
-        .map((d) => ({
-          name: d.name,
-          data: d.data,
-        }));
-
       window.postMessage({
         formData: {
+          url: window.location.href,
           id,
-          ...formData,
+          ...data.map((d) => ({
+            field: d.name,
+            data: d.data,
+          })),
         },
-      }, '*'); // TODO communicate with background
+      }, '*'); // TODO communicate with background window
     } else {
       setIsInvalidMessageDisplayed(true);
     }
@@ -309,18 +296,18 @@ const App = () => {
 
   return (
     isFormDisplayed && (
-    <>
-      <div id="rym__form" className="rym__" style={{ top: 0, right: 0 }}>
-        <div id="rym__form-inner" className="rym__">
-          <p><b>RYM artist ID:</b></p>
-          <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
-          {isInvalidMessageDisplayed
+      <Fragment>
+        <div id="rym__form" className="rym__" style={{ top: 0, right: 0 }}>
+          <div id="rym__form-inner">
+            <p><b>RYM artist ID:</b></p>
+            <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+            {isInvalidMessageDisplayed
            && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
-          <hr />
-          <ul id="rym__data">
-            {(data).map((field, i) => (
-              <li>
-                {/* <img
+            <hr />
+            <ul id="rym__data">
+              {(data).map((field, i) => (
+                <li>
+                  {/* <img
                   src="../assets/edit.png"
                   alt="edit"
                   onClick={() => {
@@ -328,24 +315,24 @@ const App = () => {
                     setIsSelecting(true);
                   }}
                 /> */}
-                <p><b>{`${field.formLabel}:`}</b></p>
-                <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
+                  <p><b>{`${field.formLabel}:`}</b></p>
+                  <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
+                </li>
+              ))}
+              <hr />
+              <li>
+                <p><b>Tracks:</b></p>
+                <TrackList
+                  positions={data.find((f) => f.name === trackPositions.name).data as Array<string>}
+                  titles={data.find((f) => f.name === trackTitles.name).data as Array<string>}
+                  durations={data.find((f) => f.name === trackDurations.name).data as Array<string>}
+                />
               </li>
-            ))}
-            <hr />
-            <li>
-              <p><b>Tracks:</b></p>
-              <TrackList
-                positions={data.find((f) => f.name === trackPositions.name).data as Array<string>}
-                titles={data.find((f) => f.name === trackTitles.name).data as Array<string>}
-                durations={data.find((f) => f.name === trackDurations.name).data as Array<string>}
-              />
-            </li>
-          </ul>
-          <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
+            </ul>
+            <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
+          </div>
         </div>
-      </div>
-    </>
+      </Fragment>
     )
   );
 };
