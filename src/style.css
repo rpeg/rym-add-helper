@@ -7,6 +7,7 @@
     z-index: 10000;
     position: fixed;
     max-height: 100vh;
+    overflow-y: scroll;
 
     color: black;
     background-color: white;
@@ -16,14 +17,16 @@
 
 #rym__form-inner {
     padding: 12px;
-    max-height: 101vh;
-    overflow-y: scroll;
 }
 
 #rym__form-inner p {
     margin: 10px 0 2px 0;
 }
 
+#rym__form-inner ul {
+    padding: 0;
+}
+
 #rym__form-inner input {
-    width: 100%;
+    width: fit-content;
 }

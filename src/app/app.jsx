@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-param-reassign */
 /* eslint-disable func-names */
 /* eslint-disable react/react-in-jsx-scope */
@@ -44,10 +45,24 @@ const App = () => {
       transformer: Transformers.textTransformer,
     },
     {
-      name: 'releaseType',
+      name: 'type',
       selector: '',
-      promptLabel: 'release type',
+      promptLabel: 'type',
       formLabel: 'type',
+      transformer: Transformers.releaseTypeTransformer,
+    },
+    {
+      name: 'format',
+      selector: '',
+      promptLabel: 'format',
+      formLabel: 'format',
+    },
+    {
+      name: 'discSize',
+      selector: '',
+      promptLabel: 'disc size',
+      formLabel: 'disc size',
+      transformer: Transformers.discSizeTransformer,
     },
     {
       name: 'date',
@@ -68,6 +83,7 @@ const App = () => {
       selector: '',
       promptLabel: 'catalog #',
       formLabel: 'catalog #',
+      transformer: Transformers.catalogIdTransformer,
     },
     {
       name: 'country',
@@ -79,14 +95,14 @@ const App = () => {
       name: 'trackPosition',
       selector: '',
       promptLabel: 'a track position',
-      formLabel: 'track position',
+      formLabel: 'ex. track position',
       multiple: true,
     },
     {
       name: 'trackTitle',
       selector: '',
       promptLabel: 'a track title',
-      formLabel: 'track title',
+      formLabel: 'ex. track title',
       multiple: true,
       transformer: Transformers.textTransformer,
     },
@@ -94,7 +110,7 @@ const App = () => {
       name: 'trackDuration',
       selector: '',
       promptLabel: 'a track duration',
-      formLabel: 'track duration',
+      formLabel: 'ex. track duration',
       multiple: true,
       transformer: Transformers.timeTransformer,
     },
@@ -151,6 +167,31 @@ const App = () => {
     }
   }, [dataIndex]);
 
+  /**
+   * Load template if available for host
+   */
+  useEffect(() => {
+    const template = Templates[document.location.hostname];
+
+    if (template) {
+      const d = [...data];
+
+      Object.entries(template).forEach(([k, v]) => {
+        const field = d.find((f) => f.name === k);
+        if (field) field.selector = v;
+      });
+
+      setData(d);
+      parseData();
+      setDataIndex(data.length);
+      setIsFormDisplayed(true);
+
+      console.log(data);
+    } else {
+      setIsSelecting(true);
+    }
+  }, []);
+
   const parseData = () => {
     const d = [...data];
 
@@ -191,35 +232,13 @@ const App = () => {
     }
   };
 
-  const template = Templates[document.location.hostname];
-
-  if (template) {
-    const d = [...data];
-
-    Object.entries(template).forEach(([k, v]) => {
-      const field = d.find((f) => f.name === k);
-      if (field) field.selector = v;
-    });
-
-    setData(d);
-    parseData();
-    setDataIndex(data.length);
-    setIsFormDisplayed(true);
-
-    console.log(data);
-  } else {
-    setIsSelecting(true);
-    setIsFormDisplayed(true);
-  }
-
   return (
     isFormDisplayed && (
     <>
       <div id="rym__form" className="rym__" style={{ top: 0, right: 0 }}>
         <div id="rym__form-inner" className="rym__">
-          <h3 id="rym__header"><b>RYM Add Helper</b></h3>
-          <h4>artist ID:</h4>
-          <input type="text" id="rym__artistid" ref={artistInputRef} />
+          <p><b>RYM artist ID:</b></p>
+          <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
           {isInvalidMessageDisplayed
            && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
           <hr />
@@ -238,7 +257,7 @@ const App = () => {
                   }}
                 /> */}
                 <p><b>{`${field.formLabel}:`}</b></p>
-                <input type="text" value={field.data} />
+                <input type="text" value={field.multiple ? field.data[0] : field.data} />
               </li>
             ))}
           </ul>
