@@ -2,6 +2,8 @@
 /* eslint-disable func-names */
 /* eslint-disable react/react-in-jsx-scope */
 /* eslint-disable no-unused-vars */
+/** @jsx h */
+/** @jsxFrag Fragment */
 import {
   h, render, Component, Fragment,
 } from 'preact';
@@ -17,28 +19,27 @@ import Templates from './utils/templates';
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 
-/** @jsx h */
-/** @jsxFrag Fragment */
+const isElmInForm = (e) => e && e.srcElement
+  && e.srcElement.offsetParent
+  && e.srcElement.offsetParent.classList
+  && [...e.srcElement.offsetParent.classList].includes(BASE_CLASS);
 
 const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
-  const [promptLabel, setPromptLabel] = useState('');
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
   const [data, setData] = useState([
     {
       name: 'artist',
       selector: '',
-      promptLabel: 'artist',
       formLabel: 'artist',
       transformer: Transformers.textTransformer,
     },
     {
       name: 'title',
       selector: '',
-      promptLabel: 'title',
       formLabel: 'title',
       transformer: Transformers.textTransformer,
     },
@@ -102,14 +103,14 @@ const App = () => {
   const artistInputRef = useRef(null);
 
   useWindowEvent('mouseover', _.throttle((e) => {
-    if (isSelecting && e.srcElement.classList && !e.srcElement.classList.contains(BASE_CLASS)) {
+    if (isSelecting && !isElmInForm(e)) {
       e.srcElement.classList.add(HOVER_CLASS);
     }
   }, 200), isFormDisplayed);
 
-  useWindowEvent('mouseout', _.throttle((e) => {
+  useWindowEvent('mouseout', (e) => {
     e.srcElement.classList.remove(HOVER_CLASS);
-  }, 200), isFormDisplayed);
+  }, isFormDisplayed);
 
   useWindowEvent('click', (e) => {
     e.preventDefault();
@@ -166,13 +167,6 @@ const App = () => {
     setData([...d]);
   };
 
-  const initGuide = () => {
-    setPromptLabel(data[0].promptLabel);
-    setIsSelecting(true);
-
-    console.log('guide init');
-  };
-
   const submitForm = () => {
     const id = artistInputRef.value;
 
@@ -214,7 +208,7 @@ const App = () => {
 
     console.log(data);
   } else {
-    initGuide();
+    setIsSelecting(true);
     setIsFormDisplayed(true);
   }
 
@@ -222,44 +216,35 @@ const App = () => {
     isFormDisplayed && (
     <>
       <div id="rym__form" className="rym__" style={{ top: 0, right: 0 }}>
-        <div id="rym__form-inner">
-          <h1 id="rym__header">RYM Add Helper</h1>
-          <h4>RYM Artist ID:</h4>
+        <div id="rym__form-inner" className="rym__">
+          <h3 id="rym__header"><b>RYM Add Helper</b></h3>
+          <h4>artist ID:</h4>
           <input type="text" id="rym__artistid" ref={artistInputRef} />
           {isInvalidMessageDisplayed
            && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
-          <br />
-          <h4>Data:</h4>
+          <hr />
           <ul id="rym__data">
             {(data).map((field, i) => (
               <li style={{
                 display: 'inline',
               }}
               >
-                <img
+                {/* <img
                   src="../assets/edit.png"
                   alt="edit"
                   onClick={() => {
                     setDataIndex(i);
                     setIsSelecting(true);
                   }}
-                />
+                /> */}
                 <p><b>{`${field.formLabel}:`}</b></p>
-                {' '}
-                {field.data || ''}
+                <input type="text" value={field.data} />
               </li>
             ))}
           </ul>
           <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
         </div>
       </div>
-      {isSelecting && promptLabel && (
-      <div id="rym__prompt-container">
-        <h3 id="rym__prompt">
-          {`Select ${promptLabel}`}
-        </h3>
-      </div>
-      )}
     </>
     )
   );

@@ -6,7 +6,7 @@
 #rym__form {
     z-index: 10000;
     position: fixed;
-    max-height: 600px;
+    max-height: 100vh;
 
     color: black;
     background-color: white;
@@ -15,14 +15,15 @@
 }
 
 #rym__form-inner {
-    margin: 30px;
+    padding: 12px;
+    max-height: 101vh;
+    overflow-y: scroll;
 }
 
-#rym__prompt-contaner {
-    z-index: 10000;
-    position: fixed;
+#rym__form-inner p {
+    margin: 10px 0 2px 0;
+}
+
+#rym__form-inner input {
     width: 100%;
-    left: 10%;
-    right: 10%;
-    bottom: 10%;
 }
