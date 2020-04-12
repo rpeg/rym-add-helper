@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import {
-  RYMDate, ReleaseTypes, Formats, Months, RegexMap,
+  RYMDate, Months, RegexMap,
 } from '../types';
 
 const ALWAYS_CAPITALIZE = [
@@ -21,9 +21,8 @@ const DO_NOT_CAPITALIZE = [
  * Second-order transformer for mapping regexes to corresponding RYM form types.
  */
 const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: string) => maps
-  .find((m) => new RegExp(m.keywords.map((k) => `(${k})`).join('|'), 'ig')
-    .test(s)).mapTo
-    || def;
+  .find((m) => new RegExp(m.regex, 'ig')
+    .test(s)).mapTo || def;
 
 /**
  * TODO: many of RYM's alphabetization rules are not formalizable from syntax alone,

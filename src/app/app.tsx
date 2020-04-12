@@ -13,7 +13,9 @@ import '../style.scss';
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
-import { Field, Template, ReleaseTypes } from './types';
+import {
+  Field, Template, ReleaseTypes, Formats, DiscSpeeds,
+} from './types';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
@@ -48,35 +50,35 @@ const type : Field = {
   transformers: [Transformers.regexMapTransformerFactory(
     [
       {
-        regexes: ['album'],
+        regex: 'album',
         mapTo: ReleaseTypes.Album,
       },
       {
-        regexes: ['comp'],
+        regex: 'comp',
         mapTo: ReleaseTypes.Comp,
       },
       {
-        regexes: ['ep'],
+        regex: 'ep',
         mapTo: ReleaseTypes.EP,
       },
       {
-        regexes: ['single', '7"'],
+        regex: /(?:single)|(?:7")/,
         mapTo: ReleaseTypes.Single,
       },
       {
-        regexes: ['mixtape'],
+        regex: 'mixtape',
         mapTo: ReleaseTypes.Mixtape,
       },
       {
-        regexes: [/mix(?!(?:tape))/],
+        regex: /mix(?!(?:tape))/,
         mapTo: ReleaseTypes.Mix,
       },
       {
-        regexes: ['bootleg', 'unauth'],
+        regex: /(?:bootleg)|(?:unauth)/,
         mapTo: ReleaseTypes.Bootleg,
       },
       {
-        regexes: ['video', 'vhs', 'dvd', /blu-?ray/],
+        regex: /(video)|(vhs)|(dvd)|(blu-?ray)/,
         mapTo: ReleaseTypes.Video,
       },
     ],
@@ -90,6 +92,123 @@ const format : Field = {
   formLabel: 'format',
   promptLabel: 'format',
   data: '',
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
+        mapTo: Formats.Vinyl,
+      },
+      {
+        regex: /(?<!\w)((?:CD)|(?:disc))(?!\w)/,
+        mapTo: Formats.CD,
+      },
+      {
+        regex: /(?<!\w)((?:mp3)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
+        mapTo: Formats.DigitalFile,
+      },
+      {
+        regex: /(blu-?ray)|((?<!\w)(BD)(?!\w))/,
+        mapTo: Formats.BluRay,
+      },
+      {
+        regex: /(?<!\w)(CD-?R)(?!\w)/,
+        mapTo: Formats.CDR,
+      },
+      {
+        regex: /dualdisc/,
+        mapTo: Formats.DualDisc,
+      },
+      {
+        regex: /(DVD)(?!\w)/,
+        mapTo: Formats.DVD,
+      },
+      {
+        regex: /dvd-?a/,
+        mapTo: Formats.DVDA,
+      },
+      {
+        regex: /dvd-?r/,
+        mapTo: Formats.DVDR,
+      },
+      {
+        regex: /HDAD/,
+        mapTo: Formats.HDAD,
+      },
+      {
+        regex: /HDCD/,
+        mapTo: Formats.HDCD,
+      },
+      {
+        regex: /laser/,
+        mapTo: Formats.Laserdisc,
+      },
+      {
+        regex: /minidisc/,
+        mapTo: Formats.MiniDisc,
+      },
+      {
+        regex: /SACD/,
+        mapTo: Formats.SACD,
+      },
+      {
+        regex: /UMD/,
+        mapTo: Formats.UMD,
+      },
+      {
+        regex: /VCD/,
+        mapTo: Formats.VCD,
+      },
+      {
+        regex: /shellac/,
+        mapTo: Formats.Shellac,
+      },
+      {
+        regex: /(8|(eight))\s?track/,
+        mapTo: Formats.EightTrack,
+      },
+      {
+        regex: /(4|(four))\s?track/,
+        mapTo: Formats.FourTrack,
+      },
+      {
+        regex: /acetate/,
+        mapTo: Formats.Acetate,
+      },
+      {
+        regex: /beta/,
+        mapTo: Formats.Beta,
+      },
+      {
+        regex: /(?<!(micro))cassette/,
+        mapTo: Formats.Cassette,
+      },
+      {
+        regex: /DAT/,
+        mapTo: Formats.DAT,
+      },
+      {
+        regex: /DCC/,
+        mapTo: Formats.DCC,
+      },
+      {
+        regex: /microcassette/,
+        mapTo: Formats.Microcassette,
+      },
+      {
+        regex: /playtape/,
+        mapTo: Formats.PlayTape,
+      },
+      {
+        regex: /reel-?to-?reel/,
+        mapTo: Formats.ReelToReel,
+      },
+      {
+        regex: /vhs/,
+        mapTo: Formats.VHS,
+      },
+    ],
+    Formats.Vinyl,
+  )],
 };
 
 const discSize : Field = {
@@ -98,7 +217,42 @@ const discSize : Field = {
   promptLabel: 'disc size',
   formLabel: 'disc size',
   data: '',
+  dependsOnFieldValue: [format, Formats.Vinyl],
   transformers: [Transformers.discSizeTransformer],
+};
+
+const discSpeed : Field = {
+  name: 'discSpeed',
+  selector: '',
+  promptLabel: 'disc speed',
+  formLabel: 'disc speed',
+  data: '',
+  dependsOnFieldValue: [format, Formats.Vinyl],
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regex: /45/,
+        mapTo: DiscSpeeds._45,
+      },
+      {
+        regex: /16/,
+        mapTo: DiscSpeeds._16,
+      },
+      {
+        regex: /33/,
+        mapTo: DiscSpeeds._33,
+      },
+      {
+        regex: /78/,
+        mapTo: DiscSpeeds._78,
+      },
+      {
+        regex: /80/,
+        mapTo: DiscSpeeds._80,
+      },
+    ],
+    DiscSpeeds._45,
+  )],
 };
 
 const date : Field = {
@@ -163,10 +317,11 @@ const trackDurations : Field = {
 const fields = [
   artist,
   title,
+  date,
   type,
   format,
   discSize,
-  date,
+  discSpeed,
   label,
   catalogId,
   country,

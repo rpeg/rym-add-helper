@@ -31,6 +31,7 @@ module.exports = {
       "ts": "never",
       "js": "never",
     }],
+    "no-underscore-dangle": "off",
     "no-unused-vars": "off",
     "no-use-before-define": "off",
     "func-names": "off",

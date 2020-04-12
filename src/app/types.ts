@@ -19,6 +19,7 @@ export interface Field {
     promptLabel: string,
     formLabel: string,
     data: string | Array<string>,
+    dependsOnFieldValue?: [Field, string],
     transformers?: Array<Function>,
 }
 
@@ -29,7 +30,7 @@ export interface RYMDate {
 }
 
 export interface RegexMap {
-    regexes: Array<string>,
+    regex: RegExp | string,
     mapTo: string
 }
 
@@ -45,9 +46,10 @@ export enum ReleaseTypes {
 }
 
 export enum Formats {
+    Vinyl = 'Vinyl',
+    CD = 'CD',
     DigitalFile = 'Digital File',
     BluRay = 'Blu-ray',
-    CD = 'CD',
     CDR = 'CD-R',
     DualDisc = 'DualDisc',
     DVD = 'DVD',
@@ -60,10 +62,18 @@ export enum Formats {
     SACD = 'SACD',
     UMD = 'UMD',
     VCD = 'VCD',
-    Vinyl = 'Vinyl',
     Shellac = 'Shellac',
     EightTrack = '8 Track',
     FourTrack = '4 Track'
+}
+
+export enum DiscSpeeds {
+    _16 = '16',
+    _33 = '33',
+    _45 = '45',
+    _78 = '78',
+    _80 = '80',
+    // missing reel-to-reel
 }
 
 export enum Months {
