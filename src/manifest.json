@@ -19,16 +19,13 @@
     "scripts": ["background.js"],
     "persistent": false
   },
-  "externally_connectable": {
-    "ids": [
-      "lbnphnjfoehlpbiadfeeffkafondeild"
-    ]
-  },
   "permissions": [
     "storage", 
     "tabs",
     "activeTab",
-    "declarativeContent"
+    "declarativeContent",
+    "http://*/",
+    "https://*/"
   ],
   "content_scripts": [
     {
@@ -39,6 +36,7 @@
   ],
   "web_accessible_resources": [
     "main.js",
+    "fill.js",
     "app/*"
   ]
 }

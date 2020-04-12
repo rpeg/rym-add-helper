@@ -20,8 +20,9 @@ chrome.runtime.onMessage.addListener(
     console.log(request);
     const { formData } = request;
 
-    if (formData) {
+    if (formData) { // execute rym form fill
       chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
+        chrome.tabs.executeScript(tab.id, { file: 'fill.js' });
         chrome.tabs.sendMessage(tab.id, { formData });
       });
     }
