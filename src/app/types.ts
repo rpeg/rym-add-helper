@@ -20,7 +20,7 @@ export interface Field {
     promptLabel: string,
     formLabel: string,
     data: string | Array<string> | Object | Array<Object>,
-    dependency?: [Field, string],
+    dependency?: [Field, string] | boolean,
     transformers?: Array<Function>,
     format?: Function,
 }
