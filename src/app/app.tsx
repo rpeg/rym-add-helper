@@ -4,6 +4,7 @@ import {
   h, render, Component, Fragment,
 } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
+import update from 'immutability-helper';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
@@ -253,6 +254,7 @@ const discSpeed : Field = {
     ],
     DiscSpeeds._45,
   )],
+  format: (speed: string) => (speed ? `${speed} RPM` : ''),
 };
 
 const date : Field = {
@@ -419,15 +421,11 @@ const App = () => {
       idName: (n) => !n.startsWith(BASE_CLASS),
     });
 
-    setData([
-      ...data.slice(0, dataIndex),
-      {
-        ...data[dataIndex],
-        selector,
-      },
-      ...data.slice(dataIndex),
-    ]);
+    const newData = update(data, { [dataIndex]: { selector: { $set: selector } } });
 
+    console.log(newData);
+
+    setData(newData);
     setDataIndex(dataIndex + 1);
   }, [selectedElm]);
 
@@ -481,7 +479,7 @@ const App = () => {
     const transformedData = matches.map((m) => transformers
       .reduce((acc, f) => f(acc), m.innerText.trim()));
 
-    if (field.data instanceof String) return transformedData.join(' ');
+    if (typeof field.data === 'string') return transformedData.join(' ');
     if (field.data instanceof Array) return transformedData;
     if (field.data instanceof Object) return _.first(transformedData);
 
@@ -520,33 +518,33 @@ const App = () => {
               && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
             <ul id="rym__data">
-              {(data)
-                .filter((d) => !d.dependency
-                  || data.find((f) => f === d.dependency[0])?.data === d.dependency[1])
-                .map((field, i) => (
-                  <li>
-                    <p>
-                      <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
-                        {`${field.formLabel}:`}
-                      </b>
-                    </p>
-                    <div style={{ display: 'flex' }}>
-                      <FormInput
-                        field={field}
-                        isSelectingField={isSelecting && dataIndex === i}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsSelecting(true);
-                          setDataIndex(i);
-                        }}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </li>
-                ))}
+              {(data).map((field, i) => (
+                !field.dependency || data.find((f) => f === field.dependency[0])
+                                        ?.data === field.dependency[1])
+                    && (
+                    <li>
+                      <p>
+                        <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
+                          {`${field.formLabel}:`}
+                        </b>
+                      </p>
+                      <div style={{ display: 'flex' }}>
+                        <FormInput
+                          field={field}
+                          isSelectingField={isSelecting && dataIndex === i}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSelecting(true);
+                            setDataIndex(i);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </li>
+                    ))}
               <hr />
               <li>
                 <p><b>Tracks:</b></p>

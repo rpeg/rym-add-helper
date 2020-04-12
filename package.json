@@ -45,6 +45,7 @@
     "@medv/finder": "1.1.2",
     "@types/jquery": "3.3.34",
     "@types/react": "16.9.34",
+    "immutability-helper": "3.0.2",
     "jquery": "3.4.1",
     "lodash": "4.17.15",
     "preact": "10.4.0"
