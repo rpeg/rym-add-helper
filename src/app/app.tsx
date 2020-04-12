@@ -385,6 +385,7 @@ const App = () => {
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
+  const [isVariousArtists, setIsVariousArtists] = useState(false);
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
   const [data, setData] = useState(fields);
@@ -402,13 +403,13 @@ const App = () => {
   }, isFormDisplayed);
 
   useWindowEvent('click', (e: MouseEvent) => {
-    e.preventDefault();
-
     if ((e.srcElement as HTMLTextAreaElement).classList.contains(HOVER_CLASS)) {
+      e.preventDefault();
       setSelectedElm(e.target);
+      return false;
     }
 
-    return false;
+    return true;
   }, isFormDisplayed);
 
   /**
@@ -495,7 +496,9 @@ const App = () => {
   };
 
   const submitForm = () => {
-    const id = artistInputRef.current.value;
+    const id = isVariousArtists
+      ? VARIOUS_ARTISTS_ID
+      : artistInputRef.current.value;
 
     if (id) {
       setIsInvalidMessageDisplayed(false);
@@ -522,6 +525,14 @@ const App = () => {
           <div id="rym__form-inner">
             <p><b>RYM artist ID:</b></p>
             <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+            <div>
+              <input
+                type="checkbox"
+                checked={isVariousArtists}
+                onClick={() => setIsVariousArtists(!isVariousArtists)}
+              />
+              <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>Various artists</label>
+            </div>
             {isInvalidMessageDisplayed
               && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />

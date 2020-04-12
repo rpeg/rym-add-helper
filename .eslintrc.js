@@ -35,6 +35,7 @@ module.exports = {
     "no-unused-vars": "off",
     "no-use-before-define": "off",
     "func-names": "off",
+    "jsx-a11y/label-has-associated-control": "off",
     "jsx-a11y/click-events-have-key-events": "off",
     "jsx-a11y/no-noninteractive-element-interactions": "off",
   },
