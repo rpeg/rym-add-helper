@@ -20,6 +20,7 @@ import {
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
+const VARIOUS_ARTISTS_ID = '5';
 
 /**
  * Fields
@@ -421,11 +422,18 @@ const App = () => {
       idName: (n) => !n.startsWith(BASE_CLASS),
     });
 
-    const newData = update(data, { [dataIndex]: { selector: { $set: selector } } });
+    const fieldData = parseField(selector, fields[dataIndex]);
 
-    console.log(newData);
+    const _data = update(data,
+      {
+        [dataIndex]:
+          {
+            selector: { $set: selector },
+            data: { $set: fieldData },
+          },
+      });
 
-    setData(newData);
+    setData(_data);
     setDataIndex(dataIndex + 1);
   }, [selectedElm]);
 
@@ -465,14 +473,14 @@ const App = () => {
 
     d.filter((field) => field.selector).forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = parseField(field);
+      field.data = parseField(field.selector, field);
     });
 
     setData([...d]);
   };
 
-  const parseField = (field: Field) => {
-    const matches: Array<HTMLElement> = $(field.selector).toArray();
+  const parseField = (selector: string, field: Field) => {
+    const matches: Array<HTMLElement> = $(selector).toArray();
 
     const transformers = field.transformers || [function (val: any) { return val; }];
 
