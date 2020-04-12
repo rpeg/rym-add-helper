@@ -455,26 +455,11 @@ const App = () => {
     setData(_data);
   }, [isVariousArtists]);
 
-  /**
-   * Load template if available for host
-   */
   useEffect(() => {
     const template = Templates[document.location.hostname] as Template;
 
     if (template) {
-      const d = [...data];
-
-      Object.entries(template).forEach(([k, v]) => {
-        const field = d.find((f) => f.name === k);
-        if (field) field.selector = v as string;
-      });
-
-      setData(d);
-      parseData();
-      setDataIndex(data.length);
-      setIsFormDisplayed(true);
-
-      console.log(data);
+      processTemplate(template);
     } else {
       setIsSelecting(true);
     }
@@ -482,6 +467,20 @@ const App = () => {
   /* #endregion */
 
   /* #region Methods */
+  const processTemplate = (template: Template) => {
+    const d = [...data];
+
+    Object.entries(template).forEach(([k, v]) => {
+      const field = d.find((f) => f.name === k);
+      if (field) field.selector = v as string;
+    });
+
+    setData(d);
+    parseData();
+    setDataIndex(data.length);
+    setIsFormDisplayed(true);
+  };
+
   const parseData = () => {
     const d = [...data];
 
@@ -516,16 +515,18 @@ const App = () => {
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
-      window.postMessage({
-        formData: {
-          url: window.location.href,
-          id,
-          ...data.map((d) => ({
-            field: d.name,
-            data: d.data,
-          })),
-        },
-      }, '*'); // TODO communicate with background window
+      window.postMessage(
+        {
+          formData: {
+            url: window.location.href,
+            id,
+            ...data.map((d) => ({
+              field: d.name,
+              data: d.data,
+            })),
+          },
+        }, '*',
+      );
     } else {
       setIsInvalidMessageDisplayed(true);
     }

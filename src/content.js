@@ -10,12 +10,13 @@ const head = document.head || document.getElementsByTagName('head')[0] || docume
 head.insertBefore(script, head.lastChild);
 
 // route messages between modules and background script
-window.addEventListener('message', (message) => {
-  chrome.runtime.sendMessage(message);
-}, false);
-
 chrome.runtime.onMessage.addListener(
-  (request) => {
+  (request, sender) => {
     window.postMessage(request);
   },
 );
+
+window.addEventListener('message', (message) => {
+  if (message.source !== window) return;
+  chrome.runtime.sendMessage(message.data);
+}, false);

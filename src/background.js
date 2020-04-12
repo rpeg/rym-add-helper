@@ -15,11 +15,15 @@ chrome.browserAction.onClicked.addListener(() => {
   });
 });
 
-// after user completes selection, open rym tab and fill out form with passed data
 chrome.runtime.onMessage.addListener(
-  ({ formData }) => {
-    chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
-      chrome.tabs.sendMessage(tab.id, { formData });
-    });
+  (request, sender, sendResponse) => {
+    console.log(request);
+    const { formData } = request;
+
+    if (formData) {
+      chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
+        chrome.tabs.sendMessage(tab.id, { formData });
+      });
+    }
   },
 );
