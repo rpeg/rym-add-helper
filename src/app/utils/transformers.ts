@@ -20,9 +20,11 @@ const DO_NOT_CAPITALIZE = [
 /**
  * Second-order transformer for mapping regexes to corresponding RYM form types.
  */
-const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: string) => maps
-  .find((m) => new RegExp(m.regex, 'ig')
-    .test(s)).mapTo || def;
+const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: string) => {
+  const match = maps.find((m) => new RegExp(m.regex, 'ig').test(s));
+
+  return match ? match.mapTo : def;
+};
 
 /**
  * TODO: many of RYM's alphabetization rules are not formalizable from syntax alone,
@@ -60,9 +62,9 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
   const day = _.head(date.match(/(?<!\d)(([1-3][0-1])|([1-2][1-9])|([1-9]))(?!\d)/));
 
   return {
-    year,
     month,
     day,
+    year,
   };
 };
 

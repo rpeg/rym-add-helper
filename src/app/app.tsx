@@ -14,7 +14,7 @@ import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  Field, Template, ReleaseTypes, Formats, DiscSpeeds,
+  Field, Template, ReleaseTypes, Formats, DiscSpeeds, RYMDate,
 } from './types';
 
 const BASE_CLASS = 'rym__';
@@ -217,7 +217,7 @@ const discSize : Field = {
   promptLabel: 'disc size',
   formLabel: 'disc size',
   data: '',
-  dependsOnFieldValue: [format, Formats.Vinyl],
+  dependency: [format, Formats.Vinyl],
   transformers: [Transformers.discSizeTransformer],
 };
 
@@ -227,7 +227,7 @@ const discSpeed : Field = {
   promptLabel: 'disc speed',
   formLabel: 'disc speed',
   data: '',
-  dependsOnFieldValue: [format, Formats.Vinyl],
+  dependency: [format, Formats.Vinyl],
   transformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -260,8 +260,9 @@ const date : Field = {
   selector: '',
   promptLabel: 'date',
   formLabel: 'date',
-  data: '',
+  data: null,
   transformers: [Transformers.dateTransformer],
+  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join(' '),
 };
 
 const label : Field = {
@@ -335,6 +336,24 @@ const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement
   && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
   && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
 
+const FormInput = ({ field, isSelectingField }: { field: Field, isSelectingField: boolean }) => {
+  const data = field.data instanceof Array
+    ? field.data[0]
+    : field.data;
+
+  const formattedData = field.format
+    ? field.format(data)
+    : data;
+
+  return (
+    <input
+      type="text"
+      disabled={!isSelectingField}
+      value={formattedData}
+    />
+  );
+};
+
 type TrackListProps = {
   positions: Array<string>,
   titles: Array<string>,
@@ -351,7 +370,7 @@ const TrackList = ({ positions, titles, durations }: TrackListProps) => {
   return (
     <ul>
       {_.range(0, maxIndex).map((i) => (
-        <li style={{ listStyleType: 'circle' }}>
+        <li style={{ listStyleType: 'disc' }}>
           {`${positions[i]}|${titles[i]}|${durations[i]}`}
         </li>
       ))}
@@ -462,7 +481,11 @@ const App = () => {
     const transformedData = matches.map((m) => transformers
       .reduce((acc, f) => f(acc), m.innerText.trim()));
 
-    return field.data instanceof Array ? transformedData : transformedData.join(' ');
+    if (field.data instanceof String) return transformedData.join(' ');
+    if (field.data instanceof Array) return transformedData;
+    if (field.data instanceof Object) return _.first(transformedData);
+
+    return transformedData;
   };
 
   const submitForm = () => {
@@ -494,24 +517,34 @@ const App = () => {
             <p><b>RYM artist ID:</b></p>
             <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
             {isInvalidMessageDisplayed
-           && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
+              && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
             <ul id="rym__data">
               {(data)
-                .filter((d) => !d.dependsOnFieldValue
-                               || data.find((f) => f === d.dependsOnFieldValue[0]).data === d.dependsOnFieldValue[1])
+                .filter((d) => !d.dependency
+                  || data.find((f) => f === d.dependency[0])?.data === d.dependency[1])
                 .map((field, i) => (
                   <li>
-                    {/* <img
-                  src="../assets/edit.png"
-                  alt="edit"
-                  onClick={() => {
-                    setDataIndex(i);
-                    setIsSelecting(true);
-                  }}
-                /> */}
-                    <p><b>{`${field.formLabel}:`}</b></p>
-                    <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
+                    <p>
+                      <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
+                        {`${field.formLabel}:`}
+                      </b>
+                    </p>
+                    <div style={{ display: 'flex' }}>
+                      <FormInput
+                        field={field}
+                        isSelectingField={isSelecting && dataIndex === i}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSelecting(true);
+                          setDataIndex(i);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </li>
                 ))}
               <hr />

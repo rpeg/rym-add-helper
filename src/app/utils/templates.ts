@@ -7,6 +7,7 @@ const Templates: {[index: string]: Template } = {
     type: '.content:nth-child(5)',
     format: '.content:nth-child(5)',
     discSize: '.content:nth-child(5)',
+    discSpeed: '.content:nth-child(5)',
     date: '.content:nth-child(9) > a',
     label: '.content:nth-child(3) > a',
     catalogId: '.content:nth-child(3)',

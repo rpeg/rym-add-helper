@@ -34,10 +34,6 @@
   ],
   "web_accessible_resources": [
     "main.js",
-    "app/app.tsx",
-    "app/utils/hooks.ts",
-    "app/utils/transformers.ts",
-    "app/utils/templates.ts",
-    "app/assets/edit.png"
+    "app/*"
   ]
 }

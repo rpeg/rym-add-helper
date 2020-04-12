@@ -3,7 +3,8 @@ export interface Template {
     title: string,
     type: string,
     format: string,
-    discSize: string,
+    discSize?: string,
+    discSpeed?: string,
     date: string,
     label: string,
     catalogId: string,
@@ -18,15 +19,16 @@ export interface Field {
     selector: string,
     promptLabel: string,
     formLabel: string,
-    data: string | Array<string>,
-    dependsOnFieldValue?: [Field, string],
+    data: string | Array<string> | Object | Array<Object>,
+    dependency?: [Field, string],
     transformers?: Array<Function>,
+    format?: Function,
 }
 
 export interface RYMDate {
-    year: string,
     month?: string,
     day?: string,
+    year: string,
 }
 
 export interface RegexMap {
@@ -64,7 +66,16 @@ export enum Formats {
     VCD = 'VCD',
     Shellac = 'Shellac',
     EightTrack = '8 Track',
-    FourTrack = '4 Track'
+    FourTrack = '4 Track',
+    Acetate = 'Acetate',
+    Beta = 'Beta',
+    Cassette = 'Cassette',
+    DAT = 'DAT',
+    DCC = 'DCC',
+    Microcassette = 'Microcassette',
+    PlayTape = 'PlayTape',
+    ReelToReel = 'Reel-to-reel',
+    VHS = 'VHS',
 }
 
 export enum DiscSpeeds {

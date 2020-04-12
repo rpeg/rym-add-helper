@@ -16,7 +16,7 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 2018,
+    ecmaVersion: 2020,
     sourceType: 'module',
   },
   plugins: [
@@ -35,6 +35,8 @@ module.exports = {
     "no-unused-vars": "off",
     "no-use-before-define": "off",
     "func-names": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
   },
   settings: {
     "import/parsers": {
