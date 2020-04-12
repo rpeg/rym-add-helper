@@ -24,6 +24,302 @@ import {
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
 const VARIOUS_ARTISTS_ID = '5';
+
+const artist : Field = {
+  name: 'artist',
+  selector: '',
+  label: 'artist',
+  data: '',
+  transformers: [Transformers.textTransformer],
+};
+
+const title : Field = {
+  name: 'title',
+  selector: '',
+  label: 'title',
+  data: '',
+  transformers: [Transformers.textTransformer],
+};
+
+const type : Field = {
+  name: 'type',
+  selector: '',
+  label: 'type',
+  data: '',
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regex: 'album',
+        mapTo: ReleaseTypes.Album,
+      },
+      {
+        regex: 'comp',
+        mapTo: ReleaseTypes.Comp,
+      },
+      {
+        regex: 'ep',
+        mapTo: ReleaseTypes.EP,
+      },
+      {
+        regex: /(?:single)|(?:7")/,
+        mapTo: ReleaseTypes.Single,
+      },
+      {
+        regex: 'mixtape',
+        mapTo: ReleaseTypes.Mixtape,
+      },
+      {
+        regex: /mix(?!(?:tape))/,
+        mapTo: ReleaseTypes.Mix,
+      },
+      {
+        regex: /(?:bootleg)|(?:unauth)/,
+        mapTo: ReleaseTypes.Bootleg,
+      },
+      {
+        regex: /(video)|(vhs)|(dvd)|(blu-?ray)/,
+        mapTo: ReleaseTypes.Video,
+      },
+    ],
+    ReleaseTypes.Album,
+  )],
+};
+
+const format : Field = {
+  name: 'format',
+  selector: '',
+  label: 'format',
+  data: '',
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
+        mapTo: Formats.Vinyl,
+      },
+      {
+        regex: /(?<!\w)((?:CD)|(?:disc))(?!\w)/,
+        mapTo: Formats.CD,
+      },
+      {
+        regex: /(?<!\w)((?:mp3)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
+        mapTo: Formats.DigitalFile,
+      },
+      {
+        regex: /(blu-?ray)|((?<!\w)(BD)(?!\w))/,
+        mapTo: Formats.BluRay,
+      },
+      {
+        regex: /(?<!\w)(CD-?R)(?!\w)/,
+        mapTo: Formats.CDR,
+      },
+      {
+        regex: /dualdisc/,
+        mapTo: Formats.DualDisc,
+      },
+      {
+        regex: /(DVD)(?!\w)/,
+        mapTo: Formats.DVD,
+      },
+      {
+        regex: /dvd-?a/,
+        mapTo: Formats.DVDA,
+      },
+      {
+        regex: /dvd-?r/,
+        mapTo: Formats.DVDR,
+      },
+      {
+        regex: /HDAD/,
+        mapTo: Formats.HDAD,
+      },
+      {
+        regex: /HDCD/,
+        mapTo: Formats.HDCD,
+      },
+      {
+        regex: /laser/,
+        mapTo: Formats.Laserdisc,
+      },
+      {
+        regex: /minidisc/,
+        mapTo: Formats.MiniDisc,
+      },
+      {
+        regex: /SACD/,
+        mapTo: Formats.SACD,
+      },
+      {
+        regex: /UMD/,
+        mapTo: Formats.UMD,
+      },
+      {
+        regex: /VCD/,
+        mapTo: Formats.VCD,
+      },
+      {
+        regex: /shellac/,
+        mapTo: Formats.Shellac,
+      },
+      {
+        regex: /(8|(eight))\s?track/,
+        mapTo: Formats.EightTrack,
+      },
+      {
+        regex: /(4|(four))\s?track/,
+        mapTo: Formats.FourTrack,
+      },
+      {
+        regex: /acetate/,
+        mapTo: Formats.Acetate,
+      },
+      {
+        regex: /beta/,
+        mapTo: Formats.Beta,
+      },
+      {
+        regex: /(?<!(micro))cassette/,
+        mapTo: Formats.Cassette,
+      },
+      {
+        regex: /DAT/,
+        mapTo: Formats.DAT,
+      },
+      {
+        regex: /DCC/,
+        mapTo: Formats.DCC,
+      },
+      {
+        regex: /microcassette/,
+        mapTo: Formats.Microcassette,
+      },
+      {
+        regex: /playtape/,
+        mapTo: Formats.PlayTape,
+      },
+      {
+        regex: /reel-?to-?reel/,
+        mapTo: Formats.ReelToReel,
+      },
+      {
+        regex: /vhs/,
+        mapTo: Formats.VHS,
+      },
+    ],
+    Formats.Vinyl,
+  )],
+};
+
+const discSize : Field = {
+  name: 'discSize',
+  selector: '',
+  label: 'disc size',
+  data: '',
+  dependency: [format, Formats.Vinyl],
+  transformers: [Transformers.discSizeTransformer],
+};
+
+const discSpeed : Field = {
+  name: 'discSpeed',
+  selector: '',
+  label: 'disc speed',
+  data: '',
+  dependency: [format, Formats.Vinyl],
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regex: /45/,
+        mapTo: DiscSpeeds._45,
+      },
+      {
+        regex: /16/,
+        mapTo: DiscSpeeds._16,
+      },
+      {
+        regex: /33/,
+        mapTo: DiscSpeeds._33,
+      },
+      {
+        regex: /78/,
+        mapTo: DiscSpeeds._78,
+      },
+      {
+        regex: /80/,
+        mapTo: DiscSpeeds._80,
+      },
+    ],
+    DiscSpeeds._45,
+  )],
+  format: (speed: string) => (speed ? `${speed} RPM` : ''),
+};
+
+const date : Field = {
+  name: 'date',
+  selector: '',
+  label: 'date',
+  data: null,
+  transformers: [Transformers.dateTransformer],
+  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join(' '),
+};
+
+const label : Field = {
+  name: 'label',
+  selector: '',
+  label: 'label',
+  data: '',
+};
+
+const catalogId : Field = {
+  name: 'catalogId',
+  selector: '',
+  label: 'catalog #',
+  data: '',
+  transformers: [Transformers.catalogIdTransformer],
+};
+
+const country : Field = {
+  name: 'country',
+  selector: '',
+  label: 'country',
+  data: '',
+};
+
+const trackPositions : Field = {
+  name: 'trackPositions',
+  selector: '',
+  label: 'a track position',
+  data: [],
+};
+
+const trackTitles : Field = {
+  name: 'trackTitles',
+  selector: '',
+  label: 'a track title',
+  data: [],
+  transformers: [Transformers.textTransformer],
+};
+
+const trackDurations : Field = {
+  name: 'trackDurations',
+  selector: '',
+  label: 'a track duration',
+  data: [],
+};
+
+const fields = [
+  artist,
+  title,
+  date,
+  type,
+  format,
+  discSize,
+  discSpeed,
+  label,
+  catalogId,
+  country,
+  trackPositions,
+  trackTitles,
+  trackDurations,
+];
 /* #endregion */
 
 /* #region FormInput  */
@@ -77,332 +373,18 @@ const TrackList = ({ positions, titles, durations }: TrackListProps) => {
 };
 /* #endregion TrackList */
 
-/* #region App */
 const App = () => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isGuiding, setIsGuiding] = useState(false);
   const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
-
-  /* #region Fields */
-  const artist : Field = {
-    name: 'artist',
-    selector: '',
-    formLabel: 'artist',
-    promptLabel: 'artist',
-    data: '',
-    dependency: !isVariousArtists,
-    transformers: [Transformers.textTransformer],
-  };
-
-  const title : Field = {
-    name: 'title',
-    selector: '',
-    formLabel: 'title',
-    promptLabel: 'title',
-    data: '',
-    transformers: [Transformers.textTransformer],
-  };
-
-  const type : Field = {
-    name: 'type',
-    selector: '',
-    promptLabel: 'type',
-    formLabel: 'type',
-    data: '',
-    transformers: [Transformers.regexMapTransformerFactory(
-      [
-        {
-          regex: 'album',
-          mapTo: ReleaseTypes.Album,
-        },
-        {
-          regex: 'comp',
-          mapTo: ReleaseTypes.Comp,
-        },
-        {
-          regex: 'ep',
-          mapTo: ReleaseTypes.EP,
-        },
-        {
-          regex: /(?:single)|(?:7")/,
-          mapTo: ReleaseTypes.Single,
-        },
-        {
-          regex: 'mixtape',
-          mapTo: ReleaseTypes.Mixtape,
-        },
-        {
-          regex: /mix(?!(?:tape))/,
-          mapTo: ReleaseTypes.Mix,
-        },
-        {
-          regex: /(?:bootleg)|(?:unauth)/,
-          mapTo: ReleaseTypes.Bootleg,
-        },
-        {
-          regex: /(video)|(vhs)|(dvd)|(blu-?ray)/,
-          mapTo: ReleaseTypes.Video,
-        },
-      ],
-      ReleaseTypes.Album,
-    )],
-  };
-
-  const format : Field = {
-    name: 'format',
-    selector: '',
-    formLabel: 'format',
-    promptLabel: 'format',
-    data: '',
-    transformers: [Transformers.regexMapTransformerFactory(
-      [
-        {
-          regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
-          mapTo: Formats.Vinyl,
-        },
-        {
-          regex: /(?<!\w)((?:CD)|(?:disc))(?!\w)/,
-          mapTo: Formats.CD,
-        },
-        {
-          regex: /(?<!\w)((?:mp3)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
-          mapTo: Formats.DigitalFile,
-        },
-        {
-          regex: /(blu-?ray)|((?<!\w)(BD)(?!\w))/,
-          mapTo: Formats.BluRay,
-        },
-        {
-          regex: /(?<!\w)(CD-?R)(?!\w)/,
-          mapTo: Formats.CDR,
-        },
-        {
-          regex: /dualdisc/,
-          mapTo: Formats.DualDisc,
-        },
-        {
-          regex: /(DVD)(?!\w)/,
-          mapTo: Formats.DVD,
-        },
-        {
-          regex: /dvd-?a/,
-          mapTo: Formats.DVDA,
-        },
-        {
-          regex: /dvd-?r/,
-          mapTo: Formats.DVDR,
-        },
-        {
-          regex: /HDAD/,
-          mapTo: Formats.HDAD,
-        },
-        {
-          regex: /HDCD/,
-          mapTo: Formats.HDCD,
-        },
-        {
-          regex: /laser/,
-          mapTo: Formats.Laserdisc,
-        },
-        {
-          regex: /minidisc/,
-          mapTo: Formats.MiniDisc,
-        },
-        {
-          regex: /SACD/,
-          mapTo: Formats.SACD,
-        },
-        {
-          regex: /UMD/,
-          mapTo: Formats.UMD,
-        },
-        {
-          regex: /VCD/,
-          mapTo: Formats.VCD,
-        },
-        {
-          regex: /shellac/,
-          mapTo: Formats.Shellac,
-        },
-        {
-          regex: /(8|(eight))\s?track/,
-          mapTo: Formats.EightTrack,
-        },
-        {
-          regex: /(4|(four))\s?track/,
-          mapTo: Formats.FourTrack,
-        },
-        {
-          regex: /acetate/,
-          mapTo: Formats.Acetate,
-        },
-        {
-          regex: /beta/,
-          mapTo: Formats.Beta,
-        },
-        {
-          regex: /(?<!(micro))cassette/,
-          mapTo: Formats.Cassette,
-        },
-        {
-          regex: /DAT/,
-          mapTo: Formats.DAT,
-        },
-        {
-          regex: /DCC/,
-          mapTo: Formats.DCC,
-        },
-        {
-          regex: /microcassette/,
-          mapTo: Formats.Microcassette,
-        },
-        {
-          regex: /playtape/,
-          mapTo: Formats.PlayTape,
-        },
-        {
-          regex: /reel-?to-?reel/,
-          mapTo: Formats.ReelToReel,
-        },
-        {
-          regex: /vhs/,
-          mapTo: Formats.VHS,
-        },
-      ],
-      Formats.Vinyl,
-    )],
-  };
-
-  const discSize : Field = {
-    name: 'discSize',
-    selector: '',
-    promptLabel: 'disc size',
-    formLabel: 'disc size',
-    data: '',
-    dependency: [format, Formats.Vinyl],
-    transformers: [Transformers.discSizeTransformer],
-  };
-
-  const discSpeed : Field = {
-    name: 'discSpeed',
-    selector: '',
-    promptLabel: 'disc speed',
-    formLabel: 'disc speed',
-    data: '',
-    dependency: [format, Formats.Vinyl],
-    transformers: [Transformers.regexMapTransformerFactory(
-      [
-        {
-          regex: /45/,
-          mapTo: DiscSpeeds._45,
-        },
-        {
-          regex: /16/,
-          mapTo: DiscSpeeds._16,
-        },
-        {
-          regex: /33/,
-          mapTo: DiscSpeeds._33,
-        },
-        {
-          regex: /78/,
-          mapTo: DiscSpeeds._78,
-        },
-        {
-          regex: /80/,
-          mapTo: DiscSpeeds._80,
-        },
-      ],
-      DiscSpeeds._45,
-    )],
-    format: (speed: string) => (speed ? `${speed} RPM` : ''),
-  };
-
-  const date : Field = {
-    name: 'date',
-    selector: '',
-    promptLabel: 'date',
-    formLabel: 'date',
-    data: null,
-    transformers: [Transformers.dateTransformer],
-    format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join(' '),
-  };
-
-  const label : Field = {
-    name: 'label',
-    selector: '',
-    formLabel: 'label',
-    promptLabel: 'label',
-    data: '',
-  };
-
-  const catalogId : Field = {
-    name: 'catalogId',
-    selector: '',
-    promptLabel: 'catalog #',
-    formLabel: 'catalog #',
-    data: '',
-    transformers: [Transformers.catalogIdTransformer],
-  };
-
-  const country : Field = {
-    name: 'country',
-    selector: '',
-    formLabel: 'country',
-    promptLabel: 'country',
-    data: '',
-  };
-
-  const trackPositions : Field = {
-    name: 'trackPositions',
-    selector: '',
-    promptLabel: 'a track position',
-    formLabel: 'a track position',
-    data: [],
-  };
-
-  const trackTitles : Field = {
-    name: 'trackTitles',
-    selector: '',
-    promptLabel: 'a track title',
-    formLabel: 'a track title',
-    data: [],
-    transformers: [Transformers.textTransformer],
-  };
-
-  const trackDurations : Field = {
-    name: 'trackDurations',
-    selector: '',
-    promptLabel: 'a track duration',
-    formLabel: 'a track duration',
-    data: [],
-  };
-
-  const fields = [
-    artist,
-    title,
-    date,
-    type,
-    format,
-    discSize,
-    discSpeed,
-    label,
-    catalogId,
-    country,
-    trackPositions,
-    trackTitles,
-    trackDurations,
-  ];
-
   const [data, setData] = useState(fields);
-  /* #endregion */
 
   const artistInputRef = useRef<HTMLInputElement>(null);
-
   /* #endregion */
 
   /* #region Hooks */
@@ -455,8 +437,23 @@ const App = () => {
   useEffect(() => {
     if (dataIndex >= data.length) {
       setIsSelecting(false);
+      setIsGuiding(false);
     }
   }, [dataIndex]);
+
+  useEffect(() => {
+    const index = data.findIndex((f) => f.name === artist.name) ?? 0;
+
+    const _data = update(data,
+      {
+        [index]:
+          {
+            disabled: { $set: isVariousArtists },
+          },
+      });
+
+    setData(_data);
+  }, [isVariousArtists]);
 
   /**
    * Load template if available for host
@@ -545,32 +542,70 @@ const App = () => {
   return (
     isFormDisplayed && (
       <Fragment>
-        <div id="rym__form" className="rym__" style={{ top: 0, right: 0 }}>
+        {isGuiding && (
+          <div
+            id="rym__prompt"
+            style={{
+              position: 'fixed',
+              zIndex: '10000',
+              bottom: 25,
+              width: '100%',
+            }}
+          >
+            <div
+              className="rym__floating_container"
+              style={{
+                display: 'flex',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                width: 'fit-content',
+                padding: 10,
+              }}
+            >
+              <p><b>{`Select ${data[dataIndex]?.label}`}</b></p>
+              <button
+                id="rym__skip"
+                type="button"
+                style={{ marginLeft: 10 }}
+                onClick={() => setDataIndex(dataIndex + 1)}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+        <div id="rym__form" className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
           <div id="rym__form-inner">
             <p><b>RYM artist ID:</b></p>
             <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
-            <div>
+            <div style={{ marginTop: 4 }}>
               <input
                 type="checkbox"
                 checked={isVariousArtists}
                 onClick={() => setIsVariousArtists(!isVariousArtists)}
               />
-              <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>Various artists</label>
+              <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
             </div>
             {isInvalidMessageDisplayed
               && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
             <ul id="rym__data">
-              {(data).map((field, i) => (
-                field.dependency === undefined // no dependency
-                  || field.dependency === true // boolean dependency
-                    || data.find((f) => f === (field.dependency as [Field, string])[0])
-                          ?.data === (field.dependency as [Field, string])[1]) // field dependency
+              <button
+                id="rym__guideme"
+                className="rym__button-primary"
+                type="button"
+                onClick={() => setIsGuiding(true)}
+              >
+                Guide Me
+              </button>
+              {(data).map((field, i) => (!field.dependency
+                || data.find((f) => f === (field.dependency as [Field, string])[0])
+                      ?.data === (field.dependency as [Field, string])[1])
                     && (
                     <li>
                       <p>
                         <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
-                          {`${field.formLabel}:`}
+                          {`${field.label}:`}
                         </b>
                       </p>
                       <div style={{ display: 'flex' }}>
@@ -580,6 +615,7 @@ const App = () => {
                         />
                         <button
                           type="button"
+                          disabled={field.disabled || isGuiding}
                           onClick={() => {
                             setIsSelecting(true);
                             setDataIndex(i);
@@ -600,7 +636,14 @@ const App = () => {
                 />
               </li>
             </ul>
-            <button id="rym__submit" type="button" onClick={submitForm}>Submit</button>
+            <button
+              id="rym__submit"
+              className="rym__button-primary"
+              type="button"
+              onClick={submitForm}
+            >
+              Submit
+            </button>
           </div>
         </div>
       </Fragment>
@@ -610,4 +653,3 @@ const App = () => {
 };
 
 export default App;
-/* #endregion */

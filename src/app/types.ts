@@ -17,10 +17,10 @@ export interface Template {
 export interface Field {
     name: string,
     selector: string,
-    promptLabel: string,
-    formLabel: string,
+    label: string,
     data: string | Array<string> | Object | Array<Object>,
-    dependency?: [Field, string] | boolean,
+    dependency?: [Field, string],
+    disabled?: boolean,
     transformers?: Array<Function>,
     format?: Function,
 }

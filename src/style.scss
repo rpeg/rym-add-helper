@@ -3,17 +3,19 @@
     cursor: pointer;
 }
 
+.rym__floating_container {
+    background-color: white;
+    box-shadow: darkslategrey -5px 5px 15px;
+    border: 1px solid darkslategrey;
+}
+
 #rym__form {
     z-index: 10000;
     position: fixed;
     max-height: 100vh;
     width: 230px;
     overflow-y: scroll;
-
     color: black;
-    background-color: white;
-    box-shadow: darkslategrey -5px 5px 15px;
-    border: 1px solid darkslategrey;
 }
 
 #rym__form-inner {
@@ -36,4 +38,15 @@
     input {
         width: fit-content;
     }
+}
+
+.rym__button-primary {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
 }
