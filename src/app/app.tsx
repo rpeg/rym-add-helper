@@ -8,10 +8,12 @@ import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
 
+import '../style.scss';
+
 import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
-import { Field, Template } from './types';
+import { Field, Template, ReleaseTypes } from './types';
 
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
@@ -43,7 +45,43 @@ const type : Field = {
   promptLabel: 'type',
   formLabel: 'type',
   data: '',
-  transformers: [Transformers.releaseTypeTransformer],
+  transformers: [Transformers.regexMapTransformerFactory(
+    [
+      {
+        regexes: ['album'],
+        mapTo: ReleaseTypes.Album,
+      },
+      {
+        regexes: ['comp'],
+        mapTo: ReleaseTypes.Comp,
+      },
+      {
+        regexes: ['ep'],
+        mapTo: ReleaseTypes.EP,
+      },
+      {
+        regexes: ['single', '7"'],
+        mapTo: ReleaseTypes.Single,
+      },
+      {
+        regexes: ['mixtape'],
+        mapTo: ReleaseTypes.Mixtape,
+      },
+      {
+        regexes: [/mix(?!(?:tape))/],
+        mapTo: ReleaseTypes.Mix,
+      },
+      {
+        regexes: ['bootleg', 'unauth'],
+        mapTo: ReleaseTypes.Bootleg,
+      },
+      {
+        regexes: ['video', 'vhs', 'dvd', /blu-?ray/],
+        mapTo: ReleaseTypes.Video,
+      },
+    ],
+    ReleaseTypes.Album,
+  )],
 };
 
 const format : Field = {
@@ -120,7 +158,6 @@ const trackDurations : Field = {
   promptLabel: 'a track duration',
   formLabel: 'a track duration',
   data: [],
-  transformers: [Transformers.timeTransformer],
 };
 
 const fields = [
@@ -159,7 +196,7 @@ const TrackList = ({ positions, titles, durations }: TrackListProps) => {
   return (
     <ul>
       {_.range(0, maxIndex).map((i) => (
-        <li>
+        <li style={{ listStyleType: 'circle' }}>
           {`${positions[i]}|${titles[i]}|${durations[i]}`}
         </li>
       ))}

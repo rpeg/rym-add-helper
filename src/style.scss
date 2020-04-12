@@ -17,16 +17,22 @@
 
 #rym__form-inner {
     padding: 12px;
-}
 
-#rym__form-inner p {
-    margin: 10px 0 2px 0;
-}
+    p {
+        margin: 10px 0 2px 0;
+    }
 
-#rym__form-inner ul {
-    padding: 0;
-}
+    ul {
+        padding: 0;
+        max-width: 162px;
+    }
 
-#rym__form-inner input {
-    width: fit-content;
+    li {
+        list-style-type: none;
+        list-style-position: inside;
+    }
+
+    input {
+        width: fit-content;
+    }
 }
