@@ -497,9 +497,12 @@ const App = () => {
            && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
             <ul id="rym__data">
-              {(data).map((field, i) => (
-                <li>
-                  {/* <img
+              {(data)
+                .filter((d) => !d.dependsOnFieldValue
+                               || data.find((f) => f === d.dependsOnFieldValue[0]).data === d.dependsOnFieldValue[1])
+                .map((field, i) => (
+                  <li>
+                    {/* <img
                   src="../assets/edit.png"
                   alt="edit"
                   onClick={() => {
@@ -507,10 +510,10 @@ const App = () => {
                     setIsSelecting(true);
                   }}
                 /> */}
-                  <p><b>{`${field.formLabel}:`}</b></p>
-                  <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
-                </li>
-              ))}
+                    <p><b>{`${field.formLabel}:`}</b></p>
+                    <input type="text" value={field.data instanceof Array ? field.data[0] : field.data} />
+                  </li>
+                ))}
               <hr />
               <li>
                 <p><b>Tracks:</b></p>
