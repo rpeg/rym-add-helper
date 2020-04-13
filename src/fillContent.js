@@ -10,7 +10,11 @@ const injectScript = (filename) => {
   head.insertBefore(script, head.lastChild);
 };
 
-// route messages between modules and background script
+const injectData = (data, name) => {
+  const div = document.createElement('div');
+  div.setAttribute(`data-${name}`, JSON.stringify(data));
+};
+
 chrome.runtime.onMessage.addListener(
   (request, sender) => {
     window.postMessage(request);
@@ -22,4 +26,4 @@ window.addEventListener('message', (message) => {
   chrome.runtime.sendMessage(message.data);
 }, false);
 
-injectScript('main.js');
+injectScript('fill.js');

@@ -1,29 +1,50 @@
 const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
 
-let isActive = false;
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ hide: true });
 });
 
 chrome.browserAction.onClicked.addListener(() => {
-  isActive = !isActive;
-
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.browserAction.setIcon({ path: `icons/${isActive ? 'on' : 'off'}_48.png`, tabId: tabs[0].id });
-    chrome.tabs.sendMessage(tabs[0].id, { isActive });
+    const { id: tabId, url } = tabs[0];
+
+    chrome.tabs.sendMessage(tabId, {
+      type: 'initApp',
+    });
+
+    chrome.storage.sync.get(tabId.toString(), (data) => {
+      const result = data[tabId.toString()];
+
+      const isActive = result && result.url === url && result.isActive;
+
+      chrome.browserAction.setIcon({ path: `icons/${isActive ? 'off' : 'on'}_48.png`, tabId });
+
+      chrome.storage.sync.set({
+        [tabId.toString()]: {
+          isActive: !isActive,
+          url,
+        },
+      });
+
+      chrome.tabs.sendMessage(tabId, {
+        isActive: !isActive,
+      });
+    });
   });
 });
 
 chrome.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
-    console.log(request);
-    const { formData } = request;
+    if (request.formData) {
+      chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'initFill',
+          formData: request.formData,
+        });
 
-    if (formData) { // execute rym form fill
-      chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
-        chrome.tabs.executeScript(tab.id, { file: 'fill.js' });
-        chrome.tabs.sendMessage(tab.id, { formData });
+        chrome.tabs.sendMessage(tab.id, {
+          formData: request.formData,
+        });
       });
     }
   },

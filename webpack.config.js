@@ -1,6 +1,9 @@
 module.exports = {
   mode: 'production',
-  entry: './src/main.js',
+  entry: {
+    main: './src/main.js',
+    fill: './src/fill.js',
+  },
   output: {
     filename: '[name].js',
     path: `${__dirname}/dist`,

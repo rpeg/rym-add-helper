@@ -1,13 +1,14 @@
 import $ from 'jquery';
 
-const fillOutForm = (data) => {
-  const title = $('#title');
-  console.log(title);
-  $('#title').text(data.find((d) => d.field === 'title').data || '');
-};
-
-window.addEventListener('message', ({ data }) => {
+window.addEventListener('message', (message) => {
   console.log('fill');
-  console.log(data);
+  console.log(message);
+  const { data } = message;
   if (data.formData) fillOutForm(data.formData);
 }, false);
+
+const fillOutForm = (data) => {
+  const title = $('#title');
+  console.log(data);
+  $('#title').text(data.find((d) => d.field === 'title').data || '');
+};
