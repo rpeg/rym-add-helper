@@ -1,25 +1,50 @@
 const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
 
-let isActive = false;
-
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ hide: true });
 });
 
 chrome.browserAction.onClicked.addListener(() => {
-  isActive = !isActive;
-
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.browserAction.setIcon({ path: `icons/${isActive ? 'on' : 'off'}_48.png`, tabId: tabs[0].id });
-    chrome.tabs.sendMessage(tabs[0].id, { isActive });
+    const { id: tabId, url } = tabs[0];
+
+    chrome.storage.sync.get(tabId.toString(), (data) => {
+      const result = data[tabId.toString()];
+
+      const isActive = result && result.url === url && result.isActive;
+
+      chrome.browserAction.setIcon({ path: `icons/${isActive ? 'off' : 'on'}_48.png`, tabId });
+
+      chrome.storage.sync.set({
+        [tabId.toString()]: {
+          isActive: !isActive,
+          url,
+        },
+      });
+
+      chrome.tabs.sendMessage(tabId, {
+        isActive: !isActive,
+      });
+    });
   });
 });
 
-// after user completes selection, open rym tab and fill out form with passed data
 chrome.runtime.onMessage.addListener(
-  ({ formData }) => {
-    chrome.tabs.create({ url: getAddReleaseUrl(formData.id) }, (tab) => {
-      chrome.tabs.sendMessage(tab.id, { formData });
-    });
+  (request, sender, sendResponse) => {
+    if (request.type === 'rym_submit' && request.formData) {
+      chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
+        chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
+          if (tabId === tab.id && changeInfo.status === 'complete') {
+            chrome.tabs.executeScript(tabId, {
+              file: 'fill.js',
+            }, () => {
+              chrome.tabs.sendMessage(tab.id, {
+                formData: request.formData,
+              });
+            });
+          }
+        });
+      });
+    }
   },
 );

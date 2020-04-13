@@ -23,21 +23,20 @@
     "storage", 
     "tabs",
     "activeTab",
-    "declarativeContent"
+    "declarativeContent",
+    "http://*/",
+    "https://*/"
   ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "css": ["style.css"],
+      "css": ["style.scss"],
       "js": ["content.js"]
     }
   ],
   "web_accessible_resources": [
     "main.js",
-    "app/app.tsx",
-    "app/utils/hooks.ts",
-    "app/utils/transformers.ts",
-    "app/utils/templates.ts",
-    "app/assets/edit.png"
+    "fill.js",
+    "app/*"
   ]
 }

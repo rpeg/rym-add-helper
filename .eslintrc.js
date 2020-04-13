@@ -16,7 +16,7 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 2018,
+    ecmaVersion: 2020,
     sourceType: 'module',
   },
   plugins: [
@@ -25,15 +25,17 @@ module.exports = {
     'import',
   ],
   rules: {
-    "react/jsx-filename-extension": [1, { "extensions": [".tsx", ".jsx" ] }],
+    "react/jsx-filename-extension": "off",
     "import/no-unresolved": "error",
-    "import/extensions": ["error", "ignorePackages", {
-      "ts": "never",
-      "js": "never",
-    }],
+    "import/extensions": "off",
+    "no-underscore-dangle": "off",
     "no-unused-vars": "off",
     "no-use-before-define": "off",
     "func-names": "off",
+    "react/react-in-jsx-scope": "off",
+    "jsx-a11y/label-has-associated-control": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
   },
   settings: {
     "import/parsers": {
