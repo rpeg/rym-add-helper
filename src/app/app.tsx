@@ -526,6 +526,7 @@ const App = () => {
 
       window.postMessage(
         {
+          type: 'rym_submit',
           formData,
         }, '*',
       );

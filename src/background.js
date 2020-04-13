@@ -31,7 +31,7 @@ chrome.browserAction.onClicked.addListener(() => {
 
 chrome.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
-    if (request.formData) {
+    if (request.type === 'rym_submit' && request.formData) {
       chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
           console.log(_tab);
