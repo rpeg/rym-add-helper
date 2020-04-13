@@ -18,6 +18,7 @@ export interface FormData {
     [key: string]: string | Array<Object> | Array<string> | Object,
 
     url: string,
+    id: string,
     artist: string,
     title: string,
     type: string,
@@ -52,6 +53,7 @@ export interface RYMTrack {
     position: string,
     title: string,
     duration: string,
+    artist?: string, // for VA releases
 }
 
 export interface RegexMap {

@@ -6,6 +6,7 @@ import { FormData, Formats } from './app/types';
 const fillOutForm = (data: FormData) => {
   const {
     url,
+    id,
     title,
     date,
     type,
@@ -73,7 +74,9 @@ const fillOutForm = (data: FormData) => {
     }
   }
 
-  tracks.length && $('#track_advanced').val(tracks.join('\n'));
+  tracks.length && $('#track_advanced').val(tracks
+    .map((t, i) => `${t.position ? t.position : i}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`)
+    .join('\n'));
 
   $('#notes').val(url);
 

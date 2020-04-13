@@ -12,8 +12,9 @@ Chrome extension to facilitate music release adding on rateyourmusic.com (RYM).
 
 ## Specs
 
-- Domain logic written in TypeScript; Chrome API scripts in JavaScript.
+- Domain logic written in TypeScript.
 - Injects a [preact](https://github.com/preactjs/preact) app into the current tab when extension is toggled.
+- ~350KB
 
 ## Setup
 

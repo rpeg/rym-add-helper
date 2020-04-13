@@ -257,7 +257,7 @@ const date : Field = {
   label: 'date',
   data: {},
   transformers: [Transformers.dateTransformer],
-  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join('/'),
+  format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
 
 const label : Field = {
@@ -289,6 +289,14 @@ const trackPositions : Field = {
   data: [],
 };
 
+const trackArtists : Field = {
+  name: 'trackArtists',
+  selector: '',
+  label: 'a track artist',
+  data: [],
+  disabled: true, // enabled when VA
+};
+
 const trackTitles : Field = {
   name: 'trackTitles',
   selector: '',
@@ -316,6 +324,7 @@ const fields = [
   catalogId,
   countries,
   trackPositions,
+  trackArtists,
   trackTitles,
   trackDurations,
 ];
@@ -437,24 +446,28 @@ const App = () => {
       });
 
     setData(_data);
-    nextField();
+    if (isGuiding) nextField(); else setIsSelecting(false);
   }, [selectedElm]);
 
   useEffect(() => {
     if (dataIndex >= data.length) {
       setIsSelecting(false);
-      setIsGuiding(false);
     }
   }, [dataIndex]);
 
   useEffect(() => {
-    const index = data.findIndex((f) => f.name === artist.name) ?? 0;
+    const artistIndex = data.findIndex((f) => f.name === artist.name);
+    const trackArtistsIndex = data.findIndex((f) => f.name === trackArtists.name);
 
     const _data = update(data,
       {
-        [index]:
+        [artistIndex]:
           {
             disabled: { $set: isVariousArtists },
+          },
+        [trackArtistsIndex]:
+          {
+            disabled: { $set: !isVariousArtists },
           },
       });
 
@@ -499,7 +512,7 @@ const App = () => {
   };
 
   const parseField = (selector: string, field: Field) => {
-    const matches: Array<HTMLElement> = $(selector).toArray();
+    const matches: Array<HTMLElement> = _.intersection($(selector).toArray());
 
     const transformers = field.transformers || [function (val: any) { return val; }];
 
@@ -521,22 +534,9 @@ const App = () => {
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
-      const positions = (getFieldData(trackPositions.name) as Array<string>);
-      const titles = (getFieldData(trackTitles.name) as Array<string>);
-      const durations = (getFieldData(trackDurations.name) as Array<string>);
-
-      const numTracks = _.min([positions.length, titles.length, durations.length]);
-
-      const tracks: Array<RYMTrack> = [];
-
-      _.range(0, numTracks).forEach((i) => tracks.push({
-        position: positions[i],
-        title: titles[i],
-        duration: durations[i],
-      }));
-
       const formData: FormData = {
         url: window.location.href,
+        id,
         artist: getFieldData(artist.name) as string,
         title: getFieldData(title.name) as string,
         type: getFieldData(type.name)as string,
@@ -547,7 +547,7 @@ const App = () => {
         label: getFieldData(label.name) as string,
         catalogId: getFieldData(catalogId.name) as string,
         countries: getFieldData(countries.name) as Array<string>,
-        tracks,
+        tracks: getTracks(),
       };
 
       window.postMessage(
@@ -561,14 +561,32 @@ const App = () => {
     }
   };
 
+  const getTracks = () => {
+    const tracks: Array<RYMTrack> = [];
+
+    const positions = (getFieldData(trackPositions.name) as Array<string>);
+    const artists = (getFieldData(trackArtists.name) as Array<string>);
+    const titles = (getFieldData(trackTitles.name) as Array<string>);
+    const durations = (getFieldData(trackDurations.name) as Array<string>);
+
+    _.range(0, positions.length).forEach((i) => tracks.push({
+      position: positions[i],
+      artist: artists[i] ?? '',
+      title: titles[i],
+      duration: durations[i],
+    }));
+
+    return tracks;
+  };
+
   const nextField = () => {
     do { setDataIndex(dataIndex + 1); }
     while (dataIndex < data.length && !isFieldDisplayed(data[dataIndex]));
   };
 
-  const isFieldDisplayed = (field: Field) => !field.dependency
+  const isFieldDisplayed = (field: Field) => !field.disabled && (!field.dependency
       || data.find((f) => f === (field.dependency as [Field, string])[0])
-            ?.data === (field.dependency as [Field, string])[1];
+            ?.data === (field.dependency as [Field, string])[1]);
 
   const getFieldData = (name: string) => data.find((d) => d.name === name)?.data;
   /* #endregion */
@@ -577,8 +595,9 @@ const App = () => {
   return (
     isFormDisplayed && (
       <Fragment>
-        {isGuiding && (
+        {isSelecting && (
           <div
+            className="rym__prompt"
             id="rym__prompt"
             style={{
               position: 'fixed',
@@ -597,7 +616,7 @@ const App = () => {
                 padding: 10,
               }}
             >
-              <p><b>{`Select ${data[dataIndex]?.label}`}</b></p>
+              <p><b>{`Select ${data[dataIndex].label}`}</b></p>
               <button
                 id="rym__skip"
                 type="button"
@@ -605,6 +624,14 @@ const App = () => {
                 onClick={() => nextField()}
               >
                 Skip
+              </button>
+              <button
+                id="rym__quit"
+                type="button"
+                style={{ marginLeft: 10 }}
+                onClick={() => setIsGuiding(false)}
+              >
+                Quit
               </button>
             </div>
           </div>
@@ -629,14 +656,18 @@ const App = () => {
                 id="rym__guideme"
                 className="rym__button-primary"
                 type="button"
-                onClick={() => setIsGuiding(true)}
+                onClick={() => {
+                  setDataIndex(0);
+                  setIsGuiding(true);
+                  setIsSelecting(true);
+                }}
               >
                 Guide Me
               </button>
               {(data).filter((field) => isFieldDisplayed(field)).map((field, i) => (
                 <li>
                   <p>
-                    <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
+                    <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
                       {`${field.label}:`}
                     </b>
                   </p>
@@ -647,7 +678,7 @@ const App = () => {
                     />
                     <button
                       type="button"
-                      disabled={field.disabled || isGuiding}
+                      disabled={isSelecting}
                       onClick={() => {
                         setIsSelecting(true);
                         setDataIndex(i);

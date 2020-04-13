@@ -9,7 +9,7 @@ const Templates: {[index: string]: Template } = {
     discSize: '.content:nth-child(5)',
     discSpeed: '.content:nth-child(5)',
     date: '.content:nth-child(9) > a',
-    label: '.content:nth-child(3) > a',
+    label: '.content:nth-child(3) > a:nth-child(1)',
     catalogId: '.content:nth-child(3)',
     countries: '.content:nth-child(7) > a',
     trackPositions: '.track .tracklist_track_pos',
