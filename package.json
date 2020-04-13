@@ -12,6 +12,10 @@
     "rateyourmusic"
   ],
   "author": "Sean Johnson",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/rpeg/rym-add-helper.git"
+  },
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "7.9.0",

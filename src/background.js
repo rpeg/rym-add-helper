@@ -8,10 +8,6 @@ chrome.browserAction.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const { id: tabId, url } = tabs[0];
 
-    chrome.tabs.sendMessage(tabId, {
-      type: 'initApp',
-    });
-
     chrome.storage.sync.get(tabId.toString(), (data) => {
       const result = data[tabId.toString()];
 
@@ -37,13 +33,17 @@ chrome.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
     if (request.formData) {
       chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'initFill',
-          formData: request.formData,
-        });
-
-        chrome.tabs.sendMessage(tab.id, {
-          formData: request.formData,
+        chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
+          console.log(_tab);
+          if (tabId === tab.id && changeInfo.status === 'complete') {
+            chrome.tabs.executeScript(tabId, {
+              file: 'fill.js',
+            }, () => {
+              chrome.tabs.sendMessage(tab.id, {
+                formData: request.formData,
+              });
+            });
+          }
         });
       });
     }

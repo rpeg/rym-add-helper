@@ -22,4 +22,6 @@ window.addEventListener('message', (message) => {
   chrome.runtime.sendMessage(message.data);
 }, false);
 
-injectScript('main.js');
+window.addEventListener('load', () => {
+  injectScript('main.js');
+}, false);

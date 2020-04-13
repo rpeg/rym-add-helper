@@ -515,16 +515,18 @@ const App = () => {
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
+      const formData = {
+        url: window.location.href,
+        id,
+      };
+
+      data.forEach((f) => {
+        formData[f.name] = f.data;
+      });
+
       window.postMessage(
         {
-          formData: {
-            url: window.location.href,
-            id,
-            ...data.map((d) => ({
-              field: d.name,
-              data: d.data,
-            })),
-          },
+          formData,
         }, '*',
       );
     } else {
