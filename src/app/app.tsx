@@ -16,7 +16,7 @@ import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  Field, Template, ReleaseTypes, Formats, DiscSpeeds, RYMDate,
+  Field, Template, ReleaseTypes, Formats, DiscSpeeds, RYMDate, FormData, RYMTrack,
 } from './types';
 /* #endregion */
 
@@ -321,6 +321,13 @@ const fields = [
 ];
 /* #endregion */
 
+/* #region Helpers */
+const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement)
+  && (e.srcElement as HTMLTextAreaElement).offsetParent
+  && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
+  && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
+/* #endregion */
+
 /* #region FormInput  */
 type FormInputProps = {
   field: Field,
@@ -514,14 +521,34 @@ const App = () => {
     if (id) {
       setIsInvalidMessageDisplayed(false);
 
-      const formData = {
-        url: window.location.href,
-        id,
-      };
+      const positions = (getFieldData(trackPositions.name) as Array<string>);
+      const titles = (getFieldData(trackTitles.name) as Array<string>);
+      const durations = (getFieldData(trackDurations.name) as Array<string>);
 
-      data.forEach((f) => {
-        formData[f.name] = f.data;
-      });
+      const numTracks = _.min([positions.length, titles.length, durations.length]);
+
+      const tracks: Array<RYMTrack> = [];
+
+      _.range(0, numTracks).forEach((i) => tracks.push({
+        position: positions[i],
+        title: titles[i],
+        duration: durations[i],
+      }));
+
+      const formData: FormData = {
+        url: window.location.href,
+        artist: getFieldData(artist.name) as string,
+        title: getFieldData(title.name) as string,
+        type: getFieldData(type.name)as string,
+        format: getFieldData(format.name) as string,
+        discSize: getFieldData(discSize.name) as string,
+        discSpeed: getFieldData(discSpeed.name) as string,
+        date: getFieldData(date.name) as RYMDate,
+        label: getFieldData(label.name) as string,
+        catalogId: getFieldData(catalogId.name) as string,
+        country: getFieldData(country.name) as string,
+        tracks,
+      };
 
       window.postMessage(
         {
@@ -534,11 +561,7 @@ const App = () => {
     }
   };
 
-  const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement)
-    && (e.srcElement as HTMLTextAreaElement).offsetParent
-    && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
-    && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
-
+  const getFieldData = (name: string) => data.find((d) => d.name === name)?.data;
   /* #endregion */
 
   /* #region Render */
@@ -633,9 +656,9 @@ const App = () => {
               <li>
                 <p><b>Tracks:</b></p>
                 <TrackList
-                  positions={data.find((f) => f.name === trackPositions.name).data as Array<string>}
-                  titles={data.find((f) => f.name === trackTitles.name).data as Array<string>}
-                  durations={data.find((f) => f.name === trackDurations.name).data as Array<string>}
+                  positions={getFieldData(trackPositions.name) as Array<string>}
+                  titles={getFieldData(trackTitles.name) as Array<string>}
+                  durations={getFieldData(trackDurations.name)as Array<string>}
                 />
               </li>
             </ul>

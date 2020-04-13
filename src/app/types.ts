@@ -14,6 +14,23 @@ export interface Template {
     trackDurations: string,
 }
 
+export interface FormData {
+    [key: string]: string | Array<Object> | Array<string> | Object,
+
+    url: string,
+    artist: string,
+    title: string,
+    type: string,
+    format: string,
+    discSize?: string,
+    discSpeed?: string,
+    date: RYMDate,
+    label: string,
+    catalogId: string,
+    country: string,
+    tracks: Array<RYMTrack>
+}
+
 export interface Field {
     name: string,
     selector: string,
@@ -29,6 +46,12 @@ export interface RYMDate {
     month?: string,
     day?: string,
     year: string,
+}
+
+export interface RYMTrack {
+    position: string,
+    title: string,
+    duration: string,
 }
 
 export interface RegexMap {
