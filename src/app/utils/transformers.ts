@@ -48,6 +48,10 @@ const textTransformer = (text: string) => {
   }).join(' ');
 };
 
+const countriesTransformer = (countries: Array<string>) => countries
+  .map((c) => c.split(/,|&|(?:and)/).map((s) => s.trim()))
+  .flat();
+
 /**
  * Many sites display their label and catalog id in the same block level elm, or same string,
  * with the catalog id placed directly in the elm's inner text. Ergo, there is no direct
@@ -89,6 +93,7 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
 export default {
   regexMapTransformerFactory,
   textTransformer,
+  countriesTransformer,
   catalogIdTransformer,
   discSizeTransformer,
   dateTransformer,

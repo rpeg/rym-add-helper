@@ -32,6 +32,7 @@ module.exports = {
     "no-unused-vars": "off",
     "no-unused-expressions": "off",
     "no-use-before-define": "off",
+    "no-mixed-operators": "off",
     "func-names": "off",
     "react/react-in-jsx-scope": "off",
     "jsx-a11y/label-has-associated-control": "off",

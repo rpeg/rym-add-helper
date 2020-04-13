@@ -16,7 +16,7 @@ import { useWindowEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  Field, Template, ReleaseTypes, Formats, DiscSpeeds, RYMDate, FormData, RYMTrack,
+  Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
 } from './types';
 /* #endregion */
 
@@ -29,7 +29,7 @@ const artist : Field = {
   name: 'artist',
   selector: '',
   label: 'artist',
-  data: '',
+  default: '',
   transformers: [Transformers.textTransformer],
 };
 
@@ -37,7 +37,7 @@ const title : Field = {
   name: 'title',
   selector: '',
   label: 'title',
-  data: '',
+  default: '',
   transformers: [Transformers.textTransformer],
 };
 
@@ -45,7 +45,7 @@ const type : Field = {
   name: 'type',
   selector: '',
   label: 'type',
-  data: '',
+  default: '',
   transformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -89,7 +89,7 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
-  data: '',
+  default: '',
   transformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -213,7 +213,7 @@ const discSize : Field = {
   name: 'discSize',
   selector: '',
   label: 'disc size',
-  data: '',
+  default: '',
   dependency: [format, Formats.Vinyl],
   transformers: [Transformers.discSizeTransformer],
 };
@@ -222,7 +222,7 @@ const discSpeed : Field = {
   name: 'discSpeed',
   selector: '',
   label: 'disc speed',
-  data: '',
+  default: '',
   dependency: [format, Formats.Vinyl],
   transformers: [Transformers.regexMapTransformerFactory(
     [
@@ -255,7 +255,7 @@ const date : Field = {
   name: 'date',
   selector: '',
   label: 'date',
-  data: {},
+  default: {},
   transformers: [Transformers.dateTransformer],
   format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
@@ -264,14 +264,14 @@ const label : Field = {
   name: 'label',
   selector: '',
   label: 'label',
-  data: '',
+  default: '',
 };
 
 const catalogId : Field = {
   name: 'catalogId',
   selector: '',
   label: 'catalog #',
-  data: '',
+  default: '',
   transformers: [Transformers.catalogIdTransformer],
 };
 
@@ -279,21 +279,22 @@ const countries : Field = {
   name: 'countries',
   selector: '',
   label: 'countries',
-  data: [],
+  default: [],
+  transformers: [Transformers.countriesTransformer],
 };
 
 const trackPositions : Field = {
   name: 'trackPositions',
   selector: '',
   label: 'a track position',
-  data: [],
+  default: [],
 };
 
 const trackArtists : Field = {
   name: 'trackArtists',
   selector: '',
   label: 'a track artist',
-  data: [],
+  default: [],
   disabled: true, // enabled when VA
 };
 
@@ -301,7 +302,7 @@ const trackTitles : Field = {
   name: 'trackTitles',
   selector: '',
   label: 'a track title',
-  data: [],
+  default: [],
   transformers: [Transformers.textTransformer],
 };
 
@@ -309,7 +310,7 @@ const trackDurations : Field = {
   name: 'trackDurations',
   selector: '',
   label: 'a track duration',
-  data: [],
+  default: [],
 };
 
 const fields = [
@@ -331,10 +332,12 @@ const fields = [
 /* #endregion */
 
 /* #region Helpers */
-const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement)
-  && (e.srcElement as HTMLTextAreaElement).offsetParent
-  && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
-  && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
+const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLElement)
+  && ((e.srcElement as HTMLElement).id
+        && (e.srcElement as HTMLElement).id.includes(BASE_CLASS))
+    || ((e.srcElement as HTMLElement).offsetParent
+        && (e.srcElement as HTMLElement).offsetParent.classList
+        && [...(e.srcElement as HTMLElement).offsetParent.classList].includes(BASE_CLASS));
 /* #endregion */
 
 /* #region FormInput  */
@@ -344,7 +347,7 @@ type FormInputProps = {
 }
 
 const FormInput = ({ field, isSelectingField }: FormInputProps) => {
-  const data = field.data instanceof Array
+  const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
 
@@ -356,7 +359,7 @@ const FormInput = ({ field, isSelectingField }: FormInputProps) => {
     <input
       type="text"
       disabled={!isSelectingField}
-      value={formattedData}
+      value={formattedData ?? field.default}
     />
   );
 };
@@ -405,16 +408,16 @@ const App = () => {
   /* #region Hooks */
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
     if (isSelecting && !isElmInForm(e)) {
-      (e.srcElement as HTMLTextAreaElement).classList.add(HOVER_CLASS);
+      (e.srcElement as HTMLElement).classList.add(HOVER_CLASS);
     }
   }, 200), isFormDisplayed);
 
   useWindowEvent('mouseout', (e: MouseEvent) => {
-    (e.srcElement as HTMLTextAreaElement).classList.remove(HOVER_CLASS);
+    (e.srcElement as HTMLElement).classList.remove(HOVER_CLASS);
   }, isFormDisplayed);
 
   useWindowEvent('click', (e: MouseEvent) => {
-    if ((e.srcElement as HTMLTextAreaElement).classList.contains(HOVER_CLASS)) {
+    if ((e.srcElement as HTMLElement).classList.contains(HOVER_CLASS)) {
       e.preventDefault();
       setSelectedElm(e.target);
       return false;
@@ -424,7 +427,7 @@ const App = () => {
   }, isFormDisplayed);
 
   /**
-   * Update data with clicked-on element's css selector; iterate data index
+   * Update data with clicked-on element's css selector
    */
   useEffect(() => {
     if (!selectedElm) return;
@@ -434,26 +437,21 @@ const App = () => {
       idName: (n) => !n.startsWith(BASE_CLASS),
     });
 
-    const fieldData = parseField(selector, data[dataIndex]);
+    const currentField = data[dataIndex];
 
     const _data = update(data,
       {
         [dataIndex]:
           {
             selector: { $set: selector },
-            data: { $set: fieldData },
+            data: { $set: pruneFieldData(selector, currentField) },
           },
       });
 
     setData(_data);
+
     if (isGuiding) nextField(); else setIsSelecting(false);
   }, [selectedElm]);
-
-  useEffect(() => {
-    if (dataIndex >= data.length) {
-      setIsSelecting(false);
-    }
-  }, [dataIndex]);
 
   useEffect(() => {
     const artistIndex = data.findIndex((f) => f.name === artist.name);
@@ -505,13 +503,13 @@ const App = () => {
 
     d.filter((field) => field.selector).forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = parseField(field.selector, field);
+      field.data = pruneFieldData(field.selector, field);
     });
 
     setData([...d]);
   };
 
-  const parseField = (selector: string, field: Field) => {
+  const pruneFieldData = (selector: string, field: Field) => {
     const matches: Array<HTMLElement> = _.intersection($(selector).toArray());
 
     const transformers = field.transformers || [function (val: any) { return val; }];
@@ -519,9 +517,9 @@ const App = () => {
     const transformedData = matches.map((m) => transformers
       .reduce((acc, f) => f(acc), m.innerText.trim()));
 
-    if (typeof field.data === 'string') return transformedData.join(' ');
-    if (field.data instanceof Array) return transformedData;
-    if (field.data instanceof Object) return _.first(transformedData);
+    if (typeof field.default === 'string') return transformedData.join(' ');
+    if (field.default instanceof Array) return transformedData;
+    if (field.default instanceof Object) return _.first(transformedData);
 
     return transformedData;
   };
@@ -537,16 +535,16 @@ const App = () => {
       const formData: FormData = {
         url: window.location.href,
         id,
-        artist: getFieldData(artist.name) as string,
-        title: getFieldData(title.name) as string,
-        type: getFieldData(type.name)as string,
-        format: getFieldData(format.name) as string,
-        discSize: getFieldData(discSize.name) as string,
-        discSpeed: getFieldData(discSpeed.name) as string,
-        date: getFieldData(date.name) as RYMDate,
-        label: getFieldData(label.name) as string,
-        catalogId: getFieldData(catalogId.name) as string,
-        countries: getFieldData(countries.name) as Array<string>,
+        artist: getDataForField(artist.name) as string,
+        title: getDataForField(title.name) as string,
+        type: getDataForField(type.name)as string,
+        format: getDataForField(format.name) as string,
+        discSize: getDataForField(discSize.name) as string,
+        discSpeed: getDataForField(discSpeed.name) as string,
+        date: getDataForField(date.name) as RYMDate,
+        label: getDataForField(label.name) as string,
+        catalogId: getDataForField(catalogId.name) as string,
+        countries: getDataForField(countries.name) as Array<string>,
         tracks: getTracks(),
       };
 
@@ -564,31 +562,46 @@ const App = () => {
   const getTracks = () => {
     const tracks: Array<RYMTrack> = [];
 
-    const positions = (getFieldData(trackPositions.name) as Array<string>);
-    const artists = (getFieldData(trackArtists.name) as Array<string>);
-    const titles = (getFieldData(trackTitles.name) as Array<string>);
-    const durations = (getFieldData(trackDurations.name) as Array<string>);
+    const positions = (getDataForField(trackPositions.name) as Array<string>);
+    const artists = (getDataForField(trackArtists.name) as Array<string>);
+    const titles = (getDataForField(trackTitles.name) as Array<string>);
+    const durations = (getDataForField(trackDurations.name) as Array<string>);
 
     _.range(0, positions.length).forEach((i) => tracks.push({
-      position: positions[i],
+      position: positions[i] ?? '',
       artist: artists[i] ?? '',
-      title: titles[i],
-      duration: durations[i],
+      title: titles[i] ?? '',
+      duration: durations[i] ?? '',
     }));
 
     return tracks;
   };
 
-  const nextField = () => {
-    do { setDataIndex(dataIndex + 1); }
-    while (dataIndex < data.length && !isFieldDisplayed(data[dataIndex]));
+  const clearField = (i: number) => {
+    const _data = update(data,
+      {
+        [i]:
+          {
+            data: { $set: null },
+          },
+      });
+
+    setData(_data);
   };
 
-  const isFieldDisplayed = (field: Field) => !field.disabled && (!field.dependency
-      || data.find((f) => f === (field.dependency as [Field, string])[0])
-            ?.data === (field.dependency as [Field, string])[1]);
+  const nextField = () => {
+    let index;
 
-  const getFieldData = (name: string) => data.find((d) => d.name === name)?.data;
+    for (index = dataIndex; index < data.length && !isFieldEnabled(data[index]); index += 1);
+
+    setDataIndex(index);
+  };
+
+  const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
+    || data.find((f) => f.name === (field.dependency as [Field, any])[0].name)
+      ?.data === (field.dependency as [Field, any])[1]);
+
+  const getDataForField = (name: string) => data.find((d) => d.name === name)?.data;
   /* #endregion */
 
   /* #region Render */
@@ -626,12 +639,23 @@ const App = () => {
                 Skip
               </button>
               <button
-                id="rym__quit"
+                id="rym__clear"
                 type="button"
                 style={{ marginLeft: 10 }}
-                onClick={() => setIsGuiding(false)}
+                onClick={() => clearField(dataIndex)}
               >
-                Quit
+                Clear
+              </button>
+              <button
+                id="rym__cancel"
+                type="button"
+                style={{ marginLeft: 10 }}
+                onClick={() => {
+                  setIsGuiding(false);
+                  setIsSelecting(false);
+                }}
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -664,7 +688,7 @@ const App = () => {
               >
                 Guide Me
               </button>
-              {(data).filter((field) => isFieldDisplayed(field)).map((field, i) => (
+              {(data).filter((field) => isFieldEnabled(field)).map((field, i) => (
                 <li>
                   <p>
                     <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
@@ -693,9 +717,9 @@ const App = () => {
               <li>
                 <p><b>Tracks:</b></p>
                 <TrackList
-                  positions={getFieldData(trackPositions.name) as Array<string>}
-                  titles={getFieldData(trackTitles.name) as Array<string>}
-                  durations={getFieldData(trackDurations.name)as Array<string>}
+                  positions={getDataForField(trackPositions.name) as Array<string>}
+                  titles={getDataForField(trackTitles.name) as Array<string>}
+                  durations={getDataForField(trackDurations.name)as Array<string>}
                 />
               </li>
             </ul>
