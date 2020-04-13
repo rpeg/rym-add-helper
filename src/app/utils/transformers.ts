@@ -17,6 +17,8 @@ const DO_NOT_CAPITALIZE = [
   'etc.',
 ];
 
+const MONTH_ABBREVIATIONS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
 /**
  * Second-order transformer for mapping regexes to corresponding RYM form types.
  */
@@ -57,9 +59,25 @@ const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.]+/ig)).
 const discSizeTransformer = (str: string) => _.head(str.match(/\d{1,2}"/));
 
 const dateTransformer: (date: string) => RYMDate = (date) => {
+  const monthRegexes = MONTH_ABBREVIATIONS.map((m, i) => {
+    const formattedOrdinal = _.padStart(`${i + 1}`, 2, '0');
+
+    return {
+      // e.g. /(jan)|(01)|(\s+1\/)|(\d\/0?1\/)/,
+      regex: `(${m})|(${formattedOrdinal})|(\\s+${i + 1}\\/)|(\\d\\/${_.padStart(`${i + 1}`, 2, '0?')}\\/)`,
+      mapTo: formattedOrdinal,
+    };
+  });
+
+  const monthTransformer = regexMapTransformerFactory(monthRegexes, '00');
+
   const year = _.last(date.match(/(19\d\d)|(20\d\d)/ig));
-  const month = Object.values(Months).find((m) => new RegExp(m.slice(0, 3), 'ig').test(date));
-  const day = _.head(date.match(/(?<!\d)(([1-3][0-1])|([1-2][1-9])|([1-9]))(?!\d)/));
+  const month = monthTransformer(date);
+  const day = _.padStart(
+    _.head(date.match(/(?<!\d)(([1-3][0-1])|([1-2][1-9])|([1-9]))(?!\d)/)) || '00',
+    2,
+    '0',
+  );
 
   return {
     month,

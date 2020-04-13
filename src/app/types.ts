@@ -79,25 +79,10 @@ export enum Formats {
 }
 
 export enum DiscSpeeds {
-    _16 = '16',
-    _33 = '33',
-    _45 = '45',
-    _78 = '78',
-    _80 = '80',
+    _16 = '16 rpm',
+    _33 = '33 rpm',
+    _45 = '45 rpm',
+    _78 = '78 rpm',
+    _80 = '80 rpm',
     // missing reel-to-reel
-}
-
-export enum Months {
-    January = 'January',
-    February = 'February',
-    March = 'March',
-    April = 'April',
-    May = 'May',
-    June = 'June',
-    July = 'July',
-    August = 'August',
-    September = 'September',
-    October = 'October',
-    November = 'November',
-    December = 'December'
 }

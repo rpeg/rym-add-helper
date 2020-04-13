@@ -34,7 +34,6 @@ chrome.runtime.onMessage.addListener(
     if (request.type === 'rym_submit' && request.formData) {
       chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
-          console.log(_tab);
           if (tabId === tab.id && changeInfo.status === 'complete') {
             chrome.tabs.executeScript(tabId, {
               file: 'fill.js',

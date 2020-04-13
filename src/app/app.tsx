@@ -249,16 +249,15 @@ const discSpeed : Field = {
     ],
     DiscSpeeds._45,
   )],
-  format: (speed: string) => (speed ? `${speed} RPM` : ''),
 };
 
 const date : Field = {
   name: 'date',
   selector: '',
   label: 'date',
-  data: null,
+  data: {},
   transformers: [Transformers.dateTransformer],
-  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join(' '),
+  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join('/'),
 };
 
 const label : Field = {
