@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 
-import { FormData } from './app/types';
+import { FormData, Formats } from './app/types';
 
 const fillOutForm = (data: FormData) => {
   const {
@@ -40,21 +40,21 @@ const fillOutForm = (data: FormData) => {
 
     $('#searchterm').val(label);
 
-    $('td > .gosearch > .button').click();
-
     $('#labellist').on('load', () => { // capture iframe update
       const results = $('#labellist .infobox');
       results.length && results[0].parentElement.parentElement.parentElement.click();
 
       isAwaitingLabel = false;
     });
+
+    $('td > .gosearch > .button').click();
   }
 
   $('#catalog_no').val(catalogId);
 
   countries.length && $('#countries').val(countries.join(', '));
 
-  if (format === 'Vinyl') {
+  if (format === Formats.Vinyl) {
     if (discSize) {
       const container = $(`.submit_field_content:nth-child(6) tr:nth-child(1) label:contains('${discSize}')`);
 

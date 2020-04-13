@@ -437,7 +437,7 @@ const App = () => {
       });
 
     setData(_data);
-    setDataIndex(dataIndex + 1);
+    nextField();
   }, [selectedElm]);
 
   useEffect(() => {
@@ -561,6 +561,15 @@ const App = () => {
     }
   };
 
+  const nextField = () => {
+    do { setDataIndex(dataIndex + 1); }
+    while (dataIndex < data.length && !isFieldDisplayed(data[dataIndex]));
+  };
+
+  const isFieldDisplayed = (field: Field) => !field.dependency
+      || data.find((f) => f === (field.dependency as [Field, string])[0])
+            ?.data === (field.dependency as [Field, string])[1];
+
   const getFieldData = (name: string) => data.find((d) => d.name === name)?.data;
   /* #endregion */
 
@@ -593,7 +602,7 @@ const App = () => {
                 id="rym__skip"
                 type="button"
                 style={{ marginLeft: 10 }}
-                onClick={() => setDataIndex(dataIndex + 1)}
+                onClick={() => nextField()}
               >
                 Skip
               </button>
@@ -624,34 +633,31 @@ const App = () => {
               >
                 Guide Me
               </button>
-              {(data).map((field, i) => (!field.dependency
-                || data.find((f) => f === (field.dependency as [Field, string])[0])
-                      ?.data === (field.dependency as [Field, string])[1])
-                    && (
-                    <li>
-                      <p>
-                        <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
-                          {`${field.label}:`}
-                        </b>
-                      </p>
-                      <div style={{ display: 'flex' }}>
-                        <FormInput
-                          field={field}
-                          isSelectingField={isSelecting && dataIndex === i}
-                        />
-                        <button
-                          type="button"
-                          disabled={field.disabled || isGuiding}
-                          onClick={() => {
-                            setIsSelecting(true);
-                            setDataIndex(i);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </li>
-                    ))}
+              {(data).filter((field) => isFieldDisplayed(field)).map((field, i) => (
+                <li>
+                  <p>
+                    <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
+                      {`${field.label}:`}
+                    </b>
+                  </p>
+                  <div style={{ display: 'flex' }}>
+                    <FormInput
+                      field={field}
+                      isSelectingField={isSelecting && dataIndex === i}
+                    />
+                    <button
+                      type="button"
+                      disabled={field.disabled || isGuiding}
+                      onClick={() => {
+                        setIsSelecting(true);
+                        setDataIndex(i);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </li>
+              ))}
               <hr />
               <li>
                 <p><b>Tracks:</b></p>

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import {
-  RYMDate, Months, RegexMap,
+  RYMDate, RegexMap,
 } from '../types';
 
 const ALWAYS_CAPITALIZE = [
