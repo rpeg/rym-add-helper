@@ -11,7 +11,7 @@ const Templates: {[index: string]: Template } = {
     date: '.content:nth-child(9) > a',
     label: '.content:nth-child(3) > a',
     catalogId: '.content:nth-child(3)',
-    country: '.content:nth-child(7) > a',
+    countries: '.content:nth-child(7) > a',
     trackPositions: '.track .tracklist_track_pos',
     trackTitles: '.tracklist_track > .track > .tracklist_track_title',
     trackDurations: '.track .tracklist_track_duration > span',

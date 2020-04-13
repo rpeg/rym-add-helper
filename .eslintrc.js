@@ -30,6 +30,7 @@ module.exports = {
     "import/extensions": "off",
     "no-underscore-dangle": "off",
     "no-unused-vars": "off",
+    "no-unused-expressions": "off",
     "no-use-before-define": "off",
     "func-names": "off",
     "react/react-in-jsx-scope": "off",

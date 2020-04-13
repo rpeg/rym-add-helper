@@ -8,7 +8,7 @@ export interface Template {
     date: string,
     label: string,
     catalogId: string,
-    country: string,
+    countries: string,
     trackPositions: string,
     trackTitles: string,
     trackDurations: string,
@@ -27,7 +27,7 @@ export interface FormData {
     date: RYMDate,
     label: string,
     catalogId: string,
-    country: string,
+    countries: Array<string>,
     tracks: Array<RYMTrack>
 }
 

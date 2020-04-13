@@ -1,11 +1,11 @@
-/* eslint-disable no-unused-expressions */
 import $ from 'jquery';
 import _ from 'lodash';
 
-const fillOutForm = (data) => {
+import { FormData } from './app/types';
+
+const fillOutForm = (data: FormData) => {
   const {
     url,
-    artist,
     title,
     date,
     type,
@@ -14,7 +14,7 @@ const fillOutForm = (data) => {
     discSpeed,
     label,
     catalogId,
-    country,
+    countries,
     tracks,
   } = data;
 
@@ -42,16 +42,17 @@ const fillOutForm = (data) => {
 
     $('td > .gosearch > .button').click();
 
-    $('#labellist').load(() => { // capture iframe update
+    $('#labellist').on('load', () => { // capture iframe update
       const results = $('#labellist .infobox');
-      results.length && results[0].parent().parent().parent().click();
+      results.length && results[0].parentElement.parentElement.parentElement.click();
+
       isAwaitingLabel = false;
     });
   }
 
   $('#catalog_no').val(catalogId);
 
-  country && $('#countries').val(country); // TODO list of countries
+  countries.length && $('#countries').val(countries.join(', '));
 
   if (format === 'Vinyl') {
     if (discSize) {

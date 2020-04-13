@@ -36,7 +36,7 @@ chrome.runtime.onMessage.addListener(
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
           if (tabId === tab.id && changeInfo.status === 'complete') {
             chrome.tabs.executeScript(tabId, {
-              file: 'fill.js',
+              file: 'fill.ts',
             }, () => {
               chrome.tabs.sendMessage(tab.id, {
                 formData: request.formData,

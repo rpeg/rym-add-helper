@@ -275,11 +275,11 @@ const catalogId : Field = {
   transformers: [Transformers.catalogIdTransformer],
 };
 
-const country : Field = {
-  name: 'country',
+const countries : Field = {
+  name: 'countries',
   selector: '',
-  label: 'country',
-  data: '',
+  label: 'countries',
+  data: [],
 };
 
 const trackPositions : Field = {
@@ -314,7 +314,7 @@ const fields = [
   discSpeed,
   label,
   catalogId,
-  country,
+  countries,
   trackPositions,
   trackTitles,
   trackDurations,
@@ -546,7 +546,7 @@ const App = () => {
         date: getFieldData(date.name) as RYMDate,
         label: getFieldData(label.name) as string,
         catalogId: getFieldData(catalogId.name) as string,
-        country: getFieldData(country.name) as string,
+        countries: getFieldData(countries.name) as Array<string>,
         tracks,
       };
 
