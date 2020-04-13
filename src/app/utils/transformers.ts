@@ -48,9 +48,7 @@ const textTransformer = (text: string) => {
   }).join(' ');
 };
 
-const countriesTransformer = (countries: Array<string>) => countries
-  .map((c) => c.split(/,|&|(?:and)/).map((s) => s.trim()))
-  .flat();
+const countryTransformer = (country: string) => country.split(/,|&|(?:and)/).map((c) => c.trim());
 
 /**
  * Many sites display their label and catalog id in the same block level elm, or same string,
@@ -93,7 +91,7 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
 export default {
   regexMapTransformerFactory,
   textTransformer,
-  countriesTransformer,
+  countriesTransformer: countryTransformer,
   catalogIdTransformer,
   discSizeTransformer,
   dateTransformer,

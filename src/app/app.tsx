@@ -281,6 +281,7 @@ const countries : Field = {
   label: 'countries',
   default: [],
   transformers: [Transformers.countriesTransformer],
+  format: (cs: Array<string>) => cs.join(', '),
 };
 
 const trackPositions : Field = {
@@ -365,38 +366,11 @@ const FormInput = ({ field, isSelectingField }: FormInputProps) => {
 };
 /* #endregion */
 
-/* #region TrackList */
-type TrackListProps = {
-  positions: Array<string>,
-  titles: Array<string>,
-  durations: Array<string>,
-}
-
-const TrackList = ({ positions, titles, durations }: TrackListProps) => {
-  const maxIndex = _.min([
-    positions.length,
-    titles.length,
-    durations.length,
-  ]);
-
-  return (
-    <ul>
-      {_.range(0, maxIndex).map((i) => (
-        <li style={{ listStyleType: 'disc' }}>
-          {`${positions[i]}|${titles[i]}|${durations[i]}`}
-        </li>
-      ))}
-    </ul>
-  );
-};
-/* #endregion TrackList */
-
 const App = () => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isGuiding, setIsGuiding] = useState(false);
-  const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
   const [selectedElm, setSelectedElm] = useState(null);
   const [dataIndex, setDataIndex] = useState(0);
@@ -525,13 +499,18 @@ const App = () => {
   };
 
   const submitForm = () => {
-    const id = isVariousArtists
-      ? VARIOUS_ARTISTS_ID
-      : artistInputRef.current.value;
+    let id = '';
+
+    if (isVariousArtists) {
+      id = VARIOUS_ARTISTS_ID;
+    } else {
+      const matches = artistInputRef.current.value.match(/\d+/);
+      if (matches && matches.length) {
+        id = _.head(matches);
+      }
+    }
 
     if (id) {
-      setIsInvalidMessageDisplayed(false);
-
       const formData: FormData = {
         url: window.location.href,
         id,
@@ -555,23 +534,30 @@ const App = () => {
         }, '*',
       );
     } else {
-      setIsInvalidMessageDisplayed(true);
+      alert('Enter a RYM artist ID');
     }
   };
 
   const getTracks = () => {
     const tracks: Array<RYMTrack> = [];
 
-    const positions = (getDataForField(trackPositions.name) as Array<string>);
-    const artists = (getDataForField(trackArtists.name) as Array<string>);
-    const titles = (getDataForField(trackTitles.name) as Array<string>);
-    const durations = (getDataForField(trackDurations.name) as Array<string>);
+    const positions = (getDataForField(trackPositions.name) as Array<string>) ?? [];
+    const artists = (getDataForField(trackArtists.name) as Array<string>) ?? [];
+    const titles = (getDataForField(trackTitles.name) as Array<string>) ?? [];
+    const durations = (getDataForField(trackDurations.name) as Array<string>) ?? [];
 
-    _.range(0, positions.length).forEach((i) => tracks.push({
-      position: positions[i] ?? '',
-      artist: artists[i] ?? '',
-      title: titles[i] ?? '',
-      duration: durations[i] ?? '',
+    const max = _.max([
+      positions.length,
+      artists.length,
+      titles.length,
+      durations.length,
+    ]);
+
+    _.range(0, max).forEach((i) => tracks.push({
+      position: positions && positions[i] ? positions[i] : '',
+      artist: artists && artists[i] ? artists[i] : '',
+      title: titles && titles[i] ? titles[i] : '',
+      duration: durations && durations[i] ? durations[i] : '',
     }));
 
     return tracks;
@@ -672,8 +658,6 @@ const App = () => {
               />
               <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
             </div>
-            {isInvalidMessageDisplayed
-              && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
             <ul id="rym__data">
               <button
@@ -716,11 +700,13 @@ const App = () => {
               <hr />
               <li>
                 <p><b>Tracks:</b></p>
-                <TrackList
-                  positions={getDataForField(trackPositions.name) as Array<string>}
-                  titles={getDataForField(trackTitles.name) as Array<string>}
-                  durations={getDataForField(trackDurations.name)as Array<string>}
-                />
+                <ul>
+                  {getTracks().map((t) => (
+                    <li style={{ listStyleType: 'disc' }}>
+                      {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
+                    </li>
+                  ))}
+                </ul>
               </li>
             </ul>
             <button
