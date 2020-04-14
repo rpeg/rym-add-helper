@@ -339,40 +339,6 @@ const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLElement)
 /* #endregion */
 
 /* #region Components  */
-class Frame extends Component {
-  componentDidMount() {
-    // eslint-disable-next-line react/destructuring-assignment
-    // eslint-disable-next-line react/prop-types
-    render(<body>{this.props.children}</body>,
-      this.iframe.contentDocument.documentElement,
-      this.iframe.contentDocument.body);
-  }
-
-  render() {
-    return (
-      <iframe
-        id="rym__frame"
-        title={BASE_CLASS}
-        style={{
-          zIndex: 10000,
-          position: 'fixed',
-          height: '100vh',
-          top: 0,
-          right: 0,
-          width: '230px',
-          overflowY: 'scroll',
-          color: 'black',
-          backgroundColor: 'white',
-          fontFamily: 'Arial, sans-serif',
-        }}
-        ref={(node) => {
-          (this.iframe = node);
-        }}
-      />
-    );
-  }
-}
-
 type FormInputProps = {
   field: Field,
   disabled: boolean,
@@ -441,8 +407,6 @@ const App = () => {
       className: (n) => !n.startsWith(BASE_CLASS),
       idName: (n) => !n.startsWith(BASE_CLASS),
     });
-
-    console.log(selector);
 
     const currentField = data[dataIndex];
 
@@ -523,14 +487,10 @@ const App = () => {
       $(window.parent.document).find(selector).toArray(),
     );
 
-    console.log(matches);
-
     const transformers = field.transformers || [function (val: any) { return val; }];
 
     const transformedData = matches.map((m) => transformers
       .reduce((acc, f) => f(acc), (m as any).innerText.trim()));
-
-    console.log(transformedData);
 
     if (typeof field.default === 'string') return transformedData.join(' ');
     if (field.default instanceof Array) return transformedData;
@@ -637,136 +597,134 @@ const App = () => {
   return (
     isFormDisplayed && (
       <Fragment>
-        <Frame>
-          {isSelecting && (
+        {isSelecting && (
+        <div
+          className="rym__ rym__prompt"
+          id="rym__prompt"
+          style={{
+            position: 'fixed',
+            zIndex: '10000',
+            bottom: 25,
+            width: '100%',
+          }}
+        >
           <div
-            className="rym__ rym__prompt"
-            id="rym__prompt"
+            className="rym__floating_container"
             style={{
-              position: 'fixed',
-              zIndex: '10000',
-              bottom: 25,
-              width: '100%',
+              display: 'flex',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              width: 'fit-content',
+              padding: 10,
             }}
           >
-            <div
-              className="rym__floating_container"
-              style={{
-                display: 'flex',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                width: 'fit-content',
-                padding: 10,
+            <p className="rym__"><b>{`Select ${data[dataIndex].label}`}</b></p>
+            <button
+              className="rym__"
+              id="rym__skip"
+              type="button"
+              style={{ marginLeft: 10 }}
+              onClick={() => nextField()}
+            >
+              Skip
+            </button>
+            <button
+              className="rym__"
+              id="rym__clear"
+              type="button"
+              style={{ marginLeft: 10 }}
+              onClick={() => clearField(dataIndex)}
+            >
+              Clear
+            </button>
+            <button
+              className="rym__"
+              id="rym__cancel"
+              type="button"
+              style={{ marginLeft: 10 }}
+              onClick={() => {
+                setIsGuiding(false);
+                setIsSelecting(false);
               }}
             >
-              <p className="rym__"><b>{`Select ${data[dataIndex].label}`}</b></p>
-              <button
-                className="rym__"
-                id="rym__skip"
-                type="button"
-                style={{ marginLeft: 10 }}
-                onClick={() => nextField()}
-              >
-                Skip
-              </button>
-              <button
-                className="rym__"
-                id="rym__clear"
-                type="button"
-                style={{ marginLeft: 10 }}
-                onClick={() => clearField(dataIndex)}
-              >
-                Clear
-              </button>
-              <button
-                className="rym__"
-                id="rym__cancel"
-                type="button"
-                style={{ marginLeft: 10 }}
-                onClick={() => {
-                  setIsGuiding(false);
-                  setIsSelecting(false);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+              Cancel
+            </button>
           </div>
-          )}
-          <div className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
-            <div id="rym__form-inner">
-              <p className="rym__"><b>RYM artist ID:</b></p>
-              <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
-              <div style={{ marginTop: 4 }}>
-                <input
-                  type="checkbox"
-                  checked={isVariousArtists}
-                  onClick={() => setIsVariousArtists(!isVariousArtists)}
-                />
-                <label className="rym__" htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
-              </div>
-              <hr />
-              <ul id="rym__data">
-                <button
-                  id="rym__guideme"
-                  className="rym__ rym__button-primary"
-                  type="button"
-                  onClick={() => {
-                    setDataIndex(0);
-                    setIsGuiding(true);
-                    setIsSelecting(true);
-                  }}
-                >
-                  Guide Me
-                </button>
-                {(data).map((field, i) => (
-                  <li>
-                    <p className="rym__">
-                      <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
-                        {`${field.label}:`}
-                      </b>
-                    </p>
-                    <div style={{ display: 'flex' }}>
-                      <FormInput
-                        field={field}
-                        disabled={!isFieldEnabled(field) || (isSelecting && dataIndex !== i)}
-                      />
-                      <button
-                        type="button"
-                        disabled={isSelecting}
-                        onClick={() => {
-                          setIsSelecting(true);
-                          setDataIndex(i);
-                        }}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </li>
-                ))}
-                <hr />
-                <li>
-                  <p className="rym__"><b>Tracks:</b></p>
-                  <ul className="rym__">
-                    {getTracks().map((t) => (
-                      <li style={{ listStyleType: 'disc' }}>
-                        {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              </ul>
+        </div>
+        )}
+        <div className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
+          <div id="rym__form-inner">
+            <p className="rym__"><b>RYM artist ID:</b></p>
+            <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+            <div style={{ marginTop: 4 }}>
+              <input
+                type="checkbox"
+                checked={isVariousArtists}
+                onClick={() => setIsVariousArtists(!isVariousArtists)}
+              />
+              <label className="rym__" htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
+            </div>
+            <hr />
+            <ul id="rym__data">
               <button
-                id="rym__submit"
+                id="rym__guideme"
                 className="rym__ rym__button-primary"
                 type="button"
-                onClick={submitForm}
+                onClick={() => {
+                  setDataIndex(0);
+                  setIsGuiding(true);
+                  setIsSelecting(true);
+                }}
               >
-                Submit
+                Guide Me
               </button>
-            </div>
+              {(data).map((field, i) => (
+                <li>
+                  <p className="rym__">
+                    <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
+                      {`${field.label}:`}
+                    </b>
+                  </p>
+                  <div style={{ display: 'flex' }}>
+                    <FormInput
+                      field={field}
+                      disabled={!isFieldEnabled(field) || (isSelecting && dataIndex !== i)}
+                    />
+                    <button
+                      type="button"
+                      disabled={isSelecting}
+                      onClick={() => {
+                        setIsSelecting(true);
+                        setDataIndex(i);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </li>
+              ))}
+              <hr />
+              <li>
+                <p className="rym__"><b>Tracks:</b></p>
+                <ul className="rym__">
+                  {getTracks().map((t) => (
+                    <li style={{ listStyleType: 'disc' }}>
+                      {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            </ul>
+            <button
+              id="rym__submit"
+              className="rym__ rym__button-primary"
+              type="button"
+              onClick={submitForm}
+            >
+              Submit
+            </button>
           </div>
-        </Frame>
+        </div>
       </Fragment>
     )
   );
