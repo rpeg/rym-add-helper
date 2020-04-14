@@ -80,9 +80,10 @@ const fillOutForm = (data) => {
   }
 
   if (tracks.length) {
+    const form = $();
     const baseRow = $('#track_base');
     const prefix = 'track_';
-    let counter = 3;
+    let counter = 2;
 
     const setAttrs = (elm) => {
       const elmId = elm.attr('id');
@@ -91,12 +92,15 @@ const fillOutForm = (data) => {
     };
 
     tracks.forEach((track, i) => {
-      const row = baseRow.clone(true, true);
-      row.attr('id', `${prefix}${counter}`);
-      row.attr('style', '');
-      row.insertBefore(baseRow);
+      const newRow = baseRow.clone(true, true);
+      counter++;
 
-      const cells = row.find('td');
+      $('#track_num').val(counter);
+
+      newRow.attr('id', `${prefix}${counter}`);
+      newRow.css('display', '');
+
+      const cells = newRow.find('td');
 
       const btn = cells.eq(0).find('input');
       setAttrs(btn);
@@ -114,7 +118,7 @@ const fillOutForm = (data) => {
       setAttrs(length);
       length.val(track.duration);
 
-      counter++;
+      baseRow.parent().insertBefore(newRow, baseRow);
     });
   }
 
@@ -125,5 +129,15 @@ const fillOutForm = (data) => {
 };
 
 window.addEventListener('message', ({ data }) => {
+  $(window).bind('load', () => {
+    // Code here
+    console.log('load!');
+  });
   $(document).ready(() => { if (data.formData) fillOutForm(data.formData); });
 }, false);
+
+
+$(window).bind('load', () => {
+  // Code here
+  console.log('other load!');
+});
