@@ -18,10 +18,6 @@ const fillOutForm = (data) => {
     tracks,
   } = data;
 
-  console.info(data);
-
-  const token = $('#token').val();
-
   title && $('#title').val(title);
 
   date.month && $('#month').val(date.month);
@@ -136,8 +132,6 @@ const fillOutForm = (data) => {
   }
 
   $('#notes').val(url);
-
-  console.log($('#release_ac'));
 
   $('html, body').scrollTop($(document).height());
 
