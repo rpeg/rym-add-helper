@@ -199,6 +199,7 @@ export const countryCodes = {
   YE: 'Yemen',
   DZ: 'Algeria',
   US: 'United States',
+  UK: 'United Kingdom',
   UY: 'Uruguay',
   YT: 'Mayotte',
   UM: 'United States Minor Outlying Islands',

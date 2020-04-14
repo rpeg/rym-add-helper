@@ -41,7 +41,16 @@ const fillOutForm = (data) => {
 
     iframe.on('load', () => { // capture iframe update
       const results = iframe.contents().find('.infobox');
-      results.length && results[0].parentElement.parentElement.parentElement.click();
+      const top = $(results.get(0));
+      const labelId = top.attr('id').match(/\d+/)[0];
+
+      top && top.parent().parent().parent().click();
+
+      $('#labeltext > .label').val(labelId);
+
+      // chrome.runtime.sendMessage(`UpdateLabelText|0|${id}`, (e) => { console.log(e); });
+
+      new XMLHttpRequest().send(`action=UpdateLabelText|0|${id}`);
     });
 
     $('td > .gosearch > .button').click();
@@ -80,7 +89,6 @@ const fillOutForm = (data) => {
   }
 
   if (tracks.length) {
-    const form = $();
     const baseRow = $('#track_base');
     const prefix = 'track_';
     let counter = 2;
@@ -103,7 +111,8 @@ const fillOutForm = (data) => {
       const cells = newRow.find('td');
 
       const btn = cells.eq(0).find('input');
-      setAttrs(btn);
+      btn.attr('id', `${prefix}delete_track${counter}`);
+      btn.attr('name', `${prefix}delete_track${counter}`);
 
       const pos = cells.eq(1).find('input');
       setAttrs(pos);
@@ -118,26 +127,18 @@ const fillOutForm = (data) => {
       setAttrs(length);
       length.val(track.duration);
 
-      baseRow.parent().insertBefore(newRow, baseRow);
+      newRow.insertBefore(baseRow);
     });
   }
 
   $('#notes').val(url);
+
+  console.log($('#release_ac'));
 
   $('#previewbtn').click();
   $('html, body').scrollTop($(document).height());
 };
 
 window.addEventListener('message', ({ data }) => {
-  $(window).bind('load', () => {
-    // Code here
-    console.log('load!');
-  });
   $(document).ready(() => { if (data.formData) fillOutForm(data.formData); });
 }, false);
-
-
-$(window).bind('load', () => {
-  // Code here
-  console.log('other load!');
-});
