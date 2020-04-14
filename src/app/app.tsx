@@ -281,7 +281,7 @@ const countries : Field = {
   label: 'countries',
   default: [],
   transformers: [Transformers.countriesTransformer],
-  format: (cs: Array<string>) => cs.join(', '),
+  format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
 };
 
 const trackPositions : Field = {
@@ -334,20 +334,51 @@ const fields = [
 
 /* #region Helpers */
 const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLElement)
-  && ((e.srcElement as HTMLElement).id
-        && (e.srcElement as HTMLElement).id.includes(BASE_CLASS))
-    || ((e.srcElement as HTMLElement).offsetParent
-        && (e.srcElement as HTMLElement).offsetParent.classList
-        && [...(e.srcElement as HTMLElement).offsetParent.classList].includes(BASE_CLASS));
+  .innerHTML.includes(BASE_CLASS);
+
 /* #endregion */
 
-/* #region FormInput  */
-type FormInputProps = {
-  field: Field,
-  isSelectingField: boolean,
+/* #region Components  */
+class Frame extends Component {
+  componentDidMount() {
+    // eslint-disable-next-line react/destructuring-assignment
+    // eslint-disable-next-line react/prop-types
+    render(<body>{this.props.children}</body>,
+      this.iframe.contentDocument.documentElement,
+      this.iframe.contentDocument.body);
+  }
+
+  render() {
+    return (
+      <iframe
+        id="rym__frame"
+        title={BASE_CLASS}
+        style={{
+          zIndex: 10000,
+          position: 'fixed',
+          height: '100vh',
+          top: 0,
+          right: 0,
+          width: '230px',
+          overflowY: 'scroll',
+          color: 'black',
+          backgroundColor: 'white',
+          fontFamily: 'Arial, sans-serif',
+        }}
+        ref={(node) => {
+          (this.iframe = node);
+        }}
+      />
+    );
+  }
 }
 
-const FormInput = ({ field, isSelectingField }: FormInputProps) => {
+type FormInputProps = {
+  field: Field,
+  disabled: boolean,
+}
+
+const FormInput = ({ field, disabled }: FormInputProps) => {
   const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
@@ -359,7 +390,7 @@ const FormInput = ({ field, isSelectingField }: FormInputProps) => {
   return (
     <input
       type="text"
-      disabled={!isSelectingField}
+      disabled={disabled}
       value={formattedData ?? field.default}
     />
   );
@@ -411,6 +442,8 @@ const App = () => {
       idName: (n) => !n.startsWith(BASE_CLASS),
     });
 
+    console.log(selector);
+
     const currentField = data[dataIndex];
 
     const _data = update(data,
@@ -424,7 +457,9 @@ const App = () => {
 
     setData(_data);
 
-    if (isGuiding) nextField(); else setIsSelecting(false);
+    if (isGuiding) {
+      nextField();
+    } else { setIsSelecting(false); }
   }, [selectedElm]);
 
   useEffect(() => {
@@ -452,7 +487,7 @@ const App = () => {
     if (template) {
       processTemplate(template);
     } else {
-      setIsSelecting(true);
+      setIsFormDisplayed(true);
     }
   }, []);
   /* #endregion */
@@ -484,12 +519,18 @@ const App = () => {
   };
 
   const pruneFieldData = (selector: string, field: Field) => {
-    const matches: Array<HTMLElement> = _.intersection($(selector).toArray());
+    const matches = _.intersection(
+      $(window.parent.document).find(selector).toArray(),
+    );
+
+    console.log(matches);
 
     const transformers = field.transformers || [function (val: any) { return val; }];
 
     const transformedData = matches.map((m) => transformers
-      .reduce((acc, f) => f(acc), m.innerText.trim()));
+      .reduce((acc, f) => f(acc), (m as any).innerText.trim()));
+
+    console.log(transformedData);
 
     if (typeof field.default === 'string') return transformedData.join(' ');
     if (field.default instanceof Array) return transformedData;
@@ -580,7 +621,7 @@ const App = () => {
   const nextField = () => {
     let index;
 
-    for (index = dataIndex; index < data.length && !isFieldEnabled(data[index]); index += 1);
+    for (index = dataIndex + 1; index < data.length && !isFieldEnabled(data[index]); index++);
 
     setDataIndex(index);
   };
@@ -596,9 +637,10 @@ const App = () => {
   return (
     isFormDisplayed && (
       <Fragment>
-        {isSelecting && (
+        <Frame>
+          {isSelecting && (
           <div
-            className="rym__prompt"
+            className="rym__ rym__prompt"
             id="rym__prompt"
             style={{
               position: 'fixed',
@@ -617,8 +659,9 @@ const App = () => {
                 padding: 10,
               }}
             >
-              <p><b>{`Select ${data[dataIndex].label}`}</b></p>
+              <p className="rym__"><b>{`Select ${data[dataIndex].label}`}</b></p>
               <button
+                className="rym__"
                 id="rym__skip"
                 type="button"
                 style={{ marginLeft: 10 }}
@@ -627,6 +670,7 @@ const App = () => {
                 Skip
               </button>
               <button
+                className="rym__"
                 id="rym__clear"
                 type="button"
                 style={{ marginLeft: 10 }}
@@ -635,6 +679,7 @@ const App = () => {
                 Clear
               </button>
               <button
+                className="rym__"
                 id="rym__cancel"
                 type="button"
                 style={{ marginLeft: 10 }}
@@ -647,80 +692,81 @@ const App = () => {
               </button>
             </div>
           </div>
-        )}
-        <div id="rym__form" className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
-          <div id="rym__form-inner">
-            <p><b>RYM artist ID:</b></p>
-            <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
-            <div style={{ marginTop: 4 }}>
-              <input
-                type="checkbox"
-                checked={isVariousArtists}
-                onClick={() => setIsVariousArtists(!isVariousArtists)}
-              />
-              <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
-            </div>
-            <hr />
-            <ul id="rym__data">
-              <button
-                id="rym__guideme"
-                className="rym__button-primary"
-                type="button"
-                onClick={() => {
-                  setDataIndex(0);
-                  setIsGuiding(true);
-                  setIsSelecting(true);
-                }}
-              >
-                Guide Me
-              </button>
-              {(data).filter((field) => isFieldEnabled(field)).map((field, i) => (
-                <li>
-                  <p>
-                    <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
-                      {`${field.label}:`}
-                    </b>
-                  </p>
-                  <div style={{ display: 'flex' }}>
-                    <FormInput
-                      field={field}
-                      isSelectingField={isSelecting && dataIndex === i}
-                    />
-                    <button
-                      type="button"
-                      disabled={isSelecting}
-                      onClick={() => {
-                        setIsSelecting(true);
-                        setDataIndex(i);
-                      }}
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </li>
-              ))}
+          )}
+          <div className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
+            <div id="rym__form-inner">
+              <p className="rym__"><b>RYM artist ID:</b></p>
+              <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+              <div style={{ marginTop: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={isVariousArtists}
+                  onClick={() => setIsVariousArtists(!isVariousArtists)}
+                />
+                <label className="rym__" htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
+              </div>
               <hr />
-              <li>
-                <p><b>Tracks:</b></p>
-                <ul>
-                  {getTracks().map((t) => (
-                    <li style={{ listStyleType: 'disc' }}>
-                      {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            </ul>
-            <button
-              id="rym__submit"
-              className="rym__button-primary"
-              type="button"
-              onClick={submitForm}
-            >
-              Submit
-            </button>
+              <ul id="rym__data">
+                <button
+                  id="rym__guideme"
+                  className="rym__ rym__button-primary"
+                  type="button"
+                  onClick={() => {
+                    setDataIndex(0);
+                    setIsGuiding(true);
+                    setIsSelecting(true);
+                  }}
+                >
+                  Guide Me
+                </button>
+                {(data).map((field, i) => (
+                  <li>
+                    <p className="rym__">
+                      <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
+                        {`${field.label}:`}
+                      </b>
+                    </p>
+                    <div style={{ display: 'flex' }}>
+                      <FormInput
+                        field={field}
+                        disabled={!isFieldEnabled(field) || (isSelecting && dataIndex !== i)}
+                      />
+                      <button
+                        type="button"
+                        disabled={isSelecting}
+                        onClick={() => {
+                          setIsSelecting(true);
+                          setDataIndex(i);
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </li>
+                ))}
+                <hr />
+                <li>
+                  <p className="rym__"><b>Tracks:</b></p>
+                  <ul className="rym__">
+                    {getTracks().map((t) => (
+                      <li style={{ listStyleType: 'disc' }}>
+                        {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              </ul>
+              <button
+                id="rym__submit"
+                className="rym__ rym__button-primary"
+                type="button"
+                onClick={submitForm}
+              >
+                Submit
+              </button>
+            </div>
           </div>
-        </div>
+        </Frame>
       </Fragment>
     )
   );

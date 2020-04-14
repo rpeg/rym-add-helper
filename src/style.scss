@@ -1,3 +1,7 @@
+.rym__ {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 .rym__hover {
     border: 2px solid #FFFF00;
     cursor: pointer;
@@ -7,15 +11,6 @@
     background-color: white;
     box-shadow: darkslategrey -5px 5px 15px;
     border: 1px solid darkslategrey;
-}
-
-#rym__form {
-    z-index: 10000;
-    position: fixed;
-    max-height: 100vh;
-    width: 230px;
-    overflow-y: scroll;
-    color: black;
 }
 
 #rym__form-inner {
@@ -40,13 +35,18 @@
     }
 }
 
-.rym__button-primary {
-    background-color: #4CAF50;
-    border: none;
+.rym__button {
     color: white;
+    border: none;
+    
     padding: 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
     font-size: 14px;
+
+    .rym__button-primary {
+        background-color: #4CAF50;
+        color: white;
+    }
 }

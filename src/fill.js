@@ -135,6 +135,7 @@ const fillOutForm = (data) => {
 
   $('html, body').scrollTop($(document).height());
 
+  // preview hack for async processing of label
   setTimeout(() => {
     $('#previewbtn').click();
     $('#previewbtn').click();
