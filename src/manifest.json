@@ -36,7 +36,7 @@
   ],
   "web_accessible_resources": [
     "main.js",
-    "fill.ts",
+    "fill.js",
     "app/*"
   ]
 }

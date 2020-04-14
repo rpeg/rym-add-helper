@@ -1,8 +1,7 @@
 import _ from 'lodash';
 
-import {
-  RYMDate, RegexMap,
-} from '../types';
+import { RYMDate, RegexMap } from '../types';
+import { countryCodes } from './constants';
 
 const ALWAYS_CAPITALIZE = [
   'be', 'been', 'am', 'are', 'is', 'was', 'were', 'if', 'as', 'so', 'he', 'she', 'we', 'it',
@@ -48,7 +47,15 @@ const textTransformer = (text: string) => {
   }).join(' ');
 };
 
-const countryTransformer = (country: string) => country.split(/,|&|(?:and)/).map((c) => c.trim());
+const countryTransformer = (country: string) => country.split(/,|&|(?:and)/)
+  .map((c) => c.trim())
+  .map((c) => {
+    if (c.length === 2) {
+      return countryCodes[c as keyof typeof countryCodes] ?? c;
+    }
+
+    return c;
+  });
 
 /**
  * Many sites display their label and catalog id in the same block level elm, or same string,

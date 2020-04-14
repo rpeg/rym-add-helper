@@ -527,6 +527,8 @@ const App = () => {
         tracks: getTracks(),
       };
 
+      console.log(data);
+
       window.postMessage(
         {
           type: 'rym_submit',
@@ -534,7 +536,7 @@ const App = () => {
         }, '*',
       );
     } else {
-      alert('Enter a RYM artist ID');
+      alert('Enter a valid RYM artist ID');
     }
   };
 
