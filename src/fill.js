@@ -20,6 +20,8 @@ const fillOutForm = (data) => {
 
   console.info(data);
 
+  const token = $('#token').val();
+
   title && $('#title').val(title);
 
   date.month && $('#month').val(date.month);
@@ -42,15 +44,17 @@ const fillOutForm = (data) => {
     iframe.on('load', () => { // capture iframe update
       const results = iframe.contents().find('.infobox');
       const top = $(results.get(0));
-      const labelId = top.attr('id').match(/\d+/)[0];
 
-      top && top.parent().parent().parent().click();
+      if (top) {
+        const labelIdText = top.attr('id');
+        const matches = labelIdText.match(/\d+/);
 
-      $('#labeltext > .label').val(labelId);
+        top && top.parent().parent().parent().click();
 
-      // chrome.runtime.sendMessage(`UpdateLabelText|0|${id}`, (e) => { console.log(e); });
+        if (matches) $('#label').val(matches[0]);
+      }
 
-      new XMLHttpRequest().send(`action=UpdateLabelText|0|${id}`);
+      iframe.off();
     });
 
     $('td > .gosearch > .button').click();
@@ -135,8 +139,12 @@ const fillOutForm = (data) => {
 
   console.log($('#release_ac'));
 
-  $('#previewbtn').click();
   $('html, body').scrollTop($(document).height());
+
+  setTimeout(() => {
+    $('#previewbtn').click();
+    $('#previewbtn').click();
+  }, 1000);
 };
 
 window.addEventListener('message', ({ data }) => {
