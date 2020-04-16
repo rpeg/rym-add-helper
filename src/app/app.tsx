@@ -365,6 +365,52 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
 };
 /* #endregion */
 
+/* #region Styled */
+const textStyle = {
+  fontFamily: 'Arial, Helvetica, sans-serif',
+  color: 'black',
+};
+
+const floatingDivStyle = {
+  backgroundColor: 'white',
+  boxShadow: 'darkslategrey -5px 5px 15px',
+  border: '1px solid darkslategrey',
+};
+
+const formPStyle = {
+  margin: '10px 0 2px 0',
+};
+
+const formUlStyle = {
+  padding: 0,
+  maxWidth: '210px',
+};
+
+const formLiStyle = {
+  listStyleType: 'none',
+  listStylePosition: 'inside',
+};
+
+const inputStyle = {
+  width: 'fit-content',
+};
+
+const buttonStyle = {
+  display: 'inline-block',
+  color: 'white',
+  border: 'none',
+  padding: '10px',
+  textAlign: 'center',
+  textDecoration: 'none',
+  fontSize: '14px',
+};
+
+const accentButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: '#4CAF50',
+};
+/* #endregion */
+
 const App = () => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
@@ -375,6 +421,8 @@ const App = () => {
   const [dataIndex, setDataIndex] = useState(0);
   const [data, setData] = useState(fields);
 
+  const promptContainerRef = useRef<HTMLDivElement>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const artistInputRef = useRef<HTMLInputElement>(null);
   /* #endregion */
 
@@ -390,13 +438,16 @@ const App = () => {
   }, isFormDisplayed);
 
   useWindowEvent('click', (e: MouseEvent) => {
-    if ((e.srcElement as HTMLElement).classList.contains(HOVER_CLASS)) {
-      e.preventDefault();
-      setSelectedElm(e.target);
-      return false;
+    // ignore clicks in app
+    if (e.target instanceof Node
+       && (formContainerRef.current.contains(e.target)
+        || promptContainerRef.current.contains(e.target))) {
+      return true;
     }
 
-    return true;
+    e.preventDefault();
+    setSelectedElm(e.target);
+    return false;
   }, isFormDisplayed);
 
   /**
@@ -601,8 +652,7 @@ const App = () => {
       <Fragment>
         {isSelecting && (
         <div
-          className="rym__ rym__prompt"
-          id="rym__prompt"
+          ref={promptContainerRef}
           style={{
             position: 'fixed',
             zIndex: '10000',
@@ -611,39 +661,44 @@ const App = () => {
           }}
         >
           <div
-            className="rym__floating_container"
             style={{
               display: 'flex',
               marginLeft: 'auto',
               marginRight: 'auto',
               width: 'fit-content',
               padding: 10,
+              ...floatingDivStyle,
             }}
           >
-            <p className="rym__"><b>{`Select ${data[dataIndex].label}`}</b></p>
+            <p style={textStyle}>
+              <b>{`Select ${data[dataIndex].label}`}</b>
+            </p>
             <button
-              className="rym__"
-              id="rym__skip"
               type="button"
-              style={{ marginLeft: 10 }}
+              style={{
+                ...buttonStyle,
+                marginLeft: 10,
+              }}
               onClick={() => nextField()}
             >
               Skip
             </button>
             <button
-              className="rym__"
-              id="rym__clear"
               type="button"
-              style={{ marginLeft: 10 }}
+              style={{
+                ...buttonStyle,
+                marginLeft: 10,
+              }}
               onClick={() => clearField(dataIndex)}
             >
               Clear
             </button>
             <button
-              className="rym__"
-              id="rym__cancel"
               type="button"
-              style={{ marginLeft: 10 }}
+              style={{
+                ...buttonStyle,
+                marginLeft: 10,
+              }}
               onClick={() => {
                 setIsGuiding(false);
                 setIsSelecting(false);
@@ -654,23 +709,39 @@ const App = () => {
           </div>
         </div>
         )}
-        <div className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
-          <div id="rym__form-inner">
-            <p className="rym__"><b>RYM artist ID:</b></p>
-            <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+        <div
+          ref={formContainerRef}
+          style={{
+            top: 0,
+            right: 0,
+            ...floatingDivStyle,
+          }}
+        >
+          <div style={{ padding: '12px' }}>
+            <p style={textStyle}><b>RYM artist ID:</b></p>
+            <input
+              style={inputStyle}
+              type="text"
+              placeholder="e.g. Artist12345"
+              ref={artistInputRef}
+            />
             <div style={{ marginTop: 4 }}>
               <input
                 type="checkbox"
                 checked={isVariousArtists}
                 onClick={() => setIsVariousArtists(!isVariousArtists)}
               />
-              <label className="rym__" htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
+              <label
+                htmlFor="rym__va_box"
+                style={{ paddingLeft: 4, ...textStyle }}
+              >
+                various artists
+              </label>
             </div>
             <hr />
-            <ul id="rym__data">
+            <ul>
               <button
-                id="rym__guideme"
-                className="rym__ rym__button-primary"
+                style={accentButtonStyle}
                 type="button"
                 onClick={() => {
                   setDataIndex(0);
@@ -681,8 +752,13 @@ const App = () => {
                 Guide Me
               </button>
               {(data).map((field, i) => (
-                <li>
-                  <p className="rym__">
+                <li style={formLiStyle}>
+                  <p
+                    style={{
+                      ...textStyle,
+                      ...formPStyle,
+                    }}
+                  >
                     <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
                       {`${field.label}:`}
                     </b>
@@ -707,19 +783,18 @@ const App = () => {
               ))}
               <hr />
               <li>
-                <p className="rym__"><b>Tracks:</b></p>
-                <ul className="rym__">
+                <p style={textStyle}><b>Tracks:</b></p>
+                <ul style={formUlStyle}>
                   {getTracks().map((t) => (
                     <li style={{ listStyleType: 'disc' }}>
-                      {`${t.position}|${t.artist ? `${t.artist} - ` : ''}${t.title}|${t.duration}`}
+                      {`${t.position}. ${t.artist ? `${t.artist} - ` : ''}${t.title} (${t.duration})`}
                     </li>
                   ))}
                 </ul>
               </li>
             </ul>
             <button
-              id="rym__submit"
-              className="rym__ rym__button-primary"
+              style={accentButtonStyle}
               type="button"
               onClick={submitForm}
             >
