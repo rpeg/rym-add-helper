@@ -36,6 +36,7 @@ export interface Field {
     name: string,
     selector: string,
     label: string,
+    placeholder?: string,
     default: string | Array<string> | Object | Array<Object>,
     data?: string | Array<string> | Object | Array<Object>,
     dependency?: [Field, any],

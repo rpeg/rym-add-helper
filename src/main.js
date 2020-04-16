@@ -25,9 +25,7 @@ class Frame extends Component {
           right: 0,
           width: '230px',
           overflowY: 'scroll',
-          color: 'black',
           backgroundColor: 'white',
-          fontFamily: 'Arial, sans-serif',
         }}
         ref={(node) => {
           (this.iframe = node);

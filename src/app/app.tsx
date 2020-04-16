@@ -46,6 +46,7 @@ const type : Field = {
   selector: '',
   label: 'type',
   default: '',
+  placeholder: 'e.g. Album',
   transformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -89,6 +90,7 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
+  placeholder: 'e.g. Vinyl',
   default: '',
   transformers: [Transformers.regexMapTransformerFactory(
     [
