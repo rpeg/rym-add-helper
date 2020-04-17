@@ -334,12 +334,6 @@ const fields = [
 ];
 /* #endregion */
 
-/* #region Helpers */
-const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLElement)
-  .innerHTML.includes(BASE_CLASS);
-
-/* #endregion */
-
 /* #region Components  */
 type FormInputProps = {
   field: Field,
@@ -427,6 +421,10 @@ const App = () => {
   /* #endregion */
 
   /* #region Hooks */
+  const isElmInForm = (e: MouseEvent) => e.target instanceof Node
+    && [formContainerRef, promptContainerRef]
+      .some((r) => r.current.contains(e.target as Node));
+
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
     if (isSelecting && !isElmInForm(e)) {
       (e.srcElement as HTMLElement).classList.add(HOVER_CLASS);
@@ -438,12 +436,7 @@ const App = () => {
   }, isFormDisplayed);
 
   useWindowEvent('click', (e: MouseEvent) => {
-    // ignore clicks in app
-    if (e.target instanceof Node
-       && (formContainerRef.current.contains(e.target)
-        || promptContainerRef.current.contains(e.target))) {
-      return true;
-    }
+    if (isElmInForm(e)) return true;
 
     e.preventDefault();
     setSelectedElm(e.target);
