@@ -217,6 +217,7 @@ const discSize : Field = {
   selector: '',
   label: 'disc size',
   default: '',
+  placeholder: 'e.g. 12"',
   dependency: [format, Formats.Vinyl],
   transformers: [Transformers.discSizeTransformer],
 };
@@ -226,6 +227,7 @@ const discSpeed : Field = {
   selector: '',
   label: 'disc speed',
   default: '',
+  placeholder: 'e.g. 45 rpm',
   dependency: [format, Formats.Vinyl],
   transformers: [Transformers.regexMapTransformerFactory(
     [
@@ -257,7 +259,7 @@ const discSpeed : Field = {
 const date : Field = {
   name: 'date',
   selector: '',
-  label: 'date',
+  label: 'release date',
   default: {},
   transformers: [Transformers.dateTransformer],
   format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
@@ -291,6 +293,7 @@ const trackPositions : Field = {
   name: 'trackPositions',
   selector: '',
   label: 'a track position',
+  placeholder: 'e.g. A1',
   default: [],
 };
 
@@ -346,7 +349,7 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
     ? field.data[0]
     : field.data;
 
-  const formattedData = field.format
+  const formattedData = !_.isEmpty(data) && field.format
     ? field.format(data)
     : data;
 
@@ -356,7 +359,7 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
       style={inputStyle}
       disabled={disabled}
       placeholder={field.placeholder ? field.placeholder : ''}
-      value={formattedData ?? field.default}
+      value={!_.isEmpty(formattedData) ? formattedData : ''}
     />
   );
 };
