@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/destructuring-assignment */
 import { h, render, Component } from 'preact';
+import $ from 'jquery';
 import App from './app/app';
 
 let root = null;

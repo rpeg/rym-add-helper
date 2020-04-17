@@ -12,7 +12,7 @@ import $ from 'jquery';
 
 import '../style.scss';
 
-import { useWindowEvent } from './utils/hooks';
+import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
@@ -444,11 +444,24 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
     (e.srcElement as HTMLElement).classList.remove(HOVER_CLASS);
   }, isFormDisplayed);
 
-  useWindowEvent('click', (e: MouseEvent) => {
+  /**
+   * Capture user's DOM selection and prevent redirects
+   */
+  useDocumentEvent('click', (e: MouseEvent) => {
     if (isElmInForm(e)) return true;
 
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
+    }
+
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+
     e.preventDefault();
+
     setSelectedElm(e.target);
+
     return false;
   }, isFormDisplayed);
 
@@ -458,27 +471,31 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   useEffect(() => {
     if (!selectedElm) return;
 
-    const selector = finder(selectedElm, {
-      className: (n) => !n.startsWith(BASE_CLASS),
-      idName: (n) => !n.startsWith(BASE_CLASS),
-    });
+    let selector;
 
-    const currentField = data[dataIndex];
+    try {
+      selector = finder(selectedElm, {
+        className: (n) => !n.startsWith(BASE_CLASS),
+        idName: (n) => !n.startsWith(BASE_CLASS),
+      });
 
-    const _data = update(data,
-      {
-        [dataIndex]:
+      const currentField = data[dataIndex];
+
+      const _data = update(data,
+        {
+          [dataIndex]:
           {
             selector: { $set: selector },
             data: { $set: pruneDataFromDOM(selector, currentField) },
           },
-      });
+        });
 
-    setData(_data);
+      setData(_data);
 
-    if (isGuiding) {
-      nextField();
-    } else { setIsSelecting(false); }
+      if (isGuiding) {
+        nextField();
+      } else { setIsSelecting(false); }
+    } catch (e) {}
   }, [selectedElm]);
 
   useEffect(() => {
@@ -500,7 +517,21 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
     setData(_data);
   }, [isVariousArtists]);
 
+  /**
+   * Initialization
+   */
   useEffect(() => {
+    // have to use native DOM listener to prevent browser redirects
+    // because React's synthetic events fire after parent's
+    $(document).ready(() => {
+      $('a').click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setSelectedElm(e.target);
+      });
+    });
+
     const template = Templates[document.location.hostname] as Template;
 
     if (template) {
@@ -787,7 +818,12 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
                 <ul style={formUlStyle}>
                   {getTracks().map((t) => (
                     <li style={{ listStyleType: 'disc' }}>
-                      {`${t.position}. ${t.artist ? `${t.artist} - ` : ''}${t.title} (${t.duration})`}
+                      <p style={textStyle}>
+                        {`${t.position ? `${t.position}.` : ''} 
+                        ${t.artist ? `${t.artist} - ` : ''}
+                        ${t.title} 
+                        ${t.duration ? `(${t.duration})` : ''}`}
+                      </p>
                     </li>
                   ))}
                 </ul>
