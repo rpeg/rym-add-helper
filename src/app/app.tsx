@@ -352,14 +352,16 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
   return (
     <input
       type="text"
+      style={inputStyle}
       disabled={disabled}
+      placeholder={field.placeholder ? field.placeholder : ''}
       value={formattedData ?? field.default}
     />
   );
 };
 /* #endregion */
 
-/* #region Styled */
+/* #region Styles */
 const textStyle = {
   fontFamily: 'Arial, Helvetica, sans-serif',
   color: 'black',
@@ -377,23 +379,29 @@ const formPStyle = {
 
 const formUlStyle = {
   padding: 0,
+  margin: 0,
   maxWidth: '210px',
 };
 
 const formLiStyle = {
+  padding: 0,
+  margin: 0,
   listStyleType: 'none',
   listStylePosition: 'inside',
 };
 
 const inputStyle = {
   width: 'fit-content',
+  flexGrow: 1,
+  padding: '4px',
+  border: '1px solid darkslategrey',
 };
 
 const buttonStyle = {
   display: 'inline-block',
   color: 'white',
   border: 'none',
-  padding: '10px',
+  backgroundColor: '#4CAF50',
   textAlign: 'center',
   textDecoration: 'none',
   fontSize: '14px',
@@ -401,7 +409,7 @@ const buttonStyle = {
 
 const accentButtonStyle = {
   ...buttonStyle,
-  backgroundColor: '#4CAF50',
+  padding: '10px',
 };
 /* #endregion */
 
@@ -461,7 +469,7 @@ const App = () => {
         [dataIndex]:
           {
             selector: { $set: selector },
-            data: { $set: pruneFieldData(selector, currentField) },
+            data: { $set: pruneDataFromDOM(selector, currentField) },
           },
       });
 
@@ -522,13 +530,13 @@ const App = () => {
 
     d.filter((field) => field.selector).forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = pruneFieldData(field.selector, field);
+      field.data = pruneDataFromDOM(field.selector, field);
     });
 
     setData([...d]);
   };
 
-  const pruneFieldData = (selector: string, field: Field) => {
+  const pruneDataFromDOM = (selector: string, field: Field) => {
     const matches = _.intersection(
       $(window.parent.document).find(selector).toArray(),
     );
@@ -649,13 +657,12 @@ const App = () => {
           style={{
             position: 'fixed',
             zIndex: '10000',
-            bottom: 25,
+            bottom: '10px',
             width: '100%',
           }}
         >
           <div
             style={{
-              display: 'flex',
               marginLeft: 'auto',
               marginRight: 'auto',
               width: 'fit-content',
@@ -666,39 +673,39 @@ const App = () => {
             <p style={textStyle}>
               <b>{`Select ${data[dataIndex].label}`}</b>
             </p>
-            <button
-              type="button"
-              style={{
-                ...buttonStyle,
-                marginLeft: 10,
-              }}
-              onClick={() => nextField()}
-            >
-              Skip
-            </button>
-            <button
-              type="button"
-              style={{
-                ...buttonStyle,
-                marginLeft: 10,
-              }}
-              onClick={() => clearField(dataIndex)}
-            >
-              Clear
-            </button>
-            <button
-              type="button"
-              style={{
-                ...buttonStyle,
-                marginLeft: 10,
-              }}
-              onClick={() => {
-                setIsGuiding(false);
-                setIsSelecting(false);
-              }}
-            >
-              Cancel
-            </button>
+            <div style={{ display: 'flex ' }}>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                }}
+                onClick={() => nextField()}
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                  margin: '0px 5px',
+                }}
+                onClick={() => clearField(dataIndex)}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                }}
+                onClick={() => {
+                  setIsGuiding(false);
+                  setIsSelecting(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
         )}
@@ -707,11 +714,12 @@ const App = () => {
           style={{
             top: 0,
             right: 0,
-            ...floatingDivStyle,
           }}
         >
-          <div style={{ padding: '12px' }}>
-            <p style={textStyle}><b>RYM artist ID:</b></p>
+          <div>
+            <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
+              <b>RYM artist ID:</b>
+            </p>
             <input
               style={inputStyle}
               type="text"
@@ -732,7 +740,7 @@ const App = () => {
               </label>
             </div>
             <hr />
-            <ul>
+            <ul style={formUlStyle}>
               <button
                 style={accentButtonStyle}
                 type="button"
@@ -769,7 +777,7 @@ const App = () => {
                         setDataIndex(i);
                       }}
                     >
-                      Edit
+                      Select
                     </button>
                   </div>
                 </li>
@@ -785,6 +793,7 @@ const App = () => {
                   ))}
                 </ul>
               </li>
+              <hr />
             </ul>
             <button
               style={accentButtonStyle}
@@ -793,6 +802,7 @@ const App = () => {
             >
               Submit
             </button>
+            <div style={{ height: '110px' }} />
           </div>
         </div>
       </Fragment>
