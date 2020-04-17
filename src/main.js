@@ -23,7 +23,7 @@ class Frame extends Component {
           height: '100vh',
           top: 0,
           right: 0,
-          width: '230px',
+          width: '250px',
           overflowY: 'scroll',
           backgroundColor: 'white',
         }}

@@ -23,6 +23,7 @@ import {
 /* #region Constants */
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = `${BASE_CLASS}hover`;
+const IFRAME_ID = 'rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
 const artist : Field = {
@@ -413,7 +414,7 @@ const accentButtonStyle = {
 };
 /* #endregion */
 
-const App = () => {
+const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -423,15 +424,12 @@ const App = () => {
   const [dataIndex, setDataIndex] = useState(0);
   const [data, setData] = useState(fields);
 
-  const promptContainerRef = useRef<HTMLDivElement>(null);
-  const formContainerRef = useRef<HTMLDivElement>(null);
   const artistInputRef = useRef<HTMLInputElement>(null);
   /* #endregion */
 
   /* #region Hooks */
   const isElmInForm = (e: MouseEvent) => e.target instanceof Node
-    && [formContainerRef, promptContainerRef]
-      .some((r) => r.current.contains(e.target as Node));
+    && document.querySelector(`#${IFRAME_ID}`).contains(e.target as Node);
 
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
     if (isSelecting && !isElmInForm(e)) {
@@ -653,7 +651,6 @@ const App = () => {
       <Fragment>
         {isSelecting && (
         <div
-          ref={promptContainerRef}
           style={{
             position: 'fixed',
             zIndex: '10000',
@@ -710,7 +707,6 @@ const App = () => {
         </div>
         )}
         <div
-          ref={formContainerRef}
           style={{
             top: 0,
             right: 0,
