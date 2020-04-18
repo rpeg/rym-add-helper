@@ -1,14 +1,13 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable react/destructuring-assignment */
 import { h, render, Component } from 'preact';
-import $ from 'jquery';
 import App from './app/app';
 
 let root = null;
 
 class Frame extends Component {
   componentDidMount() {
-    render(<body>{this.props.children}</body>,
+    const { children } = this.props;
+    render(<body>{children}</body>,
       this.iframe.contentDocument.documentElement,
       this.iframe.contentDocument.body);
   }
@@ -40,6 +39,8 @@ class Frame extends Component {
  * Toggle app render on demand
  */
 window.addEventListener('message', ({ data }) => {
+  if (data.type !== 'toggle') return;
+
   if (data.isActive) {
     root = render(<Frame><App storedTemplate={data.storedTemplate} /></Frame>, document.body);
   } else {
