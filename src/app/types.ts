@@ -1,3 +1,7 @@
+export type HashMap<K extends string, V> = {
+    [k in K]: V;
+}
+
 export interface Template {
     artist: string,
     title: string,

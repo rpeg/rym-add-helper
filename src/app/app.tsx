@@ -17,7 +17,7 @@ import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
+  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
 } from './types';
 /* #endregion */
 
@@ -326,7 +326,7 @@ const trackDurations : Field = {
   selectorTransformer: Transformers.removeNthChild,
 };
 
-const fields = [
+const _fields = [
   artist,
   title,
   date,
@@ -429,9 +429,10 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [isGuiding, setIsGuiding] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
+  const [template, setTemplate] = useState(null);
   const [selectedElm, setSelectedElm] = useState(null);
-  const [dataIndex, setDataIndex] = useState(0);
-  const [data, setData] = useState(fields);
+  const [fieldIndex, setFieldIndex] = useState(0);
+  const [fields, setFields] = useState(_fields);
 
   const artistInputRef = useRef<HTMLInputElement>(null);
   /* #endregion */
@@ -490,7 +491,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   useEffect(() => {
     if (!selectedElm) return;
 
-    const currentField = data[dataIndex];
+    const currentField = fields[fieldIndex];
 
     let selector;
 
@@ -506,30 +507,30 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
 
       console.info(selector);
 
-      const newData = update(data,
+      const newData = update(fields,
         {
-          [dataIndex]:
+          [fieldIndex]:
           {
             selector: { $set: selector },
             data: { $set: pruneDataFromDOM(selector, currentField) },
           },
         });
 
-      setData(newData);
+      setFields(newData);
 
       if (isGuiding) {
         nextField();
       } else { setIsSelecting(false); }
     } catch (e) {
-      console.error('invalid selector', e);
+      console.warn('invalid selector', e);
     }
   }, [selectedElm]);
 
   useEffect(() => {
-    const artistIndex = data.findIndex((f) => f.name === artist.name);
-    const trackArtistsIndex = data.findIndex((f) => f.name === trackArtists.name);
+    const artistIndex = fields.findIndex((f) => f.name === artist.name);
+    const trackArtistsIndex = fields.findIndex((f) => f.name === trackArtists.name);
 
-    const _data = update(data,
+    const _data = update(fields,
       {
         [artistIndex]:
           {
@@ -541,7 +542,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
           },
       });
 
-    setData(_data);
+    setFields(_data);
   }, [isVariousArtists]);
 
   /**
@@ -552,10 +553,11 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
 
     const { domain } = parseDomain(window.location.href);
 
-    const template = Templates[domain] as Template;
+    const temp = getLocalTemplate() || Templates[domain] as Template;
 
-    if (template) {
-      processTemplate(template);
+    if (temp) {
+      processTemplate(temp);
+      setTemplate(temp);
     } else {
       setIsFormDisplayed(true);
     }
@@ -563,29 +565,33 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   /* #endregion */
 
   /* #region Methods */
-  const processTemplate = (template: Template) => {
-    const d = [...data];
+  const getLocalTemplate = () => {
 
-    Object.entries(template).forEach(([k, v]) => {
+  };
+
+  const processTemplate = (temp: Template) => {
+    const d = [...fields];
+
+    Object.entries(temp).forEach(([k, v]) => {
       const field = d.find((f) => f.name === k);
       if (field) field.selector = v as string;
     });
 
-    setData(d);
+    setFields(d);
     parseData();
-    setDataIndex(data.length);
+    setFieldIndex(fields.length);
     setIsFormDisplayed(true);
   };
 
   const parseData = () => {
-    const d = [...data];
+    const d = [...fields];
 
     d.filter((field) => field.selector).forEach((field) => {
       // eslint-disable-next-line no-param-reassign
       field.data = pruneDataFromDOM(field.selector, field);
     });
 
-    setData([...d]);
+    setFields([...d]);
   };
 
   const pruneDataFromDOM = (selector: string, field: Field) => {
@@ -603,6 +609,19 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
     if (field.default instanceof Object) return _.first(transformedData);
 
     return transformedData;
+  };
+
+  const saveTemplate = () => {
+    if (template) { // process template changes
+      const newTemplate = getNewTemplate();
+
+      console.info(template);
+      console.info(newTemplate);
+
+      if (_.isEqual(template, newTemplate) || confirm('Overwrite existing template?')) {
+        // save to localstorage
+      }
+    }
   };
 
   const submitForm = () => {
@@ -634,7 +653,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
         tracks: getTracks(),
       };
 
-      console.info(data);
+      console.info(fields);
 
       window.postMessage(
         {
@@ -672,8 +691,21 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
     return tracks;
   };
 
+  /**
+   * Convert local selectors into a [Template].
+   */
+  const getNewTemplate = () => {
+    const newTemplate: HashMap<string, string> = {};
+
+    fields.forEach((f) => {
+      newTemplate[f.name] = f.selector;
+    });
+
+    return newTemplate;
+  };
+
   const clearField = (i: number) => {
-    const _data = update(data,
+    const _data = update(fields,
       {
         [i]:
           {
@@ -681,29 +713,29 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
           },
       });
 
-    setData(_data);
+    setFields(_data);
   };
 
   const nextField = () => {
     let index;
 
-    for (index = dataIndex + 1;
-      index < data.length && !isFieldEnabled(data[index]);
+    for (index = fieldIndex + 1;
+      index < fields.length && !isFieldEnabled(fields[index]);
       index++);
 
-    if (data.length && index > data.length - 1) {
+    if (fields.length && index > fields.length - 1) {
       setIsGuiding(false);
       setIsSelecting(false);
     } else {
-      setDataIndex(index);
+      setFieldIndex(index);
     }
   };
 
   const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
-    || data.find((f) => f.name === (field.dependency as [Field, any])[0].name)
+    || fields.find((f) => f.name === (field.dependency as [Field, any])[0].name)
       ?.data === (field.dependency as [Field, any])[1]);
 
-  const getDataForField = (name: string) => data.find((d) => d.name === name)?.data;
+  const getDataForField = (name: string) => fields.find((d) => d.name === name)?.data;
   /* #endregion */
 
   /* #region Render */
@@ -730,8 +762,8 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
           >
             <p style={textStyle}>
               <b>
-                {`Select ${data[dataIndex].label}
-                ${data[dataIndex].placeholder ? ` (${data[dataIndex].placeholder})` : ''}`}
+                {`Select ${fields[fieldIndex].label}
+                ${fields[fieldIndex].placeholder ? ` (${fields[fieldIndex].placeholder})` : ''}`}
               </b>
             </p>
             <div style={{ display: 'flex ' }}>
@@ -750,7 +782,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
                   ...buttonStyle,
                   margin: '0px 5px',
                 }}
-                onClick={() => clearField(dataIndex)}
+                onClick={() => clearField(fieldIndex)}
               >
                 Clear
               </button>
@@ -777,6 +809,10 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
           }}
         >
           <div>
+            {template && (
+              <p>*Loaded from template!*</p>
+            )}
+            <hr />
             <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
               <b>RYM artist ID:</b>
             </p>
@@ -805,14 +841,14 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
                 style={accentButtonStyle}
                 type="button"
                 onClick={() => {
-                  setDataIndex(0);
+                  setFieldIndex(0);
                   setIsGuiding(true);
                   setIsSelecting(true);
                 }}
               >
                 Guide Me
               </button>
-              {(data).map((field, i) => (
+              {(fields).map((field, i) => (
                 <li style={formLiStyle}>
                   <p
                     style={{
@@ -820,21 +856,21 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
                       ...formPStyle,
                     }}
                   >
-                    <b style={i === dataIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
+                    <b style={i === fieldIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
                       {`${field.label}:`}
                     </b>
                   </p>
                   <div style={{ display: 'flex' }}>
                     <FormInput
                       field={field}
-                      disabled={!isFieldEnabled(field) || (isSelecting && dataIndex !== i)}
+                      disabled={!isFieldEnabled(field) || (isSelecting && fieldIndex !== i)}
                     />
                     <button
                       type="button"
                       disabled={isSelecting}
                       onClick={() => {
                         setIsSelecting(true);
-                        setDataIndex(i);
+                        setFieldIndex(i);
                       }}
                     >
                       Select
@@ -860,13 +896,24 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
               </li>
               <hr />
             </ul>
-            <button
-              style={accentButtonStyle}
-              type="button"
-              onClick={submitForm}
-            >
-              Submit
-            </button>
+            <div style={{ display: 'flex' }}>
+              {template && (
+              <button
+                style={accentButtonStyle}
+                type="button"
+                onClick={saveTemplate}
+              >
+                Save Template
+              </button>
+              )}
+              <button
+                style={accentButtonStyle}
+                type="button"
+                onClick={submitForm}
+              >
+                Submit
+              </button>
+            </div>
             <div style={{ height: '110px' }} />
           </div>
         </div>
