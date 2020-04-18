@@ -428,6 +428,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [isGuiding, setIsGuiding] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
+  const [isTemplateSaveMessageDisplayed, setIsTemplateSaveMessageDisplayed] = useState(false);
 
   const [domain, setDomain] = useState('');
   const [template, setTemplate] = useState(null);
@@ -622,6 +623,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           value: newTemplate,
         }, '*',
       );
+
+      setIsTemplateSaveMessageDisplayed(true);
     }
   };
 
@@ -816,7 +819,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 color: '#4CAF50',
               }}
               >
-                <b>{`*${domain} template loaded*`}</b>
+                <b>{`*${domain} template loaded!*`}</b>
               </p>
             )}
             <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
@@ -922,6 +925,15 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 Submit
               </button>
             </div>
+            {isTemplateSaveMessageDisplayed && (
+              <p style={{
+                ...textStyle,
+                color: '#4CAF50',
+              }}
+              >
+                <b>{`*${domain} template saved!*`}</b>
+              </p>
+            )}
             <div style={{ height: '110px' }} />
           </div>
         </div>
