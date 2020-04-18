@@ -390,7 +390,6 @@ const formPStyle = {
 const formUlStyle = {
   padding: 0,
   margin: 0,
-  maxWidth: '210px',
 };
 
 const formLiStyle = {
@@ -423,12 +422,14 @@ const accentButtonStyle = {
 };
 /* #endregion */
 
-const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
+const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isGuiding, setIsGuiding] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
+
+  const [domain, setDomain] = useState('');
   const [template, setTemplate] = useState(null);
   const [selectedElm, setSelectedElm] = useState(null);
   const [fieldIndex, setFieldIndex] = useState(0);
@@ -505,8 +506,6 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
         selector = currentField.selectorTransformer(selector);
       }
 
-      console.info(selector);
-
       const newData = update(fields,
         {
           [fieldIndex]:
@@ -551,9 +550,11 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   useEffect(() => {
     initListeners();
 
-    const { domain } = parseDomain(window.location.href);
+    setDomain(parseDomain(window.location.href).domain);
 
-    const temp = getLocalTemplate() || Templates[domain] as Template;
+    console.log(storedTemplate);
+
+    const temp = storedTemplate || Templates[domain] as Template;
 
     if (temp) {
       processTemplate(temp);
@@ -579,7 +580,6 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
 
     setFields(d);
     parseData();
-    setFieldIndex(fields.length);
     setIsFormDisplayed(true);
   };
 
@@ -612,15 +612,16 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   };
 
   const saveTemplate = () => {
-    if (template) { // process template changes
-      const newTemplate = getNewTemplate();
+    const newTemplate = getNewTemplate();
 
-      console.info(template);
-      console.info(newTemplate);
-
-      if (_.isEqual(template, newTemplate) || confirm('Overwrite existing template?')) {
-        // save to localstorage
-      }
+    if (!template || _.isEqual(template, newTemplate) || confirm('Overwrite existing template?')) {
+      window.postMessage(
+        {
+          type: 'setStorage',
+          key: domain,
+          value: newTemplate,
+        }, '*',
+      );
     }
   };
 
@@ -810,9 +811,14 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
         >
           <div>
             {template && (
-              <p>*Loaded from template!*</p>
+              <p style={{
+                ...textStyle,
+                color: '#4CAF50',
+              }}
+              >
+                <b>{`*${domain} template loaded*`}</b>
+              </p>
             )}
-            <hr />
             <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
               <b>RYM artist ID:</b>
             </p>
@@ -896,8 +902,11 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
               </li>
               <hr />
             </ul>
-            <div style={{ display: 'flex' }}>
-              {template && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+            >
               <button
                 style={accentButtonStyle}
                 type="button"
@@ -905,7 +914,6 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
               >
                 Save Template
               </button>
-              )}
               <button
                 style={accentButtonStyle}
                 type="button"

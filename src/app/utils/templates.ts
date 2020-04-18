@@ -29,7 +29,7 @@ const Templates: {[index: string]: Template } = {
     catalogId: '',
     countries: '.tralbum-tags',
     trackPositions: '.track_row_view .track_number',
-    trackArtists: '.tracklist_track > .track > .tracklist_track_title',
+    trackArtists: '.track_row_view .track-title',
     trackTitles: '.track_row_view .track-title',
     trackDurations: '.track_row_view .time',
   },

@@ -13,7 +13,7 @@ const DO_NOT_CAPITALIZE = [
   'and', 'but', 'or', 'nor', 'for', 'yet', 'so',
   'as', 'at', 'by', 'for', 'in', 'of', 'on', 'to',
   'versus', 'vs.', 'v.',
-  'etc.',
+  'etc.', 'etc',
 ];
 
 const MONTH_ABBREVIATIONS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -51,7 +51,7 @@ const countriesTransformer = (str: string) => str.split(/\s|,|&|(?: and )/)
   .map((c) => c.trim())
   .map((c) => {
     if (c.length === 2) {
-      return countryCodes[c as keyof typeof countryCodes] ?? c;
+      return countryCodes[c as keyof typeof countryCodes];
     }
 
     return Object.values(countryCodes)

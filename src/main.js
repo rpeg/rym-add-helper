@@ -41,7 +41,7 @@ class Frame extends Component {
  */
 window.addEventListener('message', ({ data }) => {
   if (data.isActive) {
-    root = render(<Frame><App /></Frame>, document.body);
+    root = render(<Frame><App storedTemplate={data.storedTemplate} /></Frame>, document.body);
   } else {
     render(null, document.body, root);
   }

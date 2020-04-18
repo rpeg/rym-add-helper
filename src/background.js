@@ -23,6 +23,7 @@ chrome.browserAction.onClicked.addListener(() => {
       });
 
       chrome.tabs.sendMessage(tabId, {
+        type: 'toggle',
         isActive: !isActive,
       });
     });
