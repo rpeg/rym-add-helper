@@ -19,7 +19,7 @@ class Frame extends Component {
         id="rym__frame"
         title="rym__"
         style={{
-          zIndex: 10000,
+          zIndex: 999999,
           position: 'fixed',
           height: '100vh',
           top: 0,

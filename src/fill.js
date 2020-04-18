@@ -58,7 +58,7 @@ const fillOutForm = (data) => {
 
   $('#catalog_no').val(catalogId);
 
-  countries.length && $('#countries').val(countries.join(', '));
+  countries && countries.length && $('#countries').val(countries.join(', '));
 
   if (format) {
     const container = $(`.submit_field_content:nth-child(3) label:contains('${format}')`);
@@ -86,6 +86,8 @@ const fillOutForm = (data) => {
         inputs.length && inputs[0].click();
       }
     }
+  } else if (format === 'Digital File') {
+    $('#attrib123').click(); // assume Streaming
   }
 
   if (tracks.length) {

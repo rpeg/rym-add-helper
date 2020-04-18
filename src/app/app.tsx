@@ -9,6 +9,7 @@ import update from 'immutability-helper';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
+import parseDomain from 'parse-domain';
 
 import '../style.scss';
 
@@ -31,7 +32,7 @@ const artist : Field = {
   selector: '',
   label: 'artist',
   default: '',
-  transformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textTransformer],
 };
 
 const title : Field = {
@@ -39,7 +40,7 @@ const title : Field = {
   selector: '',
   label: 'title',
   default: '',
-  transformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textTransformer],
 };
 
 const type : Field = {
@@ -48,7 +49,7 @@ const type : Field = {
   label: 'type',
   default: '',
   placeholder: 'e.g. Album',
-  transformers: [Transformers.regexMapTransformerFactory(
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
         regex: 'album',
@@ -93,7 +94,7 @@ const format : Field = {
   label: 'format',
   placeholder: 'e.g. Vinyl',
   default: '',
-  transformers: [Transformers.regexMapTransformerFactory(
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
         regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
@@ -104,7 +105,7 @@ const format : Field = {
         mapTo: Formats.CD,
       },
       {
-        regex: /(?<!\w)((?:mp3)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
+        regex: /(?<!\w)((?:mp3)|(?:streaming)|(?:download)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
         mapTo: Formats.DigitalFile,
       },
       {
@@ -219,7 +220,7 @@ const discSize : Field = {
   default: '',
   placeholder: 'e.g. 12"',
   dependency: [format, Formats.Vinyl],
-  transformers: [Transformers.discSizeTransformer],
+  dataTransformers: [Transformers.discSizeTransformer],
 };
 
 const discSpeed : Field = {
@@ -229,7 +230,7 @@ const discSpeed : Field = {
   default: '',
   placeholder: 'e.g. 45 rpm',
   dependency: [format, Formats.Vinyl],
-  transformers: [Transformers.regexMapTransformerFactory(
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
         regex: /45/,
@@ -261,7 +262,7 @@ const date : Field = {
   selector: '',
   label: 'release date',
   default: {},
-  transformers: [Transformers.dateTransformer],
+  dataTransformers: [Transformers.dateTransformer],
   format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
 
@@ -277,7 +278,7 @@ const catalogId : Field = {
   selector: '',
   label: 'catalog #',
   default: '',
-  transformers: [Transformers.catalogIdTransformer],
+  dataTransformers: [Transformers.catalogIdTransformer],
 };
 
 const countries : Field = {
@@ -285,7 +286,7 @@ const countries : Field = {
   selector: '',
   label: 'countries',
   default: [],
-  transformers: [Transformers.countriesTransformer],
+  dataTransformers: [Transformers.countriesTransformer],
   format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
 };
 
@@ -295,6 +296,8 @@ const trackPositions : Field = {
   label: 'a track position',
   placeholder: 'e.g. A1',
   default: [],
+  selectorTransformer: Transformers.removeNthChild,
+  dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
 };
 
 const trackArtists : Field = {
@@ -303,6 +306,7 @@ const trackArtists : Field = {
   label: 'a track artist',
   default: [],
   disabled: true, // enabled when VA
+  selectorTransformer: Transformers.removeNthChild,
 };
 
 const trackTitles : Field = {
@@ -310,7 +314,8 @@ const trackTitles : Field = {
   selector: '',
   label: 'a track title',
   default: [],
-  transformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textTransformer],
+  selectorTransformer: Transformers.removeNthChild,
 };
 
 const trackDurations : Field = {
@@ -318,6 +323,7 @@ const trackDurations : Field = {
   selector: '',
   label: 'a track duration',
   default: [],
+  selectorTransformer: Transformers.removeNthChild,
 };
 
 const fields = [
@@ -434,7 +440,21 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   const isElmInForm = (e: MouseEvent) => e.target instanceof Node
     && document.querySelector(`#${IFRAME_ID}`).contains(e.target as Node);
 
+  const initListeners = () => {
+    // have to use native DOM listener to prevent browser redirects
+    // because React's synthetic events fire after parent's
+    $(document).ready(() => {
+      $('a').click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setSelectedElm(e.target);
+      });
+    }); // TODO register on app untoggle
+  };
+
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
+    e.preventDefault();
     if (isSelecting && !isElmInForm(e)) {
       (e.srcElement as HTMLElement).classList.add(HOVER_CLASS);
     }
@@ -444,9 +464,6 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
     (e.srcElement as HTMLElement).classList.remove(HOVER_CLASS);
   }, isFormDisplayed);
 
-  /**
-   * Capture user's DOM selection and prevent redirects
-   */
   useDocumentEvent('click', (e: MouseEvent) => {
     if (isElmInForm(e)) return true;
 
@@ -460,6 +477,8 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
 
     e.preventDefault();
 
+    (e.target as HTMLElement).onmouseover = null;
+
     setSelectedElm(e.target);
 
     return false;
@@ -471,17 +490,23 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   useEffect(() => {
     if (!selectedElm) return;
 
+    const currentField = data[dataIndex];
+
     let selector;
 
     try {
       selector = finder(selectedElm, {
-        className: (n) => !n.startsWith(BASE_CLASS),
-        idName: (n) => !n.startsWith(BASE_CLASS),
+        className: (n) => !n.includes(BASE_CLASS) && !/hover|mouse/.test(n), // TODO find better way to ignore mouseover class
+        idName: (n) => !n.includes(BASE_CLASS),
       });
 
-      const currentField = data[dataIndex];
+      if (selector && currentField.selectorTransformer) {
+        selector = currentField.selectorTransformer(selector);
+      }
 
-      const _data = update(data,
+      console.info(selector);
+
+      const newData = update(data,
         {
           [dataIndex]:
           {
@@ -490,12 +515,14 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
           },
         });
 
-      setData(_data);
+      setData(newData);
 
       if (isGuiding) {
         nextField();
       } else { setIsSelecting(false); }
-    } catch (e) {}
+    } catch (e) {
+      console.error('invalid selector', e);
+    }
   }, [selectedElm]);
 
   useEffect(() => {
@@ -521,18 +548,11 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
    * Initialization
    */
   useEffect(() => {
-    // have to use native DOM listener to prevent browser redirects
-    // because React's synthetic events fire after parent's
-    $(document).ready(() => {
-      $('a').click((e) => {
-        e.preventDefault();
-        e.stopPropagation();
+    initListeners();
 
-        setSelectedElm(e.target);
-      });
-    });
+    const { domain } = parseDomain(window.location.href);
 
-    const template = Templates[document.location.hostname] as Template;
+    const template = Templates[domain] as Template;
 
     if (template) {
       processTemplate(template);
@@ -573,10 +593,10 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
       $(window.parent.document).find(selector).toArray(),
     );
 
-    const transformers = field.transformers || [function (val: any) { return val; }];
+    const transformers = field.dataTransformers || [function (val: any) { return val; }];
 
     const transformedData = matches.map((m) => transformers
-      .reduce((acc, f) => f(acc), (m as any).innerText.trim()));
+      .reduce((acc, f) => f(acc), (m as unknown as HTMLElement).innerText.trim()));
 
     if (typeof field.default === 'string') return transformedData.join(' ');
     if (field.default instanceof Array) return transformedData;
@@ -603,7 +623,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
         id,
         artist: getDataForField(artist.name) as string,
         title: getDataForField(title.name) as string,
-        type: getDataForField(type.name)as string,
+        type: getDataForField(type.name) as string,
         format: getDataForField(format.name) as string,
         discSize: getDataForField(discSize.name) as string,
         discSpeed: getDataForField(discSpeed.name) as string,
@@ -614,7 +634,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
         tracks: getTracks(),
       };
 
-      console.log(data);
+      console.info(data);
 
       window.postMessage(
         {
@@ -667,9 +687,16 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
   const nextField = () => {
     let index;
 
-    for (index = dataIndex + 1; index < data.length && !isFieldEnabled(data[index]); index++);
+    for (index = dataIndex + 1;
+      index < data.length && !isFieldEnabled(data[index]);
+      index++);
 
-    setDataIndex(index);
+    if (data.length && index > data.length - 1) {
+      setIsGuiding(false);
+      setIsSelecting(false);
+    } else {
+      setDataIndex(index);
+    }
   };
 
   const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
@@ -702,7 +729,10 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
             }}
           >
             <p style={textStyle}>
-              <b>{`Select ${data[dataIndex].label}`}</b>
+              <b>
+                {`Select ${data[dataIndex].label}
+                ${data[dataIndex].placeholder ? ` (${data[dataIndex].placeholder})` : ''}`}
+              </b>
             </p>
             <div style={{ display: 'flex ' }}>
               <button
@@ -819,7 +849,7 @@ const App = ({ iframe }: { iframe: preact.RefObject<HTMLIFrameElement> }) => {
                   {getTracks().map((t) => (
                     <li style={{ listStyleType: 'disc' }}>
                       <p style={textStyle}>
-                        {`${t.position ? `${t.position}.` : ''} 
+                        {`${t.position ? `${t.position}` : ''} 
                         ${t.artist ? `${t.artist} - ` : ''}
                         ${t.title} 
                         ${t.duration ? `(${t.duration})` : ''}`}

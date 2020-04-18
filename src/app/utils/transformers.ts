@@ -47,15 +47,17 @@ const textTransformer = (text: string) => {
   }).join(' ');
 };
 
-const countryTransformer = (country: string) => country.split(/,|&|(?:and)/)
+const countriesTransformer = (str: string) => str.split(/\s|,|&|(?: and )/)
   .map((c) => c.trim())
   .map((c) => {
     if (c.length === 2) {
       return countryCodes[c as keyof typeof countryCodes] ?? c;
     }
 
-    return c;
-  });
+    return Object.values(countryCodes)
+      .find((country) => new RegExp(`${country}`, 'ig').test(c));
+  })
+  .filter((c) => c);
 
 /**
  * Many sites display their label and catalog id in the same block level elm, or same string,
@@ -63,18 +65,18 @@ const countryTransformer = (country: string) => country.split(/,|&|(?:and)/)
  * selector for the catalog id in most cases. This regex assumes the catalog id is the last
  * text of elm and consists of alphanumeric characters and spaces.
  */
-const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.]+/ig)).trim();
+const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.-]+/ig)).trim();
 
 const discSizeTransformer = (str: string) => _.head(str.match(/\d{1,2}"/));
 
 const dateTransformer: (date: string) => RYMDate = (date) => {
-  const monthRegexes = MONTH_ABBREVIATIONS.map((m, i) => {
-    const formattedOrdinal = _.padStart(`${i + 1}`, 2, '0');
+  const monthRegexes = MONTH_ABBREVIATIONS.map((month, i) => {
+    const paddedOrdinal = _.padStart(`${i + 1}`, 2, '0');
 
     return {
-      // e.g. /(jan)|(01)|(\s+1\/)|(\d\/0?1\/)/,
-      regex: `(${m})|(${formattedOrdinal})|(\\s+${i + 1}\\/)|(\\d\\/${_.padStart(`${i + 1}`, 2, '0?')}\\/)`,
-      mapTo: formattedOrdinal,
+      // e.g. /(?:feb)|(?:(?<!(?:\d|(\w+\s+)))02)/
+      regex: `(?:${month})|(?:(?<!(?:\\d|(\\w+\\s+)))${paddedOrdinal})`,
+      mapTo: paddedOrdinal,
     };
   });
 
@@ -95,11 +97,19 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
   };
 };
 
+/**
+ * Used to remove 'nth-child' qualifier from selectors, so fields corresponding to multiple elements
+ * can be parsed with a group selection.
+ * @param selector CSS Selector string from [finder]
+ */
+const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)/ig, '');
+
 export default {
   regexMapTransformerFactory,
   textTransformer,
-  countriesTransformer: countryTransformer,
+  countriesTransformer,
   catalogIdTransformer,
   discSizeTransformer,
   dateTransformer,
+  removeNthChild,
 };

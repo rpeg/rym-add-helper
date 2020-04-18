@@ -10,6 +10,7 @@ export interface Template {
     catalogId: string,
     countries: string,
     trackPositions: string,
+    trackArtists?: string,
     trackTitles: string,
     trackDurations: string,
 }
@@ -41,7 +42,8 @@ export interface Field {
     data?: string | Array<string> | Object | Array<Object>,
     dependency?: [Field, any],
     disabled?: boolean,
-    transformers?: Array<Function>,
+    selectorTransformer?: Function,
+    dataTransformers?: Array<Function>,
     format?: Function,
 }
 
