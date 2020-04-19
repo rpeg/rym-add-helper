@@ -37,15 +37,24 @@ export interface FormData {
     tracks: Array<RYMTrack>
 }
 
+/**
+ * Apply transform in DOM pruning step if field's selector matches one or more specified fields'
+ */
+export interface UniqueFromTransformer {
+    uniqueFrom: Array<Field>, // fields which may be in same elm and need additional parsing
+    transform?: Function
+}
+
 export interface Field {
     name: string,
     selector: string,
     label: string,
-    placeholder?: string,
+    placeholder?: string, // for <input />
     default: string | Array<string> | Object | Array<Object>,
     data?: string | Array<string> | Object | Array<Object>,
-    dependency?: [Field, any],
+    dependency?: [Field, any], // fields conditional upon another field's value
     disabled?: boolean,
+    uniqueFromTransformer?: UniqueFromTransformer,
     selectorTransformer?: Function,
     dataTransformers?: Array<Function>,
     format?: Function,

@@ -326,6 +326,24 @@ const trackDurations : Field = {
   selectorTransformer: Transformers.removeNthChild,
 };
 
+trackPositions.uniqueFromTransformer = {
+  uniqueFrom: [trackArtists, trackDurations, trackTitles],
+  transform: Transformers.parseTrackPosition,
+};
+
+trackDurations.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackArtists, trackTitles],
+  transform: Transformers.parseTrackDuration,
+};
+
+trackArtists.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackDurations],
+};
+
+trackTitles.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackDurations],
+};
+
 const _fields = [
   artist,
   title,
@@ -362,7 +380,7 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
   return (
     <input
       type="text"
-      style={inputStyle}
+      style={disabled ? inputDisabledStyle : inputStyle}
       disabled={disabled}
       placeholder={field.placeholder ? field.placeholder : ''}
       value={!_.isEmpty(formattedData) ? formattedData : ''}
@@ -404,6 +422,11 @@ const inputStyle = {
   flexGrow: 1,
   padding: '4px',
   border: '1px solid darkslategrey',
+};
+
+const inputDisabledStyle = {
+  ...inputStyle,
+  background: '#dddddd',
 };
 
 const buttonStyle = {
@@ -453,7 +476,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
         setSelectedElm(e.target);
       });
-    }); // TODO register on app untoggle
+    }); // TODO unregister on app untoggle
   };
 
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
@@ -512,7 +535,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           [fieldIndex]:
           {
             selector: { $set: selector },
-            data: { $set: pruneDataFromDOM(selector, currentField) },
+            data: { $set: pruneField(selector, currentField) },
           },
         });
 
@@ -528,21 +551,75 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   useEffect(() => {
     const artistIndex = fields.findIndex((f) => f.name === artist.name);
+    const trackTitlesIndex = fields.findIndex((f) => f.name === trackTitles.name);
     const trackArtistsIndex = fields.findIndex((f) => f.name === trackArtists.name);
+    const trackPositionsIndex = fields.findIndex((f) => f.name === trackPositions.name);
+    const trackDurationsIndex = fields.findIndex((f) => f.name === trackDurations.name);
 
-    const _data = update(fields,
+    const _artist = getField(artist.name);
+    const _trackTitles = getField(trackTitles.name);
+    const _trackArtists = getField(trackArtists.name);
+    const _trackPositions = getField(trackPositions.name);
+    const _trackDurations = getField(trackDurations.name);
+
+    // track metadata is updated to account for possible shared DOM elements on VA releases
+    // must imperatively call transform on artists/titles because it is state-conditional
+    setFields(update(fields,
       {
         [artistIndex]:
           {
             disabled: { $set: isVariousArtists },
+            data: {
+              $set: isVariousArtists
+                ? 'Various Artists'
+                : pruneField(
+                  _artist.selector,
+                  _artist,
+                ),
+            },
           },
         [trackArtistsIndex]:
           {
             disabled: { $set: !isVariousArtists },
+            data: {
+              $set: (isVariousArtists && _trackArtists.selector === _trackTitles.selector)
+                || _trackArtists.uniqueFromTransformer.uniqueFrom
+                  .some((f) => f.selector === _trackArtists.selector)
+                ? pruneFieldUnique(_trackArtists, Transformers.parseTrackArtist)
+                : pruneField(_trackArtists.selector, _trackArtists),
+            },
           },
-      });
+        [trackTitlesIndex]:
+          {
+            data: {
+              $set: (isVariousArtists && _trackArtists.selector === _trackTitles.selector)
+              || _trackTitles.uniqueFromTransformer.uniqueFrom
+                .some((f) => f.selector === _trackTitles.selector)
+                ? pruneFieldUnique(_trackTitles, Transformers.parseTrackTitle(isVariousArtists))
+                : pruneField(_trackTitles.selector, _trackTitles),
+            },
+          },
+        [trackPositionsIndex]:
+          {
+            data: {
+              $set: pruneField(
+                _trackPositions.selector,
+                _trackPositions,
+              ),
+            },
+          },
+        [trackDurationsIndex]:
+          {
+            data: {
+              $set: pruneField(
+                _trackDurations.selector,
+                _trackDurations,
+              ),
+            },
+          },
+      }));
 
-    setFields(_data);
+    console.log(fields);
   }, [isVariousArtists]);
 
   /**
@@ -551,11 +628,11 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   useEffect(() => {
     initListeners();
 
-    setDomain(parseDomain(window.location.href).domain);
+    const _domain = parseDomain(window.location.host).domain;
 
-    console.log(storedTemplate);
+    setDomain(_domain);
 
-    const temp = storedTemplate || Templates[domain] as Template;
+    const temp = storedTemplate || Templates[_domain] as Template;
 
     if (temp) {
       processTemplate(temp);
@@ -567,10 +644,6 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #endregion */
 
   /* #region Methods */
-  const getLocalTemplate = () => {
-
-  };
-
   const processTemplate = (temp: Template) => {
     const d = [...fields];
 
@@ -580,36 +653,64 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     });
 
     setFields(d);
-    parseData();
+    pruneData();
     setIsFormDisplayed(true);
   };
 
-  const parseData = () => {
+  const pruneData = () => {
     const d = [...fields];
 
     d.filter((field) => field.selector).forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = pruneDataFromDOM(field.selector, field);
+      field.data = pruneField(field.selector, field);
     });
 
     setFields([...d]);
   };
 
-  const pruneDataFromDOM = (selector: string, field: Field) => {
+  const pruneField = (selector: string, field: Field) => {
+    const matches = getSelectorMatches(selector);
+
+    return transformMatches(field, matches);
+  };
+
+  /**
+   * Explicitly apply additional transform to parse out data from shared selector.
+   */
+  const pruneFieldUnique = (field: Field, parseUnique: Function) => {
+    const matches = getSelectorMatches(field.selector);
+
+    const uniqf = parseUnique || function (val: any) { return val; };
+
+    const uniqueMatches = matches.map((m) => uniqf(m));
+
+    return transformMatches(field, uniqueMatches);
+  };
+
+  const getSelectorMatches = (selector: string) => {
     const matches = _.intersection(
       $(window.parent.document).find(selector).toArray(),
     );
 
+    return matches.map((m) => (m as unknown as HTMLElement).innerText.trim());
+  };
+
+  const transformMatches = (field: Field, matches: Array<string>) => {
+    const uniqf = field.uniqueFromTransformer && field.uniqueFromTransformer.transform
+      ? field.uniqueFromTransformer.transform
+      : function (val: any) { return val; };
+
     const transformers = field.dataTransformers || [function (val: any) { return val; }];
 
-    const transformedData = matches.map((m) => transformers
-      .reduce((acc, f) => f(acc), (m as unknown as HTMLElement).innerText.trim()));
+    const transformedMatches = matches
+      .map((m) => uniqf(m))
+      .map((m) => transformers
+        .reduce((acc, transform) => transform(acc), m));
 
-    if (typeof field.default === 'string') return transformedData.join(' ');
-    if (field.default instanceof Array) return transformedData;
-    if (field.default instanceof Object) return _.first(transformedData);
-
-    return transformedData;
+    if (typeof field.default === 'string') return transformedMatches.join(' ');
+    if (field.default instanceof Array) return transformedMatches;
+    if (field.default instanceof Object) return _.first(transformedMatches);
+    return transformedMatches;
   };
 
   const saveTemplate = () => {
@@ -623,6 +724,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           value: newTemplate,
         }, '*',
       );
+
+      // TODO only overwrite altered fields with positive diffs
 
       setIsTemplateSaveMessageDisplayed(true);
     }
@@ -644,16 +747,16 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
       const formData: FormData = {
         url: window.location.href,
         id,
-        artist: getDataForField(artist.name) as string,
-        title: getDataForField(title.name) as string,
-        type: getDataForField(type.name) as string,
-        format: getDataForField(format.name) as string,
-        discSize: getDataForField(discSize.name) as string,
-        discSpeed: getDataForField(discSpeed.name) as string,
-        date: getDataForField(date.name) as RYMDate,
-        label: getDataForField(label.name) as string,
-        catalogId: getDataForField(catalogId.name) as string,
-        countries: getDataForField(countries.name) as Array<string>,
+        artist: getField(artist.name)?.data as string,
+        title: getField(title.name)?.data as string,
+        type: getField(type.name)?.data as string,
+        format: getField(format.name)?.data as string,
+        discSize: getField(discSize.name)?.data as string,
+        discSpeed: getField(discSpeed.name)?.data as string,
+        date: getField(date.name)?.data as RYMDate,
+        label: getField(label.name)?.data as string,
+        catalogId: getField(catalogId.name)?.data as string,
+        countries: getField(countries.name)?.data as Array<string>,
         tracks: getTracks(),
       };
 
@@ -673,10 +776,10 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const getTracks = () => {
     const tracks: Array<RYMTrack> = [];
 
-    const positions = (getDataForField(trackPositions.name) as Array<string>) ?? [];
-    const artists = (getDataForField(trackArtists.name) as Array<string>) ?? [];
-    const titles = (getDataForField(trackTitles.name) as Array<string>) ?? [];
-    const durations = (getDataForField(trackDurations.name) as Array<string>) ?? [];
+    const positions = ((getField(trackPositions.name) as Field).data as Array<string>) ?? [];
+    const artists = ((getField(trackArtists.name) as Field).data as Array<string>) ?? [];
+    const titles = ((getField(trackTitles.name) as Field).data as Array<string>) ?? [];
+    const durations = ((getField(trackDurations.name) as Field).data as Array<string>) ?? [];
 
     const max = _.max([
       positions.length,
@@ -739,7 +842,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     || fields.find((f) => f.name === (field.dependency as [Field, any])[0].name)
       ?.data === (field.dependency as [Field, any])[1]);
 
-  const getDataForField = (name: string) => fields.find((d) => d.name === name)?.data;
+  const getField = (name: string) => fields.find((d) => d.name === name);
   /* #endregion */
 
   /* #region Render */

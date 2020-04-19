@@ -104,6 +104,32 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
  */
 const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)/ig, '');
 
+const parseTrackPosition = (str: string) => {
+  const matches = str.match(/(?:^\s*\d+.?)|(?:[A-Z]\d)/ig);
+  return matches ? matches[0].trim() : str;
+};
+
+const parseTrackArtist = (str: string) => {
+  const matches = str.match(/(?:(?:(?:\w\d+)|(?:\d+)).?\s+)*(.*)-/i);
+  return (matches && matches.groups ? matches.groups[0].trim() : str);
+};
+
+const parseTrackTitle = (isVariousArtists: boolean) => (str: string) => {
+  if (isVariousArtists) {
+    const matches = str.match(/-\s?([^():]+)\s?\(?\d+:\d+\)?/i);
+    console.log(matches);
+    return (matches && matches.groups ? matches.groups[0].trim() : str);
+  }
+
+  const matches = str.match(/(?:(?:\w\d+)|(?:\d+))\s(.*)\s\(?\d+:\d+\)?/i);
+  return (matches && matches.groups ? matches.groups[0].trim() : str);
+};
+
+const parseTrackDuration = (str: string) => {
+  const matches = str.match(/\d+:\d+[\s\n]*$/ig);
+  return matches ? matches[0].trim() : str;
+};
+
 export default {
   regexMapTransformerFactory,
   textTransformer,
@@ -112,4 +138,8 @@ export default {
   discSizeTransformer,
   dateTransformer,
   removeNthChild,
+  parseTrackPosition,
+  parseTrackArtist,
+  parseTrackTitle,
+  parseTrackDuration,
 };
