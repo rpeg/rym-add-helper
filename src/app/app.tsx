@@ -231,7 +231,10 @@ const discSize : Field = {
   label: 'disc size',
   default: '',
   placeholder: 'e.g. 12"',
-  dependency: [format, Formats.Vinyl],
+  dependency: {
+    field: format,
+    data: Formats.Vinyl,
+  },
   dataTransformers: [Transformers.discSizeTransformer],
 };
 
@@ -241,7 +244,10 @@ const discSpeed : Field = {
   label: 'disc speed',
   default: '',
   placeholder: 'e.g. 45 rpm',
-  dependency: [format, Formats.Vinyl],
+  dependency: {
+    field: format,
+    data: Formats.Vinyl,
+  },
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -273,9 +279,9 @@ const date : Field = {
   name: 'date',
   selector: '',
   label: 'release date',
-  default: {},
+  placeholder: 'mm/dd/yyyy',
+  default: '',
   dataTransformers: [Transformers.dateTransformer],
-  format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
 
 const label : Field = {
@@ -297,6 +303,7 @@ const countries : Field = {
   name: 'countries',
   selector: '',
   label: 'countries',
+  placeholder: 'e.g. United States, Germany',
   default: [],
   dataTransformers: [Transformers.countriesTransformer],
   format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
@@ -326,6 +333,7 @@ const trackTitles : Field = {
   selector: '',
   label: 'a track title',
   default: [],
+  disabled: true,
   dataTransformers: [Transformers.textTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -335,6 +343,7 @@ const trackDurations : Field = {
   selector: '',
   label: 'a track duration',
   default: [],
+  disabled: true,
   selectorTransformer: Transformers.removeNthChild,
 };
 
@@ -380,9 +389,10 @@ const _fields = [
 type FormInputProps = {
   field: Field,
   disabled: boolean,
+  onChange: h.JSX.GenericEventHandler<HTMLInputElement>
 }
 
-const FormInput = ({ field, disabled }: FormInputProps) => {
+const FormInput = ({ field, disabled, onChange }: FormInputProps) => {
   const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
@@ -398,6 +408,7 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
       disabled={disabled}
       placeholder={field.placeholder ? field.placeholder : ''}
       value={!_.isEmpty(formattedData) ? formattedData : ''}
+      onChange={onChange}
     />
   );
 };
@@ -746,7 +757,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         format: getField(format.name)?.data as string,
         discSize: getField(discSize.name)?.data as string,
         discSpeed: getField(discSpeed.name)?.data as string,
-        date: getField(date.name)?.data as RYMDate,
+        date: getField(date.name)?.data as string,
         label: getField(label.name)?.data as string,
         catalogId: getField(catalogId.name)?.data as string,
         countries: getField(countries.name)?.data as Array<string>,
@@ -847,9 +858,27 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     }
   };
 
+  const manuallyUpdateFieldData = (field: Field, value: String) => {
+    const i = fields.indexOf(field);
+
+    const _data = fields[i].default instanceof Array
+      ? value.split(',')
+      : value;
+
+    setFields(update(fields,
+      {
+        [i]:
+          {
+            data: {
+              $set: _data,
+            },
+          },
+      }));
+  };
+
   const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
-    || fields.find((f) => f.name === (field.dependency as [Field, any])[0].name)
-      ?.data === (field.dependency as [Field, any])[1]);
+    || fields.find((f) => f.name === (field.dependency.field.name))
+      ?.data === field.dependency.data);
 
   const getField = (name: string) => fields.find((d) => d.name === name);
   /* #endregion */
@@ -1012,6 +1041,11 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                     <FormInput
                       field={field}
                       disabled={!isFieldEnabled(field)}
+                      onChange={(e) => _.debounce(() => {
+                        const { value } = e.target as HTMLInputElement;
+
+                        manuallyUpdateFieldData(field, value);
+                      }, 200)}
                     />
                     <button
                       type="button"
