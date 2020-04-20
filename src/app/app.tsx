@@ -13,7 +13,7 @@ import parseDomain from 'parse-domain';
 
 import '../style.scss';
 
-import { useWindowEvent, useDocumentEvent } from './utils/hooks';
+import { useWindowEvent, useDocumentEvent, useParentDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
@@ -492,6 +492,11 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         setSelectedElm(e.target);
       });
     }); // TODO unregister on app untoggle
+
+    ($('#rym__frame').get(0) as HTMLIFrameElement)
+      .contentWindow.document.onkeydown = (e: KeyboardEvent) => {
+        handleKeydown(e);
+      };
   };
 
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
@@ -525,24 +530,12 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     return false;
   }, isFormDisplayed);
 
+  /**
+   * Keydown listener registered for both document and iframe
+   * to capture keystrokes when focusing on either.
+   */
   useDocumentEvent('keydown', (e: KeyboardEvent) => {
-    switch (e.keyCode) {
-      case KeyCodes.P:
-        prevField();
-        break;
-      case KeyCodes.N:
-        nextField();
-        break;
-      case KeyCodes.C:
-        clearField(fieldIndex);
-        break;
-      case KeyCodes.Q:
-        setIsGuiding(false);
-        setIsSelecting(false);
-        break;
-      default:
-        break;
-    }
+    handleKeydown(e);
   }, isGuiding);
 
   /**
@@ -849,6 +842,30 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
       ?.data === (field.dependency as [Field, any])[1]);
 
   const getField = (name: string) => fields.find((d) => d.name === name);
+
+  /**
+   * Keymaps for Guide buttons.
+   * */
+  const handleKeydown = (e: KeyboardEvent) => {
+    console.log(e);
+    switch (e.keyCode) {
+      case KeyCodes.P:
+        prevField();
+        break;
+      case KeyCodes.N:
+        nextField();
+        break;
+      case KeyCodes.C:
+        clearField(fieldIndex);
+        break;
+      case KeyCodes.Q:
+        setIsGuiding(false);
+        setIsSelecting(false);
+        break;
+      default:
+        break;
+    }
+  };
   /* #endregion */
 
   /* #region Render */
@@ -948,6 +965,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 Right
               </button>
             </div>
+            <h2 style={textStyle}>RYM Add Helper</h2>
             {template && (
               <p style={{
                 ...textStyle,
@@ -958,7 +976,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
               </p>
             )}
             <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
-              <b>RYM artist ID:</b>
+              <b>artist ID:</b>
             </p>
             <input
               style={inputStyle}
@@ -1007,7 +1025,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                   <div style={{ display: 'flex' }}>
                     <FormInput
                       field={field}
-                      disabled={!isFieldEnabled(field) || (isSelecting && fieldIndex !== i)}
+                      disabled={!isFieldEnabled(field)}
                     />
                     <button
                       type="button"
