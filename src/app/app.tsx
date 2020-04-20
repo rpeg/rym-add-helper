@@ -23,7 +23,7 @@ import {
 
 /* #region Constants */
 const BASE_CLASS = 'rym__';
-const HOVER_CLASS = `${BASE_CLASS}hover`;
+const HOVER_CLASS = 'rym__hover';
 const IFRAME_ID = 'rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
@@ -337,11 +337,13 @@ trackDurations.uniqueFromTransformer = {
 };
 
 trackArtists.uniqueFromTransformer = {
-  uniqueFrom: [trackPositions, trackDurations],
+  uniqueFrom: [trackPositions, trackTitles, trackDurations],
+  transform: Transformers.parseTrackArtist,
 };
 
 trackTitles.uniqueFromTransformer = {
-  uniqueFrom: [trackPositions, trackDurations],
+  uniqueFrom: [trackPositions, trackArtists, trackDurations],
+  transform: Transformers.parseTrackTitle,
 };
 
 const _fields = [
@@ -551,19 +553,9 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   useEffect(() => {
     const artistIndex = fields.findIndex((f) => f.name === artist.name);
-    const trackTitlesIndex = fields.findIndex((f) => f.name === trackTitles.name);
-    const trackArtistsIndex = fields.findIndex((f) => f.name === trackArtists.name);
-    const trackPositionsIndex = fields.findIndex((f) => f.name === trackPositions.name);
-    const trackDurationsIndex = fields.findIndex((f) => f.name === trackDurations.name);
 
     const _artist = getField(artist.name);
-    const _trackTitles = getField(trackTitles.name);
-    const _trackArtists = getField(trackArtists.name);
-    const _trackPositions = getField(trackPositions.name);
-    const _trackDurations = getField(trackDurations.name);
 
-    // track metadata is updated to account for possible shared DOM elements on VA releases
-    // must imperatively call transform on artists/titles because it is state-conditional
     setFields(update(fields,
       {
         [artistIndex]:
@@ -578,48 +570,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 ),
             },
           },
-        [trackArtistsIndex]:
-          {
-            disabled: { $set: !isVariousArtists },
-            data: {
-              $set: (isVariousArtists && _trackArtists.selector === _trackTitles.selector)
-                || _trackArtists.uniqueFromTransformer.uniqueFrom
-                  .some((f) => f.selector === _trackArtists.selector)
-                ? pruneFieldUnique(_trackArtists, Transformers.parseTrackArtist)
-                : pruneField(_trackArtists.selector, _trackArtists),
-            },
-          },
-        [trackTitlesIndex]:
-          {
-            data: {
-              $set: (isVariousArtists && _trackArtists.selector === _trackTitles.selector)
-              || _trackTitles.uniqueFromTransformer.uniqueFrom
-                .some((f) => f.selector === _trackTitles.selector)
-                ? pruneFieldUnique(_trackTitles, Transformers.parseTrackTitle(isVariousArtists))
-                : pruneField(_trackTitles.selector, _trackTitles),
-            },
-          },
-        [trackPositionsIndex]:
-          {
-            data: {
-              $set: pruneField(
-                _trackPositions.selector,
-                _trackPositions,
-              ),
-            },
-          },
-        [trackDurationsIndex]:
-          {
-            data: {
-              $set: pruneField(
-                _trackDurations.selector,
-                _trackDurations,
-              ),
-            },
-          },
       }));
-
-    console.log(fields);
   }, [isVariousArtists]);
 
   /**
@@ -671,32 +622,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const pruneField = (selector: string, field: Field) => {
     const matches = getSelectorMatches(selector);
 
-    return transformMatches(field, matches);
-  };
-
-  /**
-   * Explicitly apply additional transform to parse out data from shared selector.
-   */
-  const pruneFieldUnique = (field: Field, parseUnique: Function) => {
-    const matches = getSelectorMatches(field.selector);
-
-    const uniqf = parseUnique || function (val: any) { return val; };
-
-    const uniqueMatches = matches.map((m) => uniqf(m));
-
-    return transformMatches(field, uniqueMatches);
-  };
-
-  const getSelectorMatches = (selector: string) => {
-    const matches = _.intersection(
-      $(window.parent.document).find(selector).toArray(),
-    );
-
-    return matches.map((m) => (m as unknown as HTMLElement).innerText.trim());
-  };
-
-  const transformMatches = (field: Field, matches: Array<string>) => {
-    const uniqf = field.uniqueFromTransformer && field.uniqueFromTransformer.transform
+    const uniqf = field.uniqueFromTransformer
+    && field.uniqueFromTransformer.uniqueFrom.some((f) => f.selector === field.selector)
       ? field.uniqueFromTransformer.transform
       : function (val: any) { return val; };
 
@@ -710,7 +637,16 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     if (typeof field.default === 'string') return transformedMatches.join(' ');
     if (field.default instanceof Array) return transformedMatches;
     if (field.default instanceof Object) return _.first(transformedMatches);
+
     return transformedMatches;
+  };
+
+  const getSelectorMatches = (selector: string) => {
+    const matches = _.intersection(
+      $(window.parent.document).find(selector).toArray(),
+    );
+
+    return matches.map((m) => (m as unknown as HTMLElement).innerText.trim());
   };
 
   const saveTemplate = () => {

@@ -106,28 +106,30 @@ const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)
 
 const parseTrackPosition = (str: string) => {
   const matches = str.match(/(?:^\s*\d+.?)|(?:[A-Z]\d)/ig);
-  return matches ? matches[0].trim() : str;
+  return matches ? _.last(matches).trim() : str;
 };
 
 const parseTrackArtist = (str: string) => {
-  const matches = str.match(/(?:(?:(?:\w\d+)|(?:\d+)).?\s+)*(.*)-/i);
-  return (matches && matches.groups ? matches.groups[0].trim() : str);
-};
-
-const parseTrackTitle = (isVariousArtists: boolean) => (str: string) => {
-  if (isVariousArtists) {
-    const matches = str.match(/-\s?([^():]+)\s?\(?\d+:\d+\)?/i);
-    console.log(matches);
-    return (matches && matches.groups ? matches.groups[0].trim() : str);
+  if (str.includes(' - ')) {
+    const matches = str.match(/(?:(?:(?:\w\d+)|(?:\d+)).?\s+)*(.*)-/i);
+    return (matches ? _.last(matches).trim() : str);
   }
 
-  const matches = str.match(/(?:(?:\w\d+)|(?:\d+))\s(.*)\s\(?\d+:\d+\)?/i);
-  return (matches && matches.groups ? matches.groups[0].trim() : str);
+  return str;
+};
+
+const parseTrackTitle = (str: string) => {
+  if (str.includes(' - ')) {
+    const matches = str.match(/(?:-\s?(.+)\s\(?\d+:\d+\)?)|(?:-\s?(.+)$)/i);
+    return (matches ? _.last(matches).trim() : str);
+  }
+
+  return str;
 };
 
 const parseTrackDuration = (str: string) => {
   const matches = str.match(/\d+:\d+[\s\n]*$/ig);
-  return matches ? matches[0].trim() : str;
+  return matches ? _.last(matches).trim() : str;
 };
 
 export default {

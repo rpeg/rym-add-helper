@@ -42,7 +42,7 @@ export interface FormData {
  */
 export interface UniqueFromTransformer {
     uniqueFrom: Array<Field>, // fields which may be in same elm and need additional parsing
-    transform?: Function
+    transform: Function
 }
 
 export interface Field {
