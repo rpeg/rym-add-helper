@@ -59,6 +59,7 @@ const type : Field = {
   name: 'type',
   selector: '',
   label: 'type',
+  placeholder: 'e.g. Album',
   default: '',
   options: Object.values(ReleaseTypes),
   dataTransformers: [Transformers.regexMapTransformerFactory(
@@ -104,6 +105,7 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
+  placeholder: 'e.g. Vinyl',
   default: '',
   options: Object.values(Formats),
   dataTransformers: [Transformers.regexMapTransformerFactory(
@@ -230,6 +232,7 @@ const discSize : Field = {
   selector: '',
   label: 'disc size',
   default: '',
+  placeholder: 'e.g. 12"',
   options: Object.values(DiscSizes),
   dependency: {
     field: format,
@@ -242,6 +245,7 @@ const discSpeed : Field = {
   name: 'discSpeed',
   selector: '',
   label: 'disc speed',
+  placeholder: 'e.g. 45 rpm',
   default: '',
   options: Object.values(DiscSpeeds),
   dependency: {
@@ -303,7 +307,7 @@ const countries : Field = {
   name: 'countries',
   selector: '',
   label: 'countries',
-  placeholder: 'e.g. United States, Germany',
+  placeholder: 'e.g. France, Germany',
   default: [],
   dataTransformers: [Transformers.countriesTransformer],
   format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
@@ -315,7 +319,7 @@ const trackPositions : Field = {
   label: 'a track position',
   placeholder: 'e.g. A1',
   default: [],
-  disabled: true,
+  uneditable: true,
   selectorTransformer: Transformers.removeNthChild,
   dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
 };
@@ -325,6 +329,7 @@ const trackArtists : Field = {
   selector: '',
   label: 'a track artist',
   default: [],
+  uneditable: true,
   disabled: true, // enabled when VA
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -334,7 +339,7 @@ const trackTitles : Field = {
   selector: '',
   label: 'a track title',
   default: [],
-  disabled: true,
+  uneditable: true,
   dataTransformers: [Transformers.textTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -344,7 +349,7 @@ const trackDurations : Field = {
   selector: '',
   label: 'a track duration',
   default: [],
-  disabled: true,
+  uneditable: true,
   selectorTransformer: Transformers.removeNthChild,
 };
 
@@ -1065,7 +1070,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
                       ? (
                         <FormSelector
                           field={field}
-                          disabled={!isFieldEnabled(field)}
+                          disabled={!isFieldEnabled(field) || field.uneditable}
                           onChange={(e) => {
                             const { value } = e.target as HTMLSelectElement;
                             manuallyUpdateFieldData(field, value);
@@ -1075,7 +1080,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
                       : (
                         <FormInput
                           field={field}
-                          disabled={!isFieldEnabled(field)}
+                          disabled={!isFieldEnabled(field) || field.uneditable}
                           onInput={(e) => {
                             const { value } = e.target as HTMLInputElement;
                             manuallyUpdateFieldData(field, value);
