@@ -24,7 +24,7 @@ import {
 /* #region Constants */
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = 'rym__hover';
-const IFRAME_ID = 'rym__frame';
+const IFRAME_ID = '#rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
 enum KeyCodes {
@@ -479,7 +479,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   /* #region Hooks */
   const isElmInForm = (e: MouseEvent) => e.target instanceof Node
-    && document.querySelector(`#${IFRAME_ID}`).contains(e.target as Node);
+    && document.querySelector(IFRAME_ID).contains(e.target as Node);
 
   const initListeners = () => {
     // have to use native DOM listener to prevent browser redirects
@@ -492,11 +492,6 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         setSelectedElm(e.target);
       });
     }); // TODO unregister on app untoggle
-
-    ($('#rym__frame').get(0) as HTMLIFrameElement)
-      .contentWindow.document.onkeydown = (e: KeyboardEvent) => {
-        handleKeydown(e);
-      };
   };
 
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
@@ -531,11 +526,26 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   }, isFormDisplayed);
 
   /**
-   * Keydown listener registered for both document and iframe
-   * to capture keystrokes when focusing on either.
+   * Keydown listener for Guide buttons shorthands.
    */
   useDocumentEvent('keydown', (e: KeyboardEvent) => {
-    handleKeydown(e);
+    switch (e.keyCode) {
+      case KeyCodes.P:
+        prevField();
+        break;
+      case KeyCodes.N:
+        nextField();
+        break;
+      case KeyCodes.C:
+        clearField(fieldIndex);
+        break;
+      case KeyCodes.Q:
+        setIsGuiding(false);
+        setIsSelecting(false);
+        break;
+      default:
+        break;
+    }
   }, isGuiding);
 
   /**
@@ -615,8 +625,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   useEffect(() => {
     const isRight = dockPosition === DockPosition.Right;
-    $('#rym__frame').css('left', isRight ? '' : '0');
-    $('#rym__frame').css('right', isRight ? 0 : '');
+    $(IFRAME_ID).css('left', isRight ? '' : '0');
+    $(IFRAME_ID).css('right', isRight ? 0 : '');
   }, [dockPosition]);
 
   /**
@@ -842,30 +852,6 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
       ?.data === (field.dependency as [Field, any])[1]);
 
   const getField = (name: string) => fields.find((d) => d.name === name);
-
-  /**
-   * Keymaps for Guide buttons.
-   * */
-  const handleKeydown = (e: KeyboardEvent) => {
-    console.log(e);
-    switch (e.keyCode) {
-      case KeyCodes.P:
-        prevField();
-        break;
-      case KeyCodes.N:
-        nextField();
-        break;
-      case KeyCodes.C:
-        clearField(fieldIndex);
-        break;
-      case KeyCodes.Q:
-        setIsGuiding(false);
-        setIsSelecting(false);
-        break;
-      default:
-        break;
-    }
-  };
   /* #endregion */
 
   /* #region Render */
