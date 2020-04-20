@@ -52,7 +52,7 @@ const type : Field = {
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
-        regex: 'album',
+        regex: /(?:album)|(?:full)|(?:LP)/,
         mapTo: ReleaseTypes.Album,
       },
       {
@@ -528,6 +528,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         idName: (n) => !n.includes(BASE_CLASS),
       });
 
+      console.info(selector);
+
       if (selector && currentField.selectorTransformer) {
         selector = currentField.selectorTransformer(selector);
       }
@@ -553,8 +555,10 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   useEffect(() => {
     const artistIndex = fields.findIndex((f) => f.name === artist.name);
+    const trackArtistsIndex = fields.findIndex((f) => f.name === trackArtists.name);
 
     const _artist = getField(artist.name);
+    const _trackArtists = getField(trackArtists.name);
 
     setFields(update(fields,
       {
@@ -568,6 +572,16 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                   _artist.selector,
                   _artist,
                 ),
+            },
+          },
+        [trackArtistsIndex]:
+          {
+            disabled: { $set: !isVariousArtists },
+            data: {
+              $set: pruneField(
+                _trackArtists.selector,
+                _trackArtists,
+              ),
             },
           },
       }));
@@ -611,10 +625,11 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const pruneData = () => {
     const d = [...fields];
 
-    d.filter((field) => field.selector).forEach((field) => {
+    d.filter((field) => field.selector)
+      .forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = pruneField(field.selector, field);
-    });
+        field.data = pruneField(field.selector, field);
+      });
 
     setFields([...d]);
   };
@@ -712,10 +727,12 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const getTracks = () => {
     const tracks: Array<RYMTrack> = [];
 
-    const positions = ((getField(trackPositions.name) as Field).data as Array<string>) ?? [];
-    const artists = ((getField(trackArtists.name) as Field).data as Array<string>) ?? [];
-    const titles = ((getField(trackTitles.name) as Field).data as Array<string>) ?? [];
-    const durations = ((getField(trackDurations.name) as Field).data as Array<string>) ?? [];
+    const positions = (getField(trackPositions.name).data as Array<string>) ?? [];
+    const artists = !getField(trackArtists.name).disabled
+      ? ((getField(trackArtists.name).data as Array<string>) ?? [])
+      : [];
+    const titles = (getField(trackTitles.name).data as Array<string>) ?? [];
+    const durations = (getField(trackDurations.name).data as Array<string>) ?? [];
 
     const max = _.max([
       positions.length,

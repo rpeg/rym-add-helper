@@ -98,11 +98,12 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
 };
 
 /**
- * Used to remove 'nth-child' qualifier from selectors, so fields corresponding to multiple elements
- * can be parsed with a group selection.
+ * Used to remove 'nth-child' qualifier from topmost element of selector,
+ * so fields corresponding to multiple elements can be parsed with a group selection.
+ * Likely has some uncovered edge cases.
  * @param selector CSS Selector string from [finder]
  */
-const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)/ig, '');
+const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)/i, '');
 
 const parseTrackPosition = (str: string) => {
   const matches = str.match(/(?:^\s*\d+.?)|(?:[A-Z]\d)/ig);
@@ -128,7 +129,7 @@ const parseTrackTitle = (str: string) => {
 };
 
 const parseTrackDuration = (str: string) => {
-  const matches = str.match(/\d+:\d+[\s\n]*$/ig);
+  const matches = str.match(/\d+:\d+/ig);
   return matches ? _.last(matches).trim() : str;
 };
 
