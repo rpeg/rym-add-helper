@@ -515,7 +515,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const isElmInForm = (e: MouseEvent) => e.target instanceof Node
     && document.querySelector(IFRAME_ID).contains(e.target as Node);
 
-  const initListeners = () => {
+  const initGlobalListeners = () => {
     // have to use native DOM listener to prevent browser redirects
     // because React's synthetic events fire after parent's
     $(document).ready(() => {
@@ -667,7 +667,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
    * Initialization
    */
   useEffect(() => {
-    initListeners();
+    initGlobalListeners();
 
     const _domain = parseDomain(window.location.host).domain;
 
@@ -987,7 +987,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         )}
         <div>
           <div>
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <button
                 style={{ ...textStyle, fontSize: 10 }}
                 type="button"
@@ -1013,7 +1013,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 <b>{`*${domain} template loaded!*`}</b>
               </p>
             )}
-            <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
+            <p style={{ ...textStyle, ...formPStyle }}>
               <b>artist ID:</b>
             </p>
             <input
