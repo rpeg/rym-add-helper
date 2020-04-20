@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 
-import { FormData, Formats } from './app/types';
+import { FormData, Formats } from './types';
 
 const fillOutForm = (data: FormData) => {
   const {

@@ -13,7 +13,7 @@ Chrome extension to facilitate music release adding on [RateYourMusic](https://r
 ## Specs
 
 - Domain logic written in TypeScript.
-- ~350KB minified.
+- ~420KB minified.
 
 ## Setup
 

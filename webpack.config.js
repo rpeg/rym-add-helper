@@ -1,8 +1,8 @@
 module.exports = {
   mode: 'production',
   entry: {
-    main: './src/main.js',
-    fill: './src/fill.ts',
+    main: './src/app/app.jsx',
+    fill: './src/app/fill.ts',
   },
   output: {
     filename: '[name].js',

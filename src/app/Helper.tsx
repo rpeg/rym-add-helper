@@ -11,7 +11,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import parseDomain from 'parse-domain';
 
-import '../style.scss';
+import './style.scss';
 
 import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -493,7 +493,7 @@ const accentButtonStyle = {
 };
 /* #endregion */
 
-const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
+const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -1152,4 +1152,4 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #endregion */
 };
 
-export default App;
+export default Helper;
