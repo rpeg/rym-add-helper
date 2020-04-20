@@ -17,15 +17,27 @@ import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
+  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMTrack, DiscSizes, Data,
 } from './types';
 /* #endregion */
 
 /* #region Constants */
 const BASE_CLASS = 'rym__';
 const HOVER_CLASS = 'rym__hover';
-const IFRAME_ID = 'rym__frame';
+const IFRAME_ID = '#rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
+
+enum KeyCodes {
+  P = 80,
+  N = 78,
+  C = 67,
+  Q = 81,
+}
+
+enum DockPosition {
+  Left,
+  Right,
+}
 
 const artist : Field = {
   name: 'artist',
@@ -48,7 +60,7 @@ const type : Field = {
   selector: '',
   label: 'type',
   default: '',
-  placeholder: 'e.g. Album',
+  options: Object.values(ReleaseTypes),
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -92,8 +104,8 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
-  placeholder: 'e.g. Vinyl',
   default: '',
+  options: Object.values(Formats),
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -218,8 +230,11 @@ const discSize : Field = {
   selector: '',
   label: 'disc size',
   default: '',
-  placeholder: 'e.g. 12"',
-  dependency: [format, Formats.Vinyl],
+  options: Object.values(DiscSizes),
+  dependency: {
+    field: format,
+    data: Formats.Vinyl,
+  },
   dataTransformers: [Transformers.discSizeTransformer],
 };
 
@@ -228,8 +243,11 @@ const discSpeed : Field = {
   selector: '',
   label: 'disc speed',
   default: '',
-  placeholder: 'e.g. 45 rpm',
-  dependency: [format, Formats.Vinyl],
+  options: Object.values(DiscSpeeds),
+  dependency: {
+    field: format,
+    data: Formats.Vinyl,
+  },
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -261,9 +279,9 @@ const date : Field = {
   name: 'date',
   selector: '',
   label: 'release date',
-  default: {},
+  placeholder: 'mm/dd/yyyy',
+  default: '',
   dataTransformers: [Transformers.dateTransformer],
-  format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
 
 const label : Field = {
@@ -285,6 +303,7 @@ const countries : Field = {
   name: 'countries',
   selector: '',
   label: 'countries',
+  placeholder: 'e.g. United States, Germany',
   default: [],
   dataTransformers: [Transformers.countriesTransformer],
   format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
@@ -296,6 +315,7 @@ const trackPositions : Field = {
   label: 'a track position',
   placeholder: 'e.g. A1',
   default: [],
+  disabled: true,
   selectorTransformer: Transformers.removeNthChild,
   dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
 };
@@ -314,6 +334,7 @@ const trackTitles : Field = {
   selector: '',
   label: 'a track title',
   default: [],
+  disabled: true,
   dataTransformers: [Transformers.textTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -323,6 +344,7 @@ const trackDurations : Field = {
   selector: '',
   label: 'a track duration',
   default: [],
+  disabled: true,
   selectorTransformer: Transformers.removeNthChild,
 };
 
@@ -368,9 +390,10 @@ const _fields = [
 type FormInputProps = {
   field: Field,
   disabled: boolean,
+  onInput: h.JSX.GenericEventHandler<HTMLInputElement>
 }
 
-const FormInput = ({ field, disabled }: FormInputProps) => {
+const FormInput = ({ field, disabled, onInput }: FormInputProps) => {
   const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
@@ -386,9 +409,32 @@ const FormInput = ({ field, disabled }: FormInputProps) => {
       disabled={disabled}
       placeholder={field.placeholder ? field.placeholder : ''}
       value={!_.isEmpty(formattedData) ? formattedData : ''}
+      onInput={onInput}
     />
   );
 };
+
+type FormSelectorProps = {
+  field: Field,
+  disabled: boolean,
+  onChange: h.JSX.GenericEventHandler<HTMLSelectElement>
+}
+
+const FormSelector = ({
+  field, disabled, onChange,
+}: FormSelectorProps) => (
+  <select
+    style={disabled ? inputDisabledStyle : inputStyle}
+    disabled={disabled}
+    onChange={onChange}
+    required={false}
+  >
+    <option value="" />
+    {field.options.map((s) => (
+      <option value={s} selected={field.data === s}>{s}</option>
+    ))}
+  </select>
+);
 /* #endregion */
 
 /* #region Styles */
@@ -454,6 +500,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const [isGuiding, setIsGuiding] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
   const [isTemplateSaveMessageDisplayed, setIsTemplateSaveMessageDisplayed] = useState(false);
+  const [dockPosition, setDockPosition] = useState(DockPosition.Right);
 
   const [domain, setDomain] = useState('');
   const [template, setTemplate] = useState(null);
@@ -466,9 +513,9 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
   /* #region Hooks */
   const isElmInForm = (e: MouseEvent) => e.target instanceof Node
-    && document.querySelector(`#${IFRAME_ID}`).contains(e.target as Node);
+    && document.querySelector(IFRAME_ID).contains(e.target as Node);
 
-  const initListeners = () => {
+  const initGlobalListeners = () => {
     // have to use native DOM listener to prevent browser redirects
     // because React's synthetic events fire after parent's
     $(document).ready(() => {
@@ -511,6 +558,29 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
     return false;
   }, isFormDisplayed);
+
+  /**
+   * Keydown listener for Guide buttons shorthands.
+   */
+  useDocumentEvent('keydown', (e: KeyboardEvent) => {
+    switch (e.keyCode) {
+      case KeyCodes.P:
+        prevField();
+        break;
+      case KeyCodes.N:
+        nextField();
+        break;
+      case KeyCodes.C:
+        clearField(fieldIndex);
+        break;
+      case KeyCodes.Q:
+        setIsGuiding(false);
+        setIsSelecting(false);
+        break;
+      default:
+        break;
+    }
+  }, isGuiding);
 
   /**
    * Update data with clicked-on element's css selector
@@ -587,11 +657,17 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
       }));
   }, [isVariousArtists]);
 
+  useEffect(() => {
+    const isRight = dockPosition === DockPosition.Right;
+    $(IFRAME_ID).css('left', isRight ? '' : '0');
+    $(IFRAME_ID).css('right', isRight ? 0 : '');
+  }, [dockPosition]);
+
   /**
    * Initialization
    */
   useEffect(() => {
-    initListeners();
+    initGlobalListeners();
 
     const _domain = parseDomain(window.location.host).domain;
 
@@ -704,7 +780,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         format: getField(format.name)?.data as string,
         discSize: getField(discSize.name)?.data as string,
         discSpeed: getField(discSpeed.name)?.data as string,
-        date: getField(date.name)?.data as RYMDate,
+        date: getField(date.name)?.data as string,
         label: getField(label.name)?.data as string,
         catalogId: getField(catalogId.name)?.data as string,
         countries: getField(countries.name)?.data as Array<string>,
@@ -776,6 +852,20 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     setFields(_data);
   };
 
+  const prevField = () => {
+    let index;
+
+    for (index = fieldIndex - 1;
+      index > 0 && !isFieldEnabled(fields[index]);
+      index--);
+
+    if (index >= 0) {
+      setFieldIndex(index);
+    } else {
+      setFieldIndex(0);
+    }
+  };
+
   const nextField = () => {
     let index;
 
@@ -791,9 +881,27 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     }
   };
 
+  const manuallyUpdateFieldData = (field: Field, value: String) => {
+    const i = fields.indexOf(field);
+
+    const _data = fields[i].default instanceof Array
+      ? value.split(',')
+      : value;
+
+    setFields(update(fields,
+      {
+        [i]:
+          {
+            data: {
+              $set: _data,
+            },
+          },
+      }));
+  };
+
   const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
-    || fields.find((f) => f.name === (field.dependency as [Field, any])[0].name)
-      ?.data === (field.dependency as [Field, any])[1]);
+    || fields.find((f) => f.name === (field.dependency.field.name))
+      ?.data === field.dependency.data);
 
   const getField = (name: string) => fields.find((d) => d.name === name);
   /* #endregion */
@@ -832,9 +940,22 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 style={{
                   ...buttonStyle,
                 }}
+                onClick={() => prevField()}
+                disabled={fieldIndex === 0}
+              >
+                <u>P</u>
+                rev
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                  margin: '0px 5px',
+                }}
                 onClick={() => nextField()}
               >
-                Skip
+                <u>N</u>
+                ext
               </button>
               <button
                 type="button"
@@ -844,7 +965,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 }}
                 onClick={() => clearField(fieldIndex)}
               >
-                Clear
+                <u>C</u>
+                lear
               </button>
               <button
                 type="button"
@@ -856,19 +978,32 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                   setIsSelecting(false);
                 }}
               >
-                Cancel
+                <u>Q</u>
+                uit
               </button>
             </div>
           </div>
         </div>
         )}
-        <div
-          style={{
-            top: 0,
-            right: 0,
-          }}
-        >
+        <div>
           <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button
+                style={{ ...textStyle, fontSize: 10 }}
+                type="button"
+                onClick={() => setDockPosition(DockPosition.Left)}
+              >
+                Left
+              </button>
+              <button
+                style={{ ...textStyle, fontSize: 10 }}
+                type="button"
+                onClick={() => setDockPosition(DockPosition.Right)}
+              >
+                Right
+              </button>
+            </div>
+            <h2 style={textStyle}>RYM Add Helper</h2>
             {template && (
               <p style={{
                 ...textStyle,
@@ -878,8 +1013,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 <b>{`*${domain} template loaded!*`}</b>
               </p>
             )}
-            <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
-              <b>RYM artist ID:</b>
+            <p style={{ ...textStyle, ...formPStyle }}>
+              <b>artist ID:</b>
             </p>
             <input
               style={inputStyle}
@@ -926,12 +1061,30 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                     </b>
                   </p>
                   <div style={{ display: 'flex' }}>
-                    <FormInput
-                      field={field}
-                      disabled={!isFieldEnabled(field) || (isSelecting && fieldIndex !== i)}
-                    />
+                    {field.options
+                      ? (
+                        <FormSelector
+                          field={field}
+                          disabled={!isFieldEnabled(field)}
+                          onChange={(e) => {
+                            const { value } = e.target as HTMLSelectElement;
+                            manuallyUpdateFieldData(field, value);
+                          }}
+                        />
+                      )
+                      : (
+                        <FormInput
+                          field={field}
+                          disabled={!isFieldEnabled(field)}
+                          onInput={(e) => {
+                            const { value } = e.target as HTMLInputElement;
+                            manuallyUpdateFieldData(field, value);
+                          }}
+                        />
+                      )}
                     <button
                       type="button"
+                      style={buttonStyle}
                       disabled={isSelecting}
                       onClick={() => {
                         setIsSelecting(true);

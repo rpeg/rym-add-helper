@@ -30,7 +30,7 @@ export interface FormData {
     format: string,
     discSize?: string,
     discSpeed?: string,
-    date: RYMDate,
+    date: string,
     label: string,
     catalogId: string,
     countries: Array<string>,
@@ -45,25 +45,27 @@ export interface UniqueFromTransformer {
     transform: Function
 }
 
+export type Data = string | Array<string> | Object | Array<Object>;
+
+export interface Dependency {
+    field: Field,
+    data: Data,
+}
+
 export interface Field {
     name: string,
     selector: string,
     label: string,
     placeholder?: string, // for <input />
-    default: string | Array<string> | Object | Array<Object>,
-    data?: string | Array<string> | Object | Array<Object>,
-    dependency?: [Field, any], // fields conditional upon another field's value
+    default: Data,
+    data?: Data,
+    dependency?: Dependency, // fields conditional upon another field's value
     disabled?: boolean,
+    options?: Array<string>,
     uniqueFromTransformer?: UniqueFromTransformer,
     selectorTransformer?: Function,
     dataTransformers?: Array<Function>,
     format?: Function,
-}
-
-export interface RYMDate {
-    month?: string,
-    day?: string,
-    year: string,
 }
 
 export interface RYMTrack {
@@ -127,4 +129,19 @@ export enum DiscSpeeds {
     _78 = '78 rpm',
     _80 = '80 rpm',
     // missing reel-to-reel
+}
+
+export enum DiscSizes {
+    _12 = '12"',
+    _10 = '10"',
+    _7 = '7"',
+    _5 = '5"',
+    _3 = '3"',
+    _16 = '16"',
+    _11 = '11"',
+    _9 = '9"',
+    _8 = '8"',
+    _6 = '6"',
+    _4 = '4"',
+    Other = 'Non-Standard'
 }

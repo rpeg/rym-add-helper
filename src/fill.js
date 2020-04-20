@@ -20,9 +20,11 @@ const fillOutForm = (data) => {
 
   title && $('#title').val(title);
 
-  date.month && $('#month').val(date.month);
-  date.day && $('#day').val(date.day);
-  date.year && $('#year').val(date.year);
+  const [month, day, year] = date.split('/');
+
+  month && $('#month').val(month);
+  day && $('#day').val(day);
+  year && $('#year').val(year);
 
   if (type) {
     const container = $(`label[for*='category']:contains('${type}')`);

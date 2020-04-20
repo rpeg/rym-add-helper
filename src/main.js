@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { h, render, Component } from 'preact';
+import $ from 'jquery';
 import App from './app/app';
 
 let root = null;
@@ -44,6 +45,7 @@ window.addEventListener('message', ({ data }) => {
   if (data.isActive) {
     root = render(<Frame><App storedTemplate={data.storedTemplate} /></Frame>, document.body);
   } else {
+    $('a').off('click');
     render(null, document.body, root);
   }
 }, false);

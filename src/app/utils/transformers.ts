@@ -69,7 +69,7 @@ const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.-]+/ig))
 
 const discSizeTransformer = (str: string) => _.head(str.match(/\d{1,2}"/));
 
-const dateTransformer: (date: string) => RYMDate = (date) => {
+const dateTransformer = (date: string) => {
   const monthRegexes = MONTH_ABBREVIATIONS.map((month, i) => {
     const paddedOrdinal = _.padStart(`${i + 1}`, 2, '0');
 
@@ -90,11 +90,7 @@ const dateTransformer: (date: string) => RYMDate = (date) => {
     '0',
   );
 
-  return {
-    month,
-    day,
-    year,
-  };
+  return `${month}/${day}/${year}`;
 };
 
 /**
