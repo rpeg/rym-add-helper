@@ -27,6 +27,13 @@ const HOVER_CLASS = 'rym__hover';
 const IFRAME_ID = 'rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
+enum KeyCodes {
+  P = 80,
+  N = 78,
+  C = 67,
+  Q = 81,
+}
+
 enum DockPosition {
   Left,
   Right,
@@ -518,6 +525,26 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     return false;
   }, isFormDisplayed);
 
+  useDocumentEvent('keydown', (e: KeyboardEvent) => {
+    switch (e.keyCode) {
+      case KeyCodes.P:
+        prevField();
+        break;
+      case KeyCodes.N:
+        nextField();
+        break;
+      case KeyCodes.C:
+        clearField(fieldIndex);
+        break;
+      case KeyCodes.Q:
+        setIsGuiding(false);
+        setIsSelecting(false);
+        break;
+      default:
+        break;
+    }
+  }, isGuiding);
+
   /**
    * Update data with clicked-on element's css selector
    */
@@ -788,6 +815,20 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
     setFields(_data);
   };
 
+  const prevField = () => {
+    let index;
+
+    for (index = fieldIndex - 1;
+      index > 0 && !isFieldEnabled(fields[index]);
+      index--);
+
+    if (index >= 0) {
+      setFieldIndex(index);
+    } else {
+      setFieldIndex(0);
+    }
+  };
+
   const nextField = () => {
     let index;
 
@@ -844,9 +885,22 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 style={{
                   ...buttonStyle,
                 }}
+                onClick={() => prevField()}
+                disabled={fieldIndex === 0}
+              >
+                <u>P</u>
+                rev
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                  margin: '0px 5px',
+                }}
                 onClick={() => nextField()}
               >
-                Skip
+                <u>N</u>
+                ext
               </button>
               <button
                 type="button"
@@ -856,7 +910,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                 }}
                 onClick={() => clearField(fieldIndex)}
               >
-                Clear
+                <u>C</u>
+                lear
               </button>
               <button
                 type="button"
@@ -868,7 +923,8 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                   setIsSelecting(false);
                 }}
               >
-                Cancel
+                <u>Q</u>
+                uit
               </button>
             </div>
           </div>
@@ -878,14 +934,14 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           <div>
             <div style={{ display: 'flex' }}>
               <button
-                style={{ ...textStyle, fontSize: 8 }}
+                style={{ ...textStyle, fontSize: 10 }}
                 type="button"
                 onClick={() => setDockPosition(DockPosition.Left)}
               >
                 Left
               </button>
               <button
-                style={{ ...textStyle, fontSize: 8 }}
+                style={{ ...textStyle, fontSize: 10 }}
                 type="button"
                 onClick={() => setDockPosition(DockPosition.Right)}
               >
