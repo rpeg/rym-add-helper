@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-expressions */
 import $ from 'jquery';
 import _ from 'lodash';
 
@@ -6,6 +5,7 @@ const fillOutForm = (data) => {
   const {
     url,
     artist,
+    id,
     title,
     date,
     type,
@@ -14,11 +14,9 @@ const fillOutForm = (data) => {
     discSpeed,
     label,
     catalogId,
-    country,
+    countries,
     tracks,
   } = data;
-
-  let isAwaitingLabel = false;
 
   title && $('#title').val(title);
 
@@ -34,33 +32,51 @@ const fillOutForm = (data) => {
     }
   }
 
-  // search label name and choose top match if any
   if (label) {
-    isAwaitingLabel = true;
-
     $('#searchterm').val(label);
 
-    $('td > .gosearch > .button').click();
+    const iframe = $('#labellist');
 
-    $('#labellist').load(() => { // capture iframe update
-      const results = $('#labellist .infobox');
-      results.length && results[0].parent().parent().parent().click();
-      isAwaitingLabel = false;
+    iframe.on('load', () => { // capture iframe update
+      const results = iframe.contents().find('.infobox');
+      const top = $(results.get(0));
+
+      if (top) {
+        const labelIdText = top.attr('id');
+        const matches = labelIdText.match(/\d+/);
+
+        top && top.parent().parent().parent().click();
+
+        if (matches) $('#label').val(matches[0]);
+      }
+
+      iframe.off();
     });
+
+    $('td > .gosearch > .button').click();
   }
 
   $('#catalog_no').val(catalogId);
 
-  country && $('#countries').val(country); // TODO list of countries
+  countries && countries.length && $('#countries').val(countries.join(', '));
+
+  if (format) {
+    const container = $(`.submit_field_content:nth-child(3) label:contains('${format}')`);
+    if (container) {
+      const inputs = container.find('input');
+      inputs.length && inputs[0].click();
+    }
+  }
 
   if (format === 'Vinyl') {
     if (discSize) {
       const container = $(`.submit_field_content:nth-child(6) tr:nth-child(1) label:contains('${discSize}')`);
-
       if (container) {
         const inputs = container.find('input');
         inputs.length && inputs[0].click();
       }
+    } else {
+      $('#disc_size88').click();
     }
 
     if (discSpeed) {
@@ -70,17 +86,64 @@ const fillOutForm = (data) => {
         inputs.length && inputs[0].click();
       }
     }
+  } else if (format === 'Digital File') {
+    $('#attrib123').click(); // assume Streaming
   }
 
-  tracks.length && $('#track_advanced').val(tracks.join('\n'));
+  if (tracks.length) {
+    const baseRow = $('#track_base');
+    const prefix = 'track_';
+    let counter = 2;
+
+    const setAttrs = (elm) => {
+      const elmId = elm.attr('id');
+      elm.attr('id', `${prefix}${elmId}${counter}`);
+      elm.attr('name', `${prefix}${elmId}${counter}`);
+    };
+
+    tracks.forEach((track, i) => {
+      const newRow = baseRow.clone(true, true);
+      counter++;
+
+      $('#track_num').val(counter);
+
+      newRow.attr('id', `${prefix}${counter}`);
+      newRow.css('display', '');
+
+      const cells = newRow.find('td');
+
+      const btn = cells.eq(0).find('input');
+      btn.attr('id', `${prefix}delete_track${counter}`);
+      btn.attr('name', `${prefix}delete_track${counter}`);
+
+      const pos = cells.eq(1).find('input');
+      setAttrs(pos);
+      pos.val(track.position ? track.position : i + 1);
+
+      const name = cells.eq(2).find('input');
+      setAttrs(name);
+      name.val(`${track.artist ? `${track.artist} - ` : ''}${track.title}`);
+      // TODO insert artist links
+
+      const length = cells.eq(3).find('input');
+      setAttrs(length);
+      length.val(track.duration);
+
+      newRow.insertBefore(baseRow);
+    });
+  }
 
   $('#notes').val(url);
 
-  if (!isAwaitingLabel) {
+  $('html, body').scrollTop($(document).height());
+
+  // preview hack for async processing of label
+  setTimeout(() => {
     $('#previewbtn').click();
-  }
+    $('#previewbtn').click();
+  }, 1000);
 };
 
 window.addEventListener('message', ({ data }) => {
-  if (data.formData) fillOutForm(data.formData);
+  $(document).ready(() => { if (data.formData) fillOutForm(data.formData); });
 }, false);

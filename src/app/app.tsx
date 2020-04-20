@@ -9,47 +9,50 @@ import update from 'immutability-helper';
 import finder from '@medv/finder';
 import _ from 'lodash';
 import $ from 'jquery';
+import parseDomain from 'parse-domain';
 
 import '../style.scss';
 
-import { useWindowEvent } from './utils/hooks';
+import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  Field, Template, ReleaseTypes, Formats, DiscSpeeds, RYMDate,
+  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
 } from './types';
 /* #endregion */
 
 /* #region Constants */
 const BASE_CLASS = 'rym__';
-const HOVER_CLASS = `${BASE_CLASS}hover`;
+const HOVER_CLASS = 'rym__hover';
+const IFRAME_ID = 'rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
 const artist : Field = {
   name: 'artist',
   selector: '',
   label: 'artist',
-  data: '',
-  transformers: [Transformers.textTransformer],
+  default: '',
+  dataTransformers: [Transformers.textTransformer],
 };
 
 const title : Field = {
   name: 'title',
   selector: '',
   label: 'title',
-  data: '',
-  transformers: [Transformers.textTransformer],
+  default: '',
+  dataTransformers: [Transformers.textTransformer],
 };
 
 const type : Field = {
   name: 'type',
   selector: '',
   label: 'type',
-  data: '',
-  transformers: [Transformers.regexMapTransformerFactory(
+  default: '',
+  placeholder: 'e.g. Album',
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
-        regex: 'album',
+        regex: /(?:album)|(?:full)|(?:LP)/,
         mapTo: ReleaseTypes.Album,
       },
       {
@@ -89,8 +92,9 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
-  data: '',
-  transformers: [Transformers.regexMapTransformerFactory(
+  placeholder: 'e.g. Vinyl',
+  default: '',
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
         regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
@@ -101,7 +105,7 @@ const format : Field = {
         mapTo: Formats.CD,
       },
       {
-        regex: /(?<!\w)((?:mp3)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
+        regex: /(?<!\w)((?:mp3)|(?:streaming)|(?:download)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
         mapTo: Formats.DigitalFile,
       },
       {
@@ -213,18 +217,20 @@ const discSize : Field = {
   name: 'discSize',
   selector: '',
   label: 'disc size',
-  data: '',
+  default: '',
+  placeholder: 'e.g. 12"',
   dependency: [format, Formats.Vinyl],
-  transformers: [Transformers.discSizeTransformer],
+  dataTransformers: [Transformers.discSizeTransformer],
 };
 
 const discSpeed : Field = {
   name: 'discSpeed',
   selector: '',
   label: 'disc speed',
-  data: '',
+  default: '',
+  placeholder: 'e.g. 45 rpm',
   dependency: [format, Formats.Vinyl],
-  transformers: [Transformers.regexMapTransformerFactory(
+  dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
         regex: /45/,
@@ -254,57 +260,93 @@ const discSpeed : Field = {
 const date : Field = {
   name: 'date',
   selector: '',
-  label: 'date',
-  data: {},
-  transformers: [Transformers.dateTransformer],
-  format: (rymDate: RYMDate) => Object.values(rymDate).filter((v) => v).join('/'),
+  label: 'release date',
+  default: {},
+  dataTransformers: [Transformers.dateTransformer],
+  format: (rymDate: RYMDate) => rymDate && Object.values(rymDate).filter((v) => v !== '00').join('/'),
 };
 
 const label : Field = {
   name: 'label',
   selector: '',
   label: 'label',
-  data: '',
+  default: '',
 };
 
 const catalogId : Field = {
   name: 'catalogId',
   selector: '',
   label: 'catalog #',
-  data: '',
-  transformers: [Transformers.catalogIdTransformer],
+  default: '',
+  dataTransformers: [Transformers.catalogIdTransformer],
 };
 
-const country : Field = {
-  name: 'country',
+const countries : Field = {
+  name: 'countries',
   selector: '',
-  label: 'country',
-  data: '',
+  label: 'countries',
+  default: [],
+  dataTransformers: [Transformers.countriesTransformer],
+  format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
 };
 
 const trackPositions : Field = {
   name: 'trackPositions',
   selector: '',
   label: 'a track position',
-  data: [],
+  placeholder: 'e.g. A1',
+  default: [],
+  selectorTransformer: Transformers.removeNthChild,
+  dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
+};
+
+const trackArtists : Field = {
+  name: 'trackArtists',
+  selector: '',
+  label: 'a track artist',
+  default: [],
+  disabled: true, // enabled when VA
+  selectorTransformer: Transformers.removeNthChild,
 };
 
 const trackTitles : Field = {
   name: 'trackTitles',
   selector: '',
   label: 'a track title',
-  data: [],
-  transformers: [Transformers.textTransformer],
+  default: [],
+  dataTransformers: [Transformers.textTransformer],
+  selectorTransformer: Transformers.removeNthChild,
 };
 
 const trackDurations : Field = {
   name: 'trackDurations',
   selector: '',
   label: 'a track duration',
-  data: [],
+  default: [],
+  selectorTransformer: Transformers.removeNthChild,
 };
 
-const fields = [
+trackPositions.uniqueFromTransformer = {
+  uniqueFrom: [trackArtists, trackDurations, trackTitles],
+  transform: Transformers.parseTrackPosition,
+};
+
+trackDurations.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackArtists, trackTitles],
+  transform: Transformers.parseTrackDuration,
+};
+
+trackArtists.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackTitles, trackDurations],
+  transform: Transformers.parseTrackArtist,
+};
+
+trackTitles.uniqueFromTransformer = {
+  uniqueFrom: [trackPositions, trackArtists, trackDurations],
+  transform: Transformers.parseTrackTitle,
+};
+
+const _fields = [
   artist,
   title,
   date,
@@ -314,214 +356,362 @@ const fields = [
   discSpeed,
   label,
   catalogId,
-  country,
+  countries,
   trackPositions,
+  trackArtists,
   trackTitles,
   trackDurations,
 ];
 /* #endregion */
 
-/* #region FormInput  */
+/* #region Components  */
 type FormInputProps = {
   field: Field,
-  isSelectingField: boolean,
+  disabled: boolean,
 }
 
-const FormInput = ({ field, isSelectingField }: FormInputProps) => {
-  const data = field.data instanceof Array
+const FormInput = ({ field, disabled }: FormInputProps) => {
+  const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
 
-  const formattedData = field.format
+  const formattedData = !_.isEmpty(data) && field.format
     ? field.format(data)
     : data;
 
   return (
     <input
       type="text"
-      disabled={!isSelectingField}
-      value={formattedData}
+      style={disabled ? inputDisabledStyle : inputStyle}
+      disabled={disabled}
+      placeholder={field.placeholder ? field.placeholder : ''}
+      value={!_.isEmpty(formattedData) ? formattedData : ''}
     />
   );
 };
 /* #endregion */
 
-/* #region TrackList */
-type TrackListProps = {
-  positions: Array<string>,
-  titles: Array<string>,
-  durations: Array<string>,
-}
-
-const TrackList = ({ positions, titles, durations }: TrackListProps) => {
-  const maxIndex = _.min([
-    positions.length,
-    titles.length,
-    durations.length,
-  ]);
-
-  return (
-    <ul>
-      {_.range(0, maxIndex).map((i) => (
-        <li style={{ listStyleType: 'disc' }}>
-          {`${positions[i]}|${titles[i]}|${durations[i]}`}
-        </li>
-      ))}
-    </ul>
-  );
+/* #region Styles */
+const textStyle = {
+  fontFamily: 'Arial, Helvetica, sans-serif',
+  color: 'black',
 };
-/* #endregion TrackList */
 
-const App = () => {
+const floatingDivStyle = {
+  backgroundColor: 'white',
+  boxShadow: 'darkslategrey -5px 5px 15px',
+  border: '1px solid darkslategrey',
+};
+
+const formPStyle = {
+  margin: '10px 0 2px 0',
+};
+
+const formUlStyle = {
+  padding: 0,
+  margin: 0,
+};
+
+const formLiStyle = {
+  padding: 0,
+  margin: 0,
+  listStyleType: 'none',
+  listStylePosition: 'inside',
+};
+
+const inputStyle = {
+  width: 'fit-content',
+  flexGrow: 1,
+  padding: '4px',
+  border: '1px solid darkslategrey',
+};
+
+const inputDisabledStyle = {
+  ...inputStyle,
+  background: '#dddddd',
+};
+
+const buttonStyle = {
+  display: 'inline-block',
+  color: 'white',
+  border: 'none',
+  backgroundColor: '#4CAF50',
+  textAlign: 'center',
+  textDecoration: 'none',
+  fontSize: '14px',
+};
+
+const accentButtonStyle = {
+  ...buttonStyle,
+  padding: '10px',
+};
+/* #endregion */
+
+const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isGuiding, setIsGuiding] = useState(false);
-  const [isInvalidMessageDisplayed, setIsInvalidMessageDisplayed] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
+  const [isTemplateSaveMessageDisplayed, setIsTemplateSaveMessageDisplayed] = useState(false);
+
+  const [domain, setDomain] = useState('');
+  const [template, setTemplate] = useState(null);
   const [selectedElm, setSelectedElm] = useState(null);
-  const [dataIndex, setDataIndex] = useState(0);
-  const [data, setData] = useState(fields);
+  const [fieldIndex, setFieldIndex] = useState(0);
+  const [fields, setFields] = useState(_fields);
 
   const artistInputRef = useRef<HTMLInputElement>(null);
   /* #endregion */
 
   /* #region Hooks */
+  const isElmInForm = (e: MouseEvent) => e.target instanceof Node
+    && document.querySelector(`#${IFRAME_ID}`).contains(e.target as Node);
+
+  const initListeners = () => {
+    // have to use native DOM listener to prevent browser redirects
+    // because React's synthetic events fire after parent's
+    $(document).ready(() => {
+      $('a').click((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setSelectedElm(e.target);
+      });
+    }); // TODO unregister on app untoggle
+  };
+
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
+    e.preventDefault();
     if (isSelecting && !isElmInForm(e)) {
-      (e.srcElement as HTMLTextAreaElement).classList.add(HOVER_CLASS);
+      (e.srcElement as HTMLElement).classList.add(HOVER_CLASS);
     }
   }, 200), isFormDisplayed);
 
   useWindowEvent('mouseout', (e: MouseEvent) => {
-    (e.srcElement as HTMLTextAreaElement).classList.remove(HOVER_CLASS);
+    (e.srcElement as HTMLElement).classList.remove(HOVER_CLASS);
   }, isFormDisplayed);
 
-  useWindowEvent('click', (e: MouseEvent) => {
-    if ((e.srcElement as HTMLTextAreaElement).classList.contains(HOVER_CLASS)) {
-      e.preventDefault();
-      setSelectedElm(e.target);
-      return false;
+  useDocumentEvent('click', (e: MouseEvent) => {
+    if (isElmInForm(e)) return true;
+
+    if (e.stopImmediatePropagation) {
+      e.stopImmediatePropagation();
     }
 
-    return true;
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+
+    e.preventDefault();
+
+    (e.target as HTMLElement).onmouseover = null;
+
+    setSelectedElm(e.target);
+
+    return false;
   }, isFormDisplayed);
 
   /**
-   * Update data with clicked-on element's css selector; iterate data index
+   * Update data with clicked-on element's css selector
    */
   useEffect(() => {
     if (!selectedElm) return;
 
-    const selector = finder(selectedElm, {
-      className: (n) => !n.startsWith(BASE_CLASS),
-      idName: (n) => !n.startsWith(BASE_CLASS),
-    });
+    const currentField = fields[fieldIndex];
 
-    const fieldData = parseField(selector, data[dataIndex]);
+    let selector;
 
-    const _data = update(data,
-      {
-        [dataIndex]:
-          {
-            selector: { $set: selector },
-            data: { $set: fieldData },
-          },
+    try {
+      selector = finder(selectedElm, {
+        className: (n) => !n.includes(BASE_CLASS) && !/hover|mouse/.test(n), // TODO find better way to ignore mouseover class
+        idName: (n) => !n.includes(BASE_CLASS),
       });
 
-    setData(_data);
-    setDataIndex(dataIndex + 1);
+      console.info(selector);
+
+      if (selector && currentField.selectorTransformer) {
+        selector = currentField.selectorTransformer(selector);
+      }
+
+      const newData = update(fields,
+        {
+          [fieldIndex]:
+          {
+            selector: { $set: selector },
+            data: { $set: pruneField(selector, currentField) },
+          },
+        });
+
+      setFields(newData);
+
+      if (isGuiding) {
+        nextField();
+      } else { setIsSelecting(false); }
+    } catch (e) {
+      console.warn('invalid selector', e);
+    }
   }, [selectedElm]);
 
   useEffect(() => {
-    if (dataIndex >= data.length) {
-      setIsSelecting(false);
-      setIsGuiding(false);
-    }
-  }, [dataIndex]);
+    const artistIndex = fields.findIndex((f) => f.name === artist.name);
+    const trackArtistsIndex = fields.findIndex((f) => f.name === trackArtists.name);
 
-  useEffect(() => {
-    const index = data.findIndex((f) => f.name === artist.name) ?? 0;
+    const _artist = getField(artist.name);
+    const _trackArtists = getField(trackArtists.name);
 
-    const _data = update(data,
+    setFields(update(fields,
       {
-        [index]:
+        [artistIndex]:
           {
             disabled: { $set: isVariousArtists },
+            data: {
+              $set: isVariousArtists
+                ? 'Various Artists'
+                : pruneField(
+                  _artist.selector,
+                  _artist,
+                ),
+            },
           },
-      });
-
-    setData(_data);
+        [trackArtistsIndex]:
+          {
+            disabled: { $set: !isVariousArtists },
+            data: {
+              $set: pruneField(
+                _trackArtists.selector,
+                _trackArtists,
+              ),
+            },
+          },
+      }));
   }, [isVariousArtists]);
 
+  /**
+   * Initialization
+   */
   useEffect(() => {
-    const template = Templates[document.location.hostname] as Template;
+    initListeners();
 
-    if (template) {
-      processTemplate(template);
+    const _domain = parseDomain(window.location.host).domain;
+
+    setDomain(_domain);
+
+    const temp = storedTemplate || Templates[_domain] as Template;
+
+    if (temp) {
+      processTemplate(temp);
+      setTemplate(temp);
     } else {
-      setIsSelecting(true);
+      setIsFormDisplayed(true);
     }
   }, []);
   /* #endregion */
 
   /* #region Methods */
-  const processTemplate = (template: Template) => {
-    const d = [...data];
+  const processTemplate = (temp: Template) => {
+    const d = [...fields];
 
-    Object.entries(template).forEach(([k, v]) => {
+    Object.entries(temp).forEach(([k, v]) => {
       const field = d.find((f) => f.name === k);
       if (field) field.selector = v as string;
     });
 
-    setData(d);
-    parseData();
-    setDataIndex(data.length);
+    setFields(d);
+    pruneData();
     setIsFormDisplayed(true);
   };
 
-  const parseData = () => {
-    const d = [...data];
+  const pruneData = () => {
+    const d = [...fields];
 
-    d.filter((field) => field.selector).forEach((field) => {
+    d.filter((field) => field.selector)
+      .forEach((field) => {
       // eslint-disable-next-line no-param-reassign
-      field.data = parseField(field.selector, field);
-    });
+        field.data = pruneField(field.selector, field);
+      });
 
-    setData([...d]);
+    setFields([...d]);
   };
 
-  const parseField = (selector: string, field: Field) => {
-    const matches: Array<HTMLElement> = $(selector).toArray();
+  const pruneField = (selector: string, field: Field) => {
+    const matches = getSelectorMatches(selector);
 
-    const transformers = field.transformers || [function (val: any) { return val; }];
+    const uniqf = field.uniqueFromTransformer
+    && field.uniqueFromTransformer.uniqueFrom.some((f) => f.selector === field.selector)
+      ? field.uniqueFromTransformer.transform
+      : function (val: any) { return val; };
 
-    const transformedData = matches.map((m) => transformers
-      .reduce((acc, f) => f(acc), m.innerText.trim()));
+    const transformers = field.dataTransformers || [function (val: any) { return val; }];
 
-    if (typeof field.data === 'string') return transformedData.join(' ');
-    if (field.data instanceof Array) return transformedData;
-    if (field.data instanceof Object) return _.first(transformedData);
+    const transformedMatches = matches
+      .map((m) => uniqf(m))
+      .map((m) => transformers
+        .reduce((acc, transform) => transform(acc), m));
 
-    return transformedData;
+    if (typeof field.default === 'string') return transformedMatches.join(' ');
+    if (field.default instanceof Array) return transformedMatches;
+    if (field.default instanceof Object) return _.first(transformedMatches);
+
+    return transformedMatches;
+  };
+
+  const getSelectorMatches = (selector: string) => {
+    const matches = _.intersection(
+      $(window.parent.document).find(selector).toArray(),
+    );
+
+    return matches.map((m) => (m as unknown as HTMLElement).innerText.trim());
+  };
+
+  const saveTemplate = () => {
+    const newTemplate = getNewTemplate();
+
+    if (!template || _.isEqual(template, newTemplate) || confirm('Overwrite existing template?')) {
+      window.postMessage(
+        {
+          type: 'setStorage',
+          key: domain,
+          value: newTemplate,
+        }, '*',
+      );
+
+      // TODO only overwrite altered fields with positive diffs
+
+      setIsTemplateSaveMessageDisplayed(true);
+    }
   };
 
   const submitForm = () => {
-    const id = isVariousArtists
-      ? VARIOUS_ARTISTS_ID
-      : artistInputRef.current.value;
+    let id = '';
+
+    if (isVariousArtists) {
+      id = VARIOUS_ARTISTS_ID;
+    } else {
+      const matches = artistInputRef.current.value.match(/\d+/);
+      if (matches && matches.length) {
+        id = _.head(matches);
+      }
+    }
 
     if (id) {
-      setIsInvalidMessageDisplayed(false);
-
-      const formData = {
+      const formData: FormData = {
         url: window.location.href,
         id,
+        artist: getField(artist.name)?.data as string,
+        title: getField(title.name)?.data as string,
+        type: getField(type.name)?.data as string,
+        format: getField(format.name)?.data as string,
+        discSize: getField(discSize.name)?.data as string,
+        discSpeed: getField(discSpeed.name)?.data as string,
+        date: getField(date.name)?.data as RYMDate,
+        label: getField(label.name)?.data as string,
+        catalogId: getField(catalogId.name)?.data as string,
+        countries: getField(countries.name)?.data as Array<string>,
+        tracks: getTracks(),
       };
 
-      data.forEach((f) => {
-        formData[f.name] = f.data;
-      });
+      console.info(fields);
 
       window.postMessage(
         {
@@ -530,123 +720,277 @@ const App = () => {
         }, '*',
       );
     } else {
-      setIsInvalidMessageDisplayed(true);
+      alert('Enter a valid RYM artist ID');
     }
   };
 
-  const isElmInForm = (e: MouseEvent) => e && (e.srcElement as HTMLTextAreaElement)
-    && (e.srcElement as HTMLTextAreaElement).offsetParent
-    && (e.srcElement as HTMLTextAreaElement).offsetParent.classList
-    && [...(e.srcElement as HTMLTextAreaElement).offsetParent.classList].includes(BASE_CLASS);
+  const getTracks = () => {
+    const tracks: Array<RYMTrack> = [];
 
+    const positions = (getField(trackPositions.name).data as Array<string>) ?? [];
+    const artists = !getField(trackArtists.name).disabled
+      ? ((getField(trackArtists.name).data as Array<string>) ?? [])
+      : [];
+    const titles = (getField(trackTitles.name).data as Array<string>) ?? [];
+    const durations = (getField(trackDurations.name).data as Array<string>) ?? [];
+
+    const max = _.max([
+      positions.length,
+      artists.length,
+      titles.length,
+      durations.length,
+    ]);
+
+    _.range(0, max).forEach((i) => tracks.push({
+      position: positions && positions[i] ? positions[i] : '',
+      artist: artists && artists[i] ? artists[i] : '',
+      title: titles && titles[i] ? titles[i] : '',
+      duration: durations && durations[i] ? durations[i] : '',
+    }));
+
+    return tracks;
+  };
+
+  /**
+   * Convert local selectors into a [Template].
+   */
+  const getNewTemplate = () => {
+    const newTemplate: HashMap<string, string> = {};
+
+    fields.forEach((f) => {
+      newTemplate[f.name] = f.selector;
+    });
+
+    return newTemplate;
+  };
+
+  const clearField = (i: number) => {
+    const _data = update(fields,
+      {
+        [i]:
+          {
+            data: { $set: null },
+          },
+      });
+
+    setFields(_data);
+  };
+
+  const nextField = () => {
+    let index;
+
+    for (index = fieldIndex + 1;
+      index < fields.length && !isFieldEnabled(fields[index]);
+      index++);
+
+    if (fields.length && index > fields.length - 1) {
+      setIsGuiding(false);
+      setIsSelecting(false);
+    } else {
+      setFieldIndex(index);
+    }
+  };
+
+  const isFieldEnabled = (field: Field) => !field.disabled && (!field.dependency
+    || fields.find((f) => f.name === (field.dependency as [Field, any])[0].name)
+      ?.data === (field.dependency as [Field, any])[1]);
+
+  const getField = (name: string) => fields.find((d) => d.name === name);
   /* #endregion */
 
   /* #region Render */
   return (
     isFormDisplayed && (
       <Fragment>
-        {isGuiding && (
+        {isSelecting && (
+        <div
+          style={{
+            position: 'fixed',
+            zIndex: '10000',
+            bottom: '10px',
+            width: '100%',
+          }}
+        >
           <div
-            id="rym__prompt"
             style={{
-              position: 'fixed',
-              zIndex: '10000',
-              bottom: 25,
-              width: '100%',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              width: 'fit-content',
+              padding: 10,
+              ...floatingDivStyle,
             }}
           >
-            <div
-              className="rym__floating_container"
-              style={{
-                display: 'flex',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-                width: 'fit-content',
-                padding: 10,
-              }}
-            >
-              <p><b>{`Select ${data[dataIndex]?.label}`}</b></p>
+            <p style={textStyle}>
+              <b>
+                {`Select ${fields[fieldIndex].label}
+                ${fields[fieldIndex].placeholder ? ` (${fields[fieldIndex].placeholder})` : ''}`}
+              </b>
+            </p>
+            <div style={{ display: 'flex ' }}>
               <button
-                id="rym__skip"
                 type="button"
-                style={{ marginLeft: 10 }}
-                onClick={() => setDataIndex(dataIndex + 1)}
+                style={{
+                  ...buttonStyle,
+                }}
+                onClick={() => nextField()}
               >
                 Skip
               </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                  margin: '0px 5px',
+                }}
+                onClick={() => clearField(fieldIndex)}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                style={{
+                  ...buttonStyle,
+                }}
+                onClick={() => {
+                  setIsGuiding(false);
+                  setIsSelecting(false);
+                }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
+        </div>
         )}
-        <div id="rym__form" className="rym__ rym__floating_container" style={{ top: 0, right: 0 }}>
-          <div id="rym__form-inner">
-            <p><b>RYM artist ID:</b></p>
-            <input type="text" placeholder="e.g. Artist12345" ref={artistInputRef} />
+        <div
+          style={{
+            top: 0,
+            right: 0,
+          }}
+        >
+          <div>
+            {template && (
+              <p style={{
+                ...textStyle,
+                color: '#4CAF50',
+              }}
+              >
+                <b>{`*${domain} template loaded!*`}</b>
+              </p>
+            )}
+            <p style={{ ...textStyle, margin: '0 0 10px 0' }}>
+              <b>RYM artist ID:</b>
+            </p>
+            <input
+              style={inputStyle}
+              type="text"
+              placeholder="e.g. Artist12345"
+              ref={artistInputRef}
+            />
             <div style={{ marginTop: 4 }}>
               <input
                 type="checkbox"
                 checked={isVariousArtists}
                 onClick={() => setIsVariousArtists(!isVariousArtists)}
               />
-              <label htmlFor="rym__va_box" style={{ paddingLeft: 4 }}>various artists</label>
+              <label
+                htmlFor="rym__va_box"
+                style={{ paddingLeft: 4, ...textStyle }}
+              >
+                various artists
+              </label>
             </div>
-            {isInvalidMessageDisplayed
-              && <h4 style={{ color: 'red', fontWeight: 'bold' }}>* Required</h4>}
             <hr />
-            <ul id="rym__data">
+            <ul style={formUlStyle}>
               <button
-                id="rym__guideme"
-                className="rym__button-primary"
+                style={accentButtonStyle}
                 type="button"
-                onClick={() => setIsGuiding(true)}
+                onClick={() => {
+                  setFieldIndex(0);
+                  setIsGuiding(true);
+                  setIsSelecting(true);
+                }}
               >
                 Guide Me
               </button>
-              {(data).map((field, i) => (!field.dependency
-                || data.find((f) => f === (field.dependency as [Field, string])[0])
-                      ?.data === (field.dependency as [Field, string])[1])
-                    && (
-                    <li>
-                      <p>
-                        <b style={i === dataIndex ? { backgroundColor: '#FFFF00' } : {}}>
-                          {`${field.label}:`}
-                        </b>
-                      </p>
-                      <div style={{ display: 'flex' }}>
-                        <FormInput
-                          field={field}
-                          isSelectingField={isSelecting && dataIndex === i}
-                        />
-                        <button
-                          type="button"
-                          disabled={field.disabled || isGuiding}
-                          onClick={() => {
-                            setIsSelecting(true);
-                            setDataIndex(i);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </li>
-                    ))}
+              {(fields).map((field, i) => (
+                <li style={formLiStyle}>
+                  <p
+                    style={{
+                      ...textStyle,
+                      ...formPStyle,
+                    }}
+                  >
+                    <b style={i === fieldIndex && isSelecting ? { backgroundColor: '#FFFF00' } : {}}>
+                      {`${field.label}:`}
+                    </b>
+                  </p>
+                  <div style={{ display: 'flex' }}>
+                    <FormInput
+                      field={field}
+                      disabled={!isFieldEnabled(field) || (isSelecting && fieldIndex !== i)}
+                    />
+                    <button
+                      type="button"
+                      disabled={isSelecting}
+                      onClick={() => {
+                        setIsSelecting(true);
+                        setFieldIndex(i);
+                      }}
+                    >
+                      Select
+                    </button>
+                  </div>
+                </li>
+              ))}
               <hr />
               <li>
-                <p><b>Tracks:</b></p>
-                <TrackList
-                  positions={data.find((f) => f.name === trackPositions.name).data as Array<string>}
-                  titles={data.find((f) => f.name === trackTitles.name).data as Array<string>}
-                  durations={data.find((f) => f.name === trackDurations.name).data as Array<string>}
-                />
+                <p style={textStyle}><b>Tracks:</b></p>
+                <ul style={formUlStyle}>
+                  {getTracks().map((t) => (
+                    <li style={{ listStyleType: 'disc' }}>
+                      <p style={textStyle}>
+                        {`${t.position ? `${t.position}` : ''} 
+                        ${t.artist ? `${t.artist} - ` : ''}
+                        ${t.title} 
+                        ${t.duration ? `(${t.duration})` : ''}`}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               </li>
+              <hr />
             </ul>
-            <button
-              id="rym__submit"
-              className="rym__button-primary"
-              type="button"
-              onClick={submitForm}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
             >
-              Submit
-            </button>
+              <button
+                style={accentButtonStyle}
+                type="button"
+                onClick={saveTemplate}
+              >
+                Save Template
+              </button>
+              <button
+                style={accentButtonStyle}
+                type="button"
+                onClick={submitForm}
+              >
+                Submit
+              </button>
+            </div>
+            {isTemplateSaveMessageDisplayed && (
+              <p style={{
+                ...textStyle,
+                color: '#4CAF50',
+              }}
+              >
+                <b>{`*${domain} template saved!*`}</b>
+              </p>
+            )}
+            <div style={{ height: '110px' }} />
           </div>
         </div>
       </Fragment>

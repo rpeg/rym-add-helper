@@ -13,8 +13,8 @@
   ],
   "author": "Sean Johnson",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/rpeg/rym-add-helper.git"
+    "type": "git",
+    "url": "https://github.com/rpeg/rym-add-helper.git"
   },
   "license": "ISC",
   "devDependencies": {
@@ -53,6 +53,7 @@
     "immutability-helper": "3.0.2",
     "jquery": "3.4.1",
     "lodash": "4.17.15",
+    "parse-domain": "2.3.4",
     "preact": "10.4.0"
   }
 }

@@ -1,3 +1,7 @@
+export type HashMap<K extends string, V> = {
+    [k in K]: V;
+}
+
 export interface Template {
     artist: string,
     title: string,
@@ -8,20 +12,51 @@ export interface Template {
     date: string,
     label: string,
     catalogId: string,
-    country: string,
+    countries: string,
     trackPositions: string,
+    trackArtists?: string,
     trackTitles: string,
     trackDurations: string,
+}
+
+export interface FormData {
+    [key: string]: string | Array<Object> | Array<string> | Object,
+
+    url: string,
+    id: string,
+    artist: string,
+    title: string,
+    type: string,
+    format: string,
+    discSize?: string,
+    discSpeed?: string,
+    date: RYMDate,
+    label: string,
+    catalogId: string,
+    countries: Array<string>,
+    tracks: Array<RYMTrack>
+}
+
+/**
+ * Apply transform in DOM pruning step if field's selector matches one or more specified fields'
+ */
+export interface UniqueFromTransformer {
+    uniqueFrom: Array<Field>, // fields which may be in same elm and need additional parsing
+    transform: Function
 }
 
 export interface Field {
     name: string,
     selector: string,
     label: string,
-    data: string | Array<string> | Object | Array<Object>,
-    dependency?: [Field, string],
+    placeholder?: string, // for <input />
+    default: string | Array<string> | Object | Array<Object>,
+    data?: string | Array<string> | Object | Array<Object>,
+    dependency?: [Field, any], // fields conditional upon another field's value
     disabled?: boolean,
-    transformers?: Array<Function>,
+    uniqueFromTransformer?: UniqueFromTransformer,
+    selectorTransformer?: Function,
+    dataTransformers?: Array<Function>,
     format?: Function,
 }
 
@@ -29,6 +64,13 @@ export interface RYMDate {
     month?: string,
     day?: string,
     year: string,
+}
+
+export interface RYMTrack {
+    position: string,
+    title: string,
+    duration: string,
+    artist?: string, // for VA releases
 }
 
 export interface RegexMap {
