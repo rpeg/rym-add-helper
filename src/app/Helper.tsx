@@ -619,14 +619,18 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
         });
 
       setFields(newData);
-
-      if (isGuiding) {
-        nextField();
-      } else { setIsSelecting(false); }
     } catch (e) {
       console.warn('invalid selector', e);
     }
   }, [selectedElm]);
+
+  useEffect(() => {
+    if (isGuiding) {
+      nextField();
+    } else {
+      setIsSelecting(false);
+    }
+  }, [fields]);
 
   useEffect(() => {
     const artistIndex = fields.findIndex((f) => f.name === artist.name);

@@ -37,10 +37,8 @@ const fillOutForm = (data: FormData) => {
   if (label) {
     $('#searchterm').val(label);
 
-    const iframe = $('#labellist');
-
-    iframe.on('load', () => { // capture iframe update
-      const results = iframe.contents().find('.infobox');
+    $('#labellist').one('load', () => {
+      const results = $('#labellist').contents().find('.infobox');
       const top = $(results.get(0));
 
       if (top) {
@@ -51,8 +49,6 @@ const fillOutForm = (data: FormData) => {
 
         if (matches) $('#label').val(matches[0]);
       }
-
-      iframe.off();
     });
 
     $('td > .gosearch > .button').click();
@@ -143,7 +139,7 @@ const fillOutForm = (data: FormData) => {
   setTimeout(() => {
     $('#previewbtn').click();
     $('#previewbtn').click();
-  }, 1000);
+  }, 2000);
 };
 
 window.addEventListener('message', ({ data }) => {
