@@ -22,9 +22,9 @@ const fillOutForm = (data) => {
 
   const [month, day, year] = date.split('/');
 
-  month && $('#month').val(date.month);
-  day && $('#day').val(date.day);
-  year && $('#year').val(date.year);
+  month && $('#month').val(month);
+  day && $('#day').val(day);
+  year && $('#year').val(year);
 
   if (type) {
     const container = $(`label[for*='category']:contains('${type}')`);

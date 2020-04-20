@@ -13,11 +13,11 @@ import parseDomain from 'parse-domain';
 
 import '../style.scss';
 
-import { useWindowEvent, useDocumentEvent, useParentDocumentEvent } from './utils/hooks';
+import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
 import Templates from './utils/templates';
 import {
-  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMDate, RYMTrack,
+  HashMap, Field, Template, FormData, ReleaseTypes, Formats, DiscSpeeds, RYMTrack, DiscSizes, Data,
 } from './types';
 /* #endregion */
 
@@ -60,7 +60,7 @@ const type : Field = {
   selector: '',
   label: 'type',
   default: '',
-  placeholder: 'e.g. Album',
+  options: Object.values(ReleaseTypes),
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -104,8 +104,8 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
-  placeholder: 'e.g. Vinyl',
   default: '',
+  options: Object.values(Formats),
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
@@ -230,7 +230,7 @@ const discSize : Field = {
   selector: '',
   label: 'disc size',
   default: '',
-  placeholder: 'e.g. 12"',
+  options: Object.values(DiscSizes),
   dependency: {
     field: format,
     data: Formats.Vinyl,
@@ -243,7 +243,7 @@ const discSpeed : Field = {
   selector: '',
   label: 'disc speed',
   default: '',
-  placeholder: 'e.g. 45 rpm',
+  options: Object.values(DiscSpeeds),
   dependency: {
     field: format,
     data: Formats.Vinyl,
@@ -315,6 +315,7 @@ const trackPositions : Field = {
   label: 'a track position',
   placeholder: 'e.g. A1',
   default: [],
+  disabled: true,
   selectorTransformer: Transformers.removeNthChild,
   dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
 };
@@ -389,10 +390,10 @@ const _fields = [
 type FormInputProps = {
   field: Field,
   disabled: boolean,
-  onChange: h.JSX.GenericEventHandler<HTMLInputElement>
+  onInput: h.JSX.GenericEventHandler<HTMLInputElement>
 }
 
-const FormInput = ({ field, disabled, onChange }: FormInputProps) => {
+const FormInput = ({ field, disabled, onInput }: FormInputProps) => {
   const data = field.data instanceof Array && field.data.length
     ? field.data[0]
     : field.data;
@@ -408,10 +409,32 @@ const FormInput = ({ field, disabled, onChange }: FormInputProps) => {
       disabled={disabled}
       placeholder={field.placeholder ? field.placeholder : ''}
       value={!_.isEmpty(formattedData) ? formattedData : ''}
-      onChange={onChange}
+      onInput={onInput}
     />
   );
 };
+
+type FormSelectorProps = {
+  field: Field,
+  disabled: boolean,
+  onChange: h.JSX.GenericEventHandler<HTMLSelectElement>
+}
+
+const FormSelector = ({
+  field, disabled, onChange,
+}: FormSelectorProps) => (
+  <select
+    style={disabled ? inputDisabledStyle : inputStyle}
+    disabled={disabled}
+    onChange={onChange}
+    required={false}
+  >
+    <option value="" />
+    {field.options.map((s) => (
+      <option value={s} selected={field.data === s}>{s}</option>
+    ))}
+  </select>
+);
 /* #endregion */
 
 /* #region Styles */
@@ -1038,17 +1061,30 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                     </b>
                   </p>
                   <div style={{ display: 'flex' }}>
-                    <FormInput
-                      field={field}
-                      disabled={!isFieldEnabled(field)}
-                      onChange={(e) => _.debounce(() => {
-                        const { value } = e.target as HTMLInputElement;
-
-                        manuallyUpdateFieldData(field, value);
-                      }, 200)}
-                    />
+                    {field.options
+                      ? (
+                        <FormSelector
+                          field={field}
+                          disabled={!isFieldEnabled(field)}
+                          onChange={(e) => {
+                            const { value } = e.target as HTMLSelectElement;
+                            manuallyUpdateFieldData(field, value);
+                          }}
+                        />
+                      )
+                      : (
+                        <FormInput
+                          field={field}
+                          disabled={!isFieldEnabled(field)}
+                          onInput={(e) => {
+                            const { value } = e.target as HTMLInputElement;
+                            manuallyUpdateFieldData(field, value);
+                          }}
+                        />
+                      )}
                     <button
                       type="button"
+                      style={buttonStyle}
                       disabled={isSelecting}
                       onClick={() => {
                         setIsSelecting(true);

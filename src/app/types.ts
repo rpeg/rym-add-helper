@@ -61,6 +61,7 @@ export interface Field {
     data?: Data,
     dependency?: Dependency, // fields conditional upon another field's value
     disabled?: boolean,
+    options?: Array<string>,
     uniqueFromTransformer?: UniqueFromTransformer,
     selectorTransformer?: Function,
     dataTransformers?: Array<Function>,
@@ -128,4 +129,19 @@ export enum DiscSpeeds {
     _78 = '78 rpm',
     _80 = '80 rpm',
     // missing reel-to-reel
+}
+
+export enum DiscSizes {
+    _12 = '12"',
+    _10 = '10"',
+    _7 = '7"',
+    _5 = '5"',
+    _3 = '3"',
+    _16 = '16"',
+    _11 = '11"',
+    _9 = '9"',
+    _8 = '8"',
+    _6 = '6"',
+    _4 = '4"',
+    Other = 'Non-Standard'
 }
