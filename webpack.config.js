@@ -2,7 +2,7 @@ module.exports = {
   mode: 'production',
   entry: {
     main: './src/main.js',
-    fill: './src/fill.js',
+    fill: './src/fill.ts',
   },
   output: {
     filename: '[name].js',
