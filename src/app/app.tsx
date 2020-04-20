@@ -27,6 +27,11 @@ const HOVER_CLASS = 'rym__hover';
 const IFRAME_ID = 'rym__frame';
 const VARIOUS_ARTISTS_ID = '5';
 
+enum DockPosition {
+  Left,
+  Right,
+}
+
 const artist : Field = {
   name: 'artist',
   selector: '',
@@ -454,6 +459,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const [isGuiding, setIsGuiding] = useState(false);
   const [isVariousArtists, setIsVariousArtists] = useState(false);
   const [isTemplateSaveMessageDisplayed, setIsTemplateSaveMessageDisplayed] = useState(false);
+  const [dockPosition, setDockPosition] = useState(DockPosition.Right);
 
   const [domain, setDomain] = useState('');
   const [template, setTemplate] = useState(null);
@@ -586,6 +592,12 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           },
       }));
   }, [isVariousArtists]);
+
+  useEffect(() => {
+    const isRight = dockPosition === DockPosition.Right;
+    $('#rym__frame').css('left', isRight ? '' : '0');
+    $('#rym__frame').css('right', isRight ? 0 : '');
+  }, [dockPosition]);
 
   /**
    * Initialization
@@ -862,13 +874,24 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
           </div>
         </div>
         )}
-        <div
-          style={{
-            top: 0,
-            right: 0,
-          }}
-        >
+        <div>
           <div>
+            <div style={{ display: 'flex' }}>
+              <button
+                style={{ ...textStyle, fontSize: 8 }}
+                type="button"
+                onClick={() => setDockPosition(DockPosition.Left)}
+              >
+                Left
+              </button>
+              <button
+                style={{ ...textStyle, fontSize: 8 }}
+                type="button"
+                onClick={() => setDockPosition(DockPosition.Right)}
+              >
+                Right
+              </button>
+            </div>
             {template && (
               <p style={{
                 ...textStyle,

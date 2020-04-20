@@ -81,6 +81,22 @@ const Templates: {[index: string]: Template } = {
     trackTitles: '.tracklist-name',
     trackDurations: '.tracklist-duration > span',
   },
+  musicbrainz: {
+    artist: '.subheader > a > bdi',
+    title: 'h1 bdi',
+    date: '.release-date',
+    type: '.type',
+    format: '.format',
+    discSize: '.format',
+    discSpeed: '.format',
+    label: '.links > li:nth-child(1) > a > bdi',
+    catalogId: 'li:nth-child(1) > .catalog-number',
+    countries: '.flag:nth-child(1) bdi',
+    trackPositions: '.pos > a',
+    trackArtists: '', // TODO: couldn't find a selector to grab artists that also works for standard releases
+    trackTitles: '.odd > td > a > bdi, .even > td > a > bdi',
+    trackDurations: 'td.treleases',
+  },
 };
 
 export default Templates;
