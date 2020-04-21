@@ -10,6 +10,17 @@ Chrome extension to facilitate music release adding on [RateYourMusic](https://r
 - Leverages [finder](https://github.com/antonmedv/finder) to create site-specific CSS selector maps, saved to user's Google profile, such that subsequent invocations on a given site will be carried out with a single click.
 - Includes several default templates: [Discogs](https://www.discogs.com/), [Bandcamp](https://bandcamp.com/), [Spotify](spotify.com), [Metal-Archives](https://www.metal-archives.com/), [Boomkat](https://boomkat.com), [MusicBrainz](https://musicbrainz.org/).
 
+## Demos
+
+### Selecting Elements
+
+![](./demos/helper.gif)
+
+### Loading from Template
+
+![](./demos/template.gif)
+
+
 ## Specs
 
 - Domain logic written in TypeScript.
