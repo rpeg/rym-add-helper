@@ -61,6 +61,7 @@ export interface Field {
     data?: Data,
     dependency?: Dependency, // fields conditional upon another field's value
     disabled?: boolean,
+    uneditable?: boolean,
     options?: Array<string>,
     uniqueFromTransformer?: UniqueFromTransformer,
     selectorTransformer?: Function,

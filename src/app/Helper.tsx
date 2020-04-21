@@ -11,7 +11,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import parseDomain from 'parse-domain';
 
-import '../style.scss';
+import './style.scss';
 
 import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -59,6 +59,7 @@ const type : Field = {
   name: 'type',
   selector: '',
   label: 'type',
+  placeholder: 'e.g. Album',
   default: '',
   options: Object.values(ReleaseTypes),
   dataTransformers: [Transformers.regexMapTransformerFactory(
@@ -104,6 +105,7 @@ const format : Field = {
   name: 'format',
   selector: '',
   label: 'format',
+  placeholder: 'e.g. Vinyl',
   default: '',
   options: Object.values(Formats),
   dataTransformers: [Transformers.regexMapTransformerFactory(
@@ -230,6 +232,7 @@ const discSize : Field = {
   selector: '',
   label: 'disc size',
   default: '',
+  placeholder: 'e.g. 12"',
   options: Object.values(DiscSizes),
   dependency: {
     field: format,
@@ -242,6 +245,7 @@ const discSpeed : Field = {
   name: 'discSpeed',
   selector: '',
   label: 'disc speed',
+  placeholder: 'e.g. 45 rpm',
   default: '',
   options: Object.values(DiscSpeeds),
   dependency: {
@@ -296,14 +300,13 @@ const catalogId : Field = {
   selector: '',
   label: 'catalog #',
   default: '',
-  dataTransformers: [Transformers.catalogIdTransformer],
 };
 
 const countries : Field = {
   name: 'countries',
   selector: '',
   label: 'countries',
-  placeholder: 'e.g. United States, Germany',
+  placeholder: 'e.g. France, Germany',
   default: [],
   dataTransformers: [Transformers.countriesTransformer],
   format: (cs: Array<string>) => cs && cs.length && cs.join(', '),
@@ -315,7 +318,7 @@ const trackPositions : Field = {
   label: 'a track position',
   placeholder: 'e.g. A1',
   default: [],
-  disabled: true,
+  uneditable: true,
   selectorTransformer: Transformers.removeNthChild,
   dataTransformers: [(position: string) => position.replace(/\.+$/, '')], // remove trailing period
 };
@@ -325,6 +328,7 @@ const trackArtists : Field = {
   selector: '',
   label: 'a track artist',
   default: [],
+  uneditable: true,
   disabled: true, // enabled when VA
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -334,7 +338,7 @@ const trackTitles : Field = {
   selector: '',
   label: 'a track title',
   default: [],
-  disabled: true,
+  uneditable: true,
   dataTransformers: [Transformers.textTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
@@ -344,8 +348,18 @@ const trackDurations : Field = {
   selector: '',
   label: 'a track duration',
   default: [],
-  disabled: true,
+  uneditable: true,
   selectorTransformer: Transformers.removeNthChild,
+};
+
+label.uniqueFromTransformer = {
+  uniqueFrom: [catalogId],
+  transform: Transformers.parseLabel,
+};
+
+catalogId.uniqueFromTransformer = {
+  uniqueFrom: [label],
+  transform: Transformers.parseCatalogId,
 };
 
 trackPositions.uniqueFromTransformer = {
@@ -493,7 +507,7 @@ const accentButtonStyle = {
 };
 /* #endregion */
 
-const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
+const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #region State */
   const [isFormDisplayed, setIsFormDisplayed] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -614,14 +628,18 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
         });
 
       setFields(newData);
-
-      if (isGuiding) {
-        nextField();
-      } else { setIsSelecting(false); }
     } catch (e) {
       console.warn('invalid selector', e);
     }
   }, [selectedElm]);
+
+  useEffect(() => {
+    if (isGuiding) {
+      nextField();
+    } else {
+      setIsSelecting(false);
+    }
+  }, [fields]);
 
   useEffect(() => {
     const artistIndex = fields.findIndex((f) => f.name === artist.name);
@@ -1065,7 +1083,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                       ? (
                         <FormSelector
                           field={field}
-                          disabled={!isFieldEnabled(field)}
+                          disabled={!isFieldEnabled(field) || field.uneditable}
                           onChange={(e) => {
                             const { value } = e.target as HTMLSelectElement;
                             manuallyUpdateFieldData(field, value);
@@ -1075,7 +1093,7 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
                       : (
                         <FormInput
                           field={field}
-                          disabled={!isFieldEnabled(field)}
+                          disabled={!isFieldEnabled(field) || field.uneditable}
                           onInput={(e) => {
                             const { value } = e.target as HTMLInputElement;
                             manuallyUpdateFieldData(field, value);
@@ -1152,4 +1170,4 @@ const App = ({ storedTemplate }: { storedTemplate?: Template }) => {
   /* #endregion */
 };
 
-export default App;
+export default Helper;

@@ -1,11 +1,11 @@
 import $ from 'jquery';
 import _ from 'lodash';
 
-const fillOutForm = (data) => {
+import { FormData, Formats } from './types';
+
+const fillOutForm = (data: FormData) => {
   const {
     url,
-    artist,
-    id,
     title,
     date,
     type,
@@ -37,10 +37,8 @@ const fillOutForm = (data) => {
   if (label) {
     $('#searchterm').val(label);
 
-    const iframe = $('#labellist');
-
-    iframe.on('load', () => { // capture iframe update
-      const results = iframe.contents().find('.infobox');
+    $('#labellist').one('load', () => {
+      const results = $('#labellist').contents().find('.infobox');
       const top = $(results.get(0));
 
       if (top) {
@@ -51,8 +49,6 @@ const fillOutForm = (data) => {
 
         if (matches) $('#label').val(matches[0]);
       }
-
-      iframe.off();
     });
 
     $('td > .gosearch > .button').click();
@@ -70,7 +66,7 @@ const fillOutForm = (data) => {
     }
   }
 
-  if (format === 'Vinyl') {
+  if (format === Formats.Vinyl) {
     if (discSize) {
       const container = $(`.submit_field_content:nth-child(6) tr:nth-child(1) label:contains('${discSize}')`);
       if (container) {
@@ -88,7 +84,7 @@ const fillOutForm = (data) => {
         inputs.length && inputs[0].click();
       }
     }
-  } else if (format === 'Digital File') {
+  } else if (format === Formats.DigitalFile) {
     $('#attrib123').click(); // assume Streaming
   }
 
@@ -97,7 +93,7 @@ const fillOutForm = (data) => {
     const prefix = 'track_';
     let counter = 2;
 
-    const setAttrs = (elm) => {
+    const setAttrs = (elm: JQuery<HTMLElement>) => {
       const elmId = elm.attr('id');
       elm.attr('id', `${prefix}${elmId}${counter}`);
       elm.attr('name', `${prefix}${elmId}${counter}`);
@@ -139,11 +135,11 @@ const fillOutForm = (data) => {
 
   $('html, body').scrollTop($(document).height());
 
-  // preview hack for async processing of label
+  // preview hack
   setTimeout(() => {
     $('#previewbtn').click();
     $('#previewbtn').click();
-  }, 1000);
+  }, 2000);
 };
 
 window.addEventListener('message', ({ data }) => {

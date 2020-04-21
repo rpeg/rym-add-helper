@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { h, render, Component } from 'preact';
 import $ from 'jquery';
-import App from './app/app';
+import Helper from './Helper';
 
 let root = null;
 
@@ -43,7 +43,7 @@ window.addEventListener('message', ({ data }) => {
   if (data.type !== 'toggle') return;
 
   if (data.isActive) {
-    root = render(<Frame><App storedTemplate={data.storedTemplate} /></Frame>, document.body);
+    root = render(<Frame><Helper storedTemplate={data.storedTemplate} /></Frame>, document.body);
   } else {
     $('a').off('click');
     render(null, document.body, root);

@@ -59,14 +59,6 @@ const countriesTransformer = (str: string) => str.split(/\s|,|&|(?: and )/)
   })
   .filter((c) => c);
 
-/**
- * Many sites display their label and catalog id in the same block level elm, or same string,
- * with the catalog id placed directly in the elm's inner text. Ergo, there is no direct
- * selector for the catalog id in most cases. This regex assumes the catalog id is the last
- * text of elm and consists of alphanumeric characters and spaces.
- */
-const catalogIdTransformer = (str: string) => _.last(str.match(/[\d\s\w.-]+/ig)).trim();
-
 const discSizeTransformer = (str: string) => _.head(str.match(/\d{1,2}"/));
 
 const dateTransformer = (date: string) => {
@@ -101,6 +93,14 @@ const dateTransformer = (date: string) => {
  */
 const removeNthChild = (selector: string) => selector.replace(/:nth-child\(\d+\)/i, '');
 
+/**
+ * Parsers for fields often grouped together in the same selector.
+ */
+
+const parseLabel = (str: string) => _.first(str.split('‎–')).trim();
+
+const parseCatalogId = (str: string) => _.last(str.split('‎–')).trim();
+
 const parseTrackPosition = (str: string) => {
   const matches = str.match(/(?:^\s*\d+.?)|(?:[A-Z]\d)/ig);
   return matches ? _.last(matches).trim() : str;
@@ -133,7 +133,8 @@ export default {
   regexMapTransformerFactory,
   textTransformer,
   countriesTransformer,
-  catalogIdTransformer,
+  parseLabel,
+  parseCatalogId,
   discSizeTransformer,
   dateTransformer,
   removeNthChild,

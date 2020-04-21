@@ -16,7 +16,7 @@
     "128": "icons/on_128.png"
   },
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["chrome/background.js"],
     "persistent": false
   },
   "permissions": [
@@ -31,12 +31,11 @@
     {
       "matches": ["<all_urls>"],
       "css": ["style.scss"],
-      "js": ["content.js"]
+      "js": ["chrome/content.js"]
     }
   ],
   "web_accessible_resources": [
     "main.js",
-    "fill.js",
-    "app/*"
+    "fill.js"
   ]
 }
