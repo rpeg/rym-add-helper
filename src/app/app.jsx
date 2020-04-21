@@ -44,6 +44,7 @@ window.addEventListener('message', ({ data }) => {
 
   if (data.isActive) {
     root = render(<Frame><Helper storedTemplate={data.storedTemplate} /></Frame>, document.body);
+    console.log('rendered');
   } else {
     $('a').off('click');
     render(null, document.body, root);

@@ -5,15 +5,15 @@
   "manifest_version": 2,
   "browser_action": {
     "default_icon": {
-      "16": "chrome/icons/off_16.png",
-      "48": "chrome/icons/off_48.png"
+      "16": "icons/off_16.png",
+      "48": "icons/off_48.png"
     },
     "default_title": "RYM Add Helper"
   },
   "icons": {
-    "16": "chrome/icons/on_16.png",
-    "48": "chrome/icons/on_48.png",
-    "128": "chrome/icons/on_128.png"
+    "16": "icons/on_16.png",
+    "48": "icons/on_48.png",
+    "128": "icons/on_128.png"
   },
   "background": {
     "scripts": ["chrome/background.js"],

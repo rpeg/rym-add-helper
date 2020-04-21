@@ -13,6 +13,8 @@ chrome.browserAction.onClicked.addListener(() => {
 
       const isActive = result && result.url === url && result.isActive;
 
+      console.info(`RYM Add Helper ${isActive ? 'disabled' : 'enabled'}`);
+
       chrome.browserAction.setIcon({ path: `icons/${isActive ? 'off' : 'on'}_48.png`, tabId });
 
       chrome.storage.sync.set({
