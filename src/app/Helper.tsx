@@ -300,7 +300,6 @@ const catalogId : Field = {
   selector: '',
   label: 'catalog #',
   default: '',
-  dataTransformers: [Transformers.catalogIdTransformer],
 };
 
 const countries : Field = {
@@ -351,6 +350,16 @@ const trackDurations : Field = {
   default: [],
   uneditable: true,
   selectorTransformer: Transformers.removeNthChild,
+};
+
+label.uniqueFromTransformer = {
+  uniqueFrom: [catalogId],
+  transform: Transformers.parseLabel,
+};
+
+catalogId.uniqueFromTransformer = {
+  uniqueFrom: [label],
+  transform: Transformers.parseCatalogId,
 };
 
 trackPositions.uniqueFromTransformer = {
