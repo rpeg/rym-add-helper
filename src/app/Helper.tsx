@@ -539,7 +539,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
 
         setSelectedElm(e.target);
       });
-    }); // TODO unregister on app untoggle
+    });
   };
 
   useWindowEvent('mouseover', _.throttle((e: MouseEvent) => {
@@ -766,11 +766,11 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
         {
           type: 'setStorage',
           key: domain,
-          value: newTemplate,
+          value: {
+            newTemplate,
+          },
         }, '*',
       );
-
-      // TODO only overwrite altered fields with positive diffs
 
       setIsTemplateSaveMessageDisplayed(true);
     }

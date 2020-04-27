@@ -1,5 +1,6 @@
 module.exports = {
   mode: 'production',
+  devtool: false,
   entry: {
     main: './src/app/app.jsx',
     fill: './src/app/fill.ts',
