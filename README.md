@@ -20,12 +20,6 @@ Chrome extension to facilitate music release adding on [RateYourMusic](https://r
 
 ![](./demos/template.gif)
 
-
-## Specs
-
-- Domain logic written in TypeScript.
-- ~420KB minified.
-
 ## Setup
 
 1. `git clone https://github.com/rpeg/rym-add-helper.git`
