@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { RYMDate, RegexMap } from '../types';
+import { RegexMap } from '../types';
 import { countryCodes } from './constants';
 
 const ALWAYS_CAPITALIZE = [
