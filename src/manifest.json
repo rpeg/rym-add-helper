@@ -23,9 +23,7 @@
     "storage", 
     "tabs",
     "activeTab",
-    "declarativeContent",
-    "http://*/",
-    "https://*/"
+    "https://rateyourmusic.com/releases/ac"
   ],
   "content_scripts": [
     {

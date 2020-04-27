@@ -28,8 +28,7 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
 };
 
 /**
- * TODO: many of RYM's alphabetization rules are not formalizable from syntax alone,
- * and will require parts-of-speech NLP to be fully adequate.
+ * Note: doesn't capture semantic rules (e.g. parts of speech).
  */
 const textTransformer = (text: string) => {
   const words = text.split(' ').map((w) => w.trim());
