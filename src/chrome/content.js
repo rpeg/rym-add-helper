@@ -2,9 +2,8 @@
 
 'use strict';
 
-const TLD_RE = /^(com|edu|gov|net|mil|org|nom|co|name|info|biz)$/i;
-
 const injectScript = (filename) => {
+  console.log('inject');
   const script = document.createElement('script');
   script.setAttribute('type', 'module');
   script.setAttribute('src', chrome.extension.getURL(filename));
@@ -19,6 +18,8 @@ const injectScript = (filename) => {
  * e.g. "band.bandcamp.com" -> "bandcamp"
  */
 const getDomainName = (host) => {
+  const TLD_RE = /^(com|edu|gov|net|mil|org|nom|co|name|info|biz)$/i;
+
   const parts = host.split('.').reverse();
 
   if (parts.length >= 3) { // has subdomain
@@ -35,28 +36,34 @@ const getDomainName = (host) => {
 };
 
 // route messages between modules and background script
-chrome.runtime.onMessage.addListener(
-  (request, sender) => {
-    switch (request.type) {
-      case 'toggle': {
-        const domain = getDomainName(window.location.host);
+chrome.runtime.onConnect.addListener((port) => {
+  port.onMessage.addListener(
+    (request, sender, sendResponse) => {
+      switch (request.type) {
+        case 'ping': {
+          sendResponse('OK');
+          break;
+        }
+        case 'toggle': {
+          const domain = getDomainName(window.location.host);
 
-        chrome.storage.sync.get([domain], (result) => {
-          result[domain] && console.info(`${domain} templated loaded`);
+          chrome.storage.sync.get([domain], (result) => {
+            result[domain] && console.info(`${domain} templated loaded`);
 
-          window.postMessage({
-            storedTemplate: result[domain],
-            ...request,
+            window.postMessage({
+              storedTemplate: result[domain],
+              ...request,
+            });
           });
-        });
 
-        break;
+          break;
+        }
+        default:
+          window.postMessage(request);
       }
-      default:
-        window.postMessage(request);
-    }
-  },
-);
+    },
+  );
+});
 
 window.addEventListener('message', (message) => {
   if (message.source !== window) return;
@@ -79,6 +86,4 @@ window.addEventListener('message', (message) => {
   }
 }, false);
 
-window.addEventListener('load', () => {
-  injectScript('main.js');
-}, false);
+injectScript('main.js');

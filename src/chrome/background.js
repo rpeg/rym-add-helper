@@ -7,26 +7,32 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.browserAction.onClicked.addListener(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const { id: tabId, url } = tabs[0];
+    chrome.tabs.sendMessage(tabs[0].id, 'ping', (res) => {
+      chrome.storage.sync.get(tabId.toString(), (data) => {
+        const result = data[tabId.toString()];
 
-    chrome.storage.sync.get(tabId.toString(), (data) => {
-      const result = data[tabId.toString()];
+        const isActive = result && result.url === url && result.isActive;
 
-      const isActive = result && result.url === url && result.isActive;
+        console.info(`RYM Add Helper ${isActive ? 'disabled' : 'enabled'}`);
 
-      console.info(`RYM Add Helper ${isActive ? 'disabled' : 'enabled'}`);
+        chrome.browserAction.setIcon({ path: `icons/${isActive ? 'off' : 'on'}_48.png`, tabId });
 
-      chrome.browserAction.setIcon({ path: `icons/${isActive ? 'off' : 'on'}_48.png`, tabId });
+        chrome.storage.sync.set({
+          [tabId.toString()]: {
+            isActive: !isActive,
+            url,
+          },
+        });
 
-      chrome.storage.sync.set({
-        [tabId.toString()]: {
+        if (typeof res === 'undefined') { // first injection
+          chrome.tabs.executeScript(null, { file: 'chrome/content.js' },
+            () => { console.info('loaded content'); });
+        }
+
+        chrome.tabs.sendMessage(tabId, {
+          type: 'toggle',
           isActive: !isActive,
-          url,
-        },
-      });
-
-      chrome.tabs.sendMessage(tabId, {
-        type: 'toggle',
-        isActive: !isActive,
+        });
       });
     });
   });

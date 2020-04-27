@@ -21,16 +21,8 @@
   },
   "permissions": [
     "storage", 
-    "tabs",
     "activeTab",
     "https://rateyourmusic.com/releases/ac"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "css": ["style.scss"],
-      "js": ["chrome/content.js"]
-    }
   ],
   "web_accessible_resources": [
     "main.js",
