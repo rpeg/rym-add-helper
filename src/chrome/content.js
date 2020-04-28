@@ -61,8 +61,6 @@ window.addEventListener('message', (message) => {
 
   switch (message.data.type) {
     case 'setStorage': {
-      console.info(message.data);
-
       chrome.storage.sync.set({ [message.data.key]: message.data.value }, () => {
         console.info(`${message.data.key} template saved`);
       });
