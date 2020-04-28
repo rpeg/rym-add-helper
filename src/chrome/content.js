@@ -3,7 +3,6 @@
 'use strict';
 
 const injectScript = (filename) => {
-  console.log('inject');
   const script = document.createElement('script');
   script.setAttribute('type', 'module');
   script.setAttribute('src', chrome.extension.getURL(filename));
@@ -36,33 +35,25 @@ const getDomainName = (host) => {
 };
 
 // route messages between modules and background script
-chrome.runtime.onConnect.addListener((port) => {
-  port.onMessage.addListener(
-    (request, sender, sendResponse) => {
-      switch (request.type) {
-        case 'ping': {
-          sendResponse('OK');
-          break;
-        }
-        case 'toggle': {
-          const domain = getDomainName(window.location.host);
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  switch (request.type) {
+    case 'toggle': {
+      const domain = getDomainName(window.location.host);
 
-          chrome.storage.sync.get([domain], (result) => {
-            result[domain] && console.info(`${domain} templated loaded`);
+      chrome.storage.sync.get([domain], (result) => {
+        result[domain] && console.info(`${domain} templated loaded`);
 
-            window.postMessage({
-              storedTemplate: result[domain],
-              ...request,
-            });
-          });
+        window.postMessage({
+          storedTemplate: result[domain],
+          ...request,
+        });
+      });
 
-          break;
-        }
-        default:
-          window.postMessage(request);
-      }
-    },
-  );
+      break;
+    }
+    default:
+      window.postMessage(request);
+  }
 });
 
 window.addEventListener('message', (message) => {
@@ -87,3 +78,4 @@ window.addEventListener('message', (message) => {
 }, false);
 
 injectScript('main.js');
+injectScript('fill.js');

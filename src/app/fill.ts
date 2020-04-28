@@ -135,13 +135,23 @@ const fillOutForm = (data: FormData) => {
 
   $('html, body').scrollTop($(document).height());
 
-  // preview hack
-  setTimeout(() => {
+  // preview hack to bind label
+  const t1 = setTimeout(() => {
     $('#previewbtn').click();
-    $('#previewbtn').click();
-  }, 2000);
+
+    const t2 = setTimeout(() => {
+      $('#previewbtn').click();
+      $('#previewbtn').off('click');
+      clearTimeout(t1);
+      clearTimeout(t2);
+    }, 1500);
+  }, 1500);
 };
 
 window.addEventListener('message', ({ data }) => {
-  $(document).ready(() => { if (data.formData) fillOutForm(data.formData); });
+  $(document).ready(() => {
+    if (data.formData && !data.isFilled) {
+      fillOutForm(data.formData);
+    }
+  });
 }, false);

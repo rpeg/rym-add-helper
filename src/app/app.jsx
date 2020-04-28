@@ -3,7 +3,7 @@ import { h, render, Component } from 'preact';
 import $ from 'jquery';
 import Helper from './Helper';
 
-const root = null;
+let root = null;
 
 class Frame extends Component {
   componentDidMount() {
@@ -40,5 +40,13 @@ class Frame extends Component {
  * Toggle app render on demand
  */
 window.addEventListener('message', ({ data }) => {
-  render(<Frame><Helper storedTemplate={data.storedTemplate} /></Frame>, document.body);
+  console.log(data);
+  if (data.type !== 'toggle') return;
+
+  if (data.isActive) {
+    root = render(<Frame><Helper storedTemplate={data.storedTemplate} /></Frame>, document.body);
+  } else {
+    $('a').off('click');
+    render(null, document.body, root);
+  }
 }, false);
