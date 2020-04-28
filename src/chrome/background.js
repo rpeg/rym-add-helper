@@ -14,6 +14,8 @@ chrome.browserAction.onClicked.addListener(() => {
     chrome.storage.sync.get(tabId.toString(), (data) => {
       const result = data[tabId.toString()];
 
+      console.log(result);
+
       const isActive = result && result.url === url && result.isActive;
 
       console.info(`RYM Add Helper ${isActive ? 'disabled' : 'enabled'}`);
@@ -31,13 +33,18 @@ chrome.browserAction.onClicked.addListener(() => {
         chrome.tabs.executeScript(null, { file: 'chrome/content.js' }, () => {
           console.info('loaded content');
           hasInjectedContent = true;
+
+          chrome.tabs.sendMessage(tabId, {
+            type: 'toggle',
+            isActive: !isActive,
+          });
+        });
+      } else {
+        chrome.tabs.sendMessage(tabId, {
+          type: 'toggle',
+          isActive: !isActive,
         });
       }
-
-      chrome.tabs.sendMessage(tabId, {
-        type: 'toggle',
-        isActive: !isActive,
-      });
     });
   });
 });

@@ -144,7 +144,7 @@ const fillOutForm = (data: FormData) => {
       $('#previewbtn').off('click');
       clearTimeout(t1);
       clearTimeout(t2);
-    }, 1500);
+    }, 2000);
   }, 1500);
 };
 
