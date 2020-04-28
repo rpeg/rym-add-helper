@@ -761,19 +761,40 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
   const saveTemplate = () => {
     const newTemplate = getNewTemplate();
 
-    if (!template || _.isEqual(template, newTemplate) || confirm('Overwrite existing template?')) {
+    const isDiff = !_.isEqual(template, newTemplate);
+
+    if (!template) {
       window.postMessage(
         {
           type: 'setStorage',
           key: domain,
-          value: {
-            newTemplate,
-          },
+          value: newTemplate,
         }, '*',
       );
 
-      setIsTemplateSaveMessageDisplayed(true);
+      setTemplate(newTemplate);
+    } else if (isDiff && confirm('Overwrite existing template?')) {
+      const temp = _.cloneDeep(template);
+
+      Object.keys(temp).forEach((k) => {
+        // skip blank data
+        if (!_.isEmpty(newTemplate[k]) && !_.isEqual(newTemplate[k], temp[k])) {
+          temp[k] = newTemplate[k];
+        }
+      });
+
+      window.postMessage(
+        {
+          type: 'setStorage',
+          key: domain,
+          value: temp,
+        }, '*',
+      );
+
+      setTemplate(temp);
     }
+
+    setIsTemplateSaveMessageDisplayed(true);
   };
 
   const submitForm = () => {
@@ -899,7 +920,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
     }
   };
 
-  const manuallyUpdateFieldData = (field: Field, value: String) => {
+  const updateFieldData = (field: Field, value: String) => {
     const i = fields.indexOf(field);
 
     const _data = fields[i].default instanceof Array
@@ -1086,7 +1107,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
                           disabled={!isFieldEnabled(field) || field.uneditable}
                           onChange={(e) => {
                             const { value } = e.target as HTMLSelectElement;
-                            manuallyUpdateFieldData(field, value);
+                            updateFieldData(field, value);
                           }}
                         />
                       )
@@ -1096,7 +1117,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
                           disabled={!isFieldEnabled(field) || field.uneditable}
                           onInput={(e) => {
                             const { value } = e.target as HTMLInputElement;
-                            manuallyUpdateFieldData(field, value);
+                            updateFieldData(field, value);
                           }}
                         />
                       )}

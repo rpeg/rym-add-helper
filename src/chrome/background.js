@@ -1,6 +1,6 @@
 const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
 
-const contentLoadedTabs = [];
+const history = []; // arrayOf([tabId, url])
 const fillExecutedTabs = [];
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -22,15 +22,15 @@ chrome.browserAction.onClicked.addListener(() => {
 
       chrome.storage.sync.set({
         [tabId.toString()]: {
-          isActive: !contentLoadedTabs.includes(tabId) || !isActive,
+          isActive: !isActive,
           url,
         },
       });
 
-      if (!contentLoadedTabs.includes(tabId)) {
+      if (!history.some((arr) => arr[0] === tabId && arr[1] === url)) {
         chrome.tabs.executeScript(null, { file: 'chrome/content.js' }, () => {
           console.info('loaded content');
-          contentLoadedTabs.push(tabId);
+          history.push([tabId, url]);
 
           chrome.tabs.sendMessage(tabId, {
             type: 'toggle',
