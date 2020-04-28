@@ -1,7 +1,7 @@
 const getAddReleaseUrl = (id) => `https://rateyourmusic.com/releases/ac?artist_id=${id}`;
 
-let hasInjectedContent = false;
-let hasExecutedFill = false;
+const contentLoadedTabs = [];
+const fillExecutedTabs = [];
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ hide: true });
@@ -14,8 +14,6 @@ chrome.browserAction.onClicked.addListener(() => {
     chrome.storage.sync.get(tabId.toString(), (data) => {
       const result = data[tabId.toString()];
 
-      console.log(result);
-
       const isActive = result && result.url === url && result.isActive;
 
       console.info(`RYM Add Helper ${isActive ? 'disabled' : 'enabled'}`);
@@ -24,19 +22,19 @@ chrome.browserAction.onClicked.addListener(() => {
 
       chrome.storage.sync.set({
         [tabId.toString()]: {
-          isActive: !isActive,
+          isActive: !contentLoadedTabs.includes(tabId) || !isActive,
           url,
         },
       });
 
-      if (!hasInjectedContent) {
+      if (!contentLoadedTabs.includes(tabId)) {
         chrome.tabs.executeScript(null, { file: 'chrome/content.js' }, () => {
           console.info('loaded content');
-          hasInjectedContent = true;
+          contentLoadedTabs.push(tabId);
 
           chrome.tabs.sendMessage(tabId, {
             type: 'toggle',
-            isActive: !isActive,
+            isActive: true,
           });
         });
       } else {
@@ -54,7 +52,7 @@ chrome.runtime.onMessage.addListener(
     if (request.type === 'rym_submit' && request.formData) {
       chrome.tabs.create({ url: getAddReleaseUrl(request.formData.id) }, (tab) => {
         chrome.tabs.onUpdated.addListener((tabId, changeInfo, _tab) => {
-          if (!hasExecutedFill && tabId === tab.id && changeInfo.status === 'complete') {
+          if (!fillExecutedTabs.includes(tabId) && tabId === tab.id && changeInfo.status === 'complete') {
             chrome.tabs.executeScript(tabId, {
               file: 'fill.js',
             }, () => {
@@ -62,7 +60,7 @@ chrome.runtime.onMessage.addListener(
                 formData: request.formData,
               });
 
-              hasExecutedFill = true;
+              fillExecutedTabs.push(tabId);
             });
           }
         });

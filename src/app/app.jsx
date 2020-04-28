@@ -40,7 +40,6 @@ class Frame extends Component {
  * Toggle app render on demand
  */
 window.addEventListener('message', ({ data }) => {
-  console.log(data);
   if (data.type !== 'toggle') return;
 
   if (data.isActive) {
