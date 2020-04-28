@@ -20,14 +20,13 @@
     "persistent": false
   },
   "permissions": [
-    "storage", 
-    "tabs",
+    "storage",
     "activeTab",
     "https://rateyourmusic.com/releases/ac"
   ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://rateyourmusic.com/releases/ac?artist_id=*"],
       "css": ["style.scss"],
       "js": ["chrome/content.js"]
     }
