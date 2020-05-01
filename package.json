@@ -54,7 +54,7 @@
     "@types/jquery": "3.3.34",
     "@types/react": "16.9.34",
     "immutability-helper": "3.0.2",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "lodash": "4.17.15",
     "parse-domain": "2.3.4",
     "preact": "10.4.0"
