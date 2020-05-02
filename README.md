@@ -2,6 +2,8 @@
 
 Chrome extension to facilitate music release adding on [RateYourMusic](https://rateyourmusic.com/) (RYM).
 
+[Available in the Chrome Web Store](https://chrome.google.com/webstore/detail/rym-add-helper/einfkiigmefpijdgkijkcmccpihacifc/related).
+
 ## Features
 
 - Injects a [preact](https://github.com/preactjs/preact) app which guides users through an DOM element selection process to prune metadata from any arbitrary webpage.
