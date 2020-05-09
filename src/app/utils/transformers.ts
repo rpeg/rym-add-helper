@@ -1,14 +1,16 @@
+// @ts-ignore
+import { detect } from 'franc-min';
 import _ from 'lodash';
 
 import { RegexMap } from '../types';
 import { countryCodes } from './constants';
 
-const ALWAYS_CAPITALIZE = [
+const ENG_ALWAYS_CAPITALIZE = [
   'be', 'been', 'am', 'are', 'is', 'was', 'were', 'if', 'as', 'so', 'he', 'she', 'we', 'it',
   'into', 'from', 'with', 'upon',
 ];
 
-const DO_NOT_CAPITALIZE = [
+const ENG_DO_NOT_CAPITALIZE = [
   'a', 'an', 'the',
   'and', 'but', 'or', 'nor', 'for', 'yet', 'so',
   'as', 'at', 'by', 'for', 'in', 'of', 'on', 'to',
@@ -28,23 +30,43 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
 };
 
 /**
- * Note: doesn't capture semantic rules (e.g. parts of speech).
+ * Applies static capitalization rules to English text.
+ * Skips non-English text altogether because in most cases the text we are pruning data from
+ * will be more accurate than any programmatic transformation is capable of without sophisticated
+ * NLP techniques, and any other methods seem more likely to introduce discrepancies rather than
+ * prevent them.
  */
 const textTransformer = (text: string) => {
+  const lang = detect(text);
+
+  console.info(lang);
+
+  return lang === 'eng'
+    ? processEnglishText(text).trim()
+    : text.trim();
+};
+
+/**
+ * Note: this won't capture the parts-of-speech exceptions for words like 'but'.
+ * I attempted to do this with the 'compromise' library but it proved unsufficiently sophisticated
+ * to recognize non-conjunction contexts of 'but' etc. More exhaustive NLP libraries would surely
+ * incur too much overhead for the purpose of the extension.
+ */
+function processEnglishText(text: string) {
   const words = text.split(' ').map((w) => w.trim());
 
   return words.map((word, i) => {
     let temp = word;
 
-    if (i === 0 || i === words.length - 1 || ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
+    if (i === 0 || i === words.length - 1 || ENG_ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
       temp = word.slice(0, 1).toUpperCase() + word.slice(1);
-    } else if (DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
+    } else if (ENG_DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
       temp = word.toLowerCase();
     }
 
     return temp;
   }).join(' ');
-};
+}
 
 const countriesTransformer = (str: string) => str.split(/\s|,|&|(?: and )/)
   .map((c) => c.trim())
