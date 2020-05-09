@@ -1,5 +1,5 @@
 // @ts-ignore
-import { detect } from 'franc-min';
+import detectLanguage from 'franc-min';
 import _ from 'lodash';
 
 import { RegexMap } from '../types';
@@ -16,6 +16,7 @@ const ENG_DO_NOT_CAPITALIZE = [
   'as', 'at', 'by', 'for', 'in', 'of', 'on', 'to',
   'versus', 'vs.', 'v.',
   'etc.', 'etc',
+  "o'", "n'",
 ];
 
 const MONTH_ABBREVIATIONS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -30,16 +31,19 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
 };
 
 /**
+ * Uses a heuristic to gauge likelihood of the given text being English or not.
+ *
  * Applies static capitalization rules to English text.
+ *
  * Skips non-English text altogether because in most cases the text we are pruning data from
  * will be more accurate than any programmatic transformation is capable of without sophisticated
  * NLP techniques, and any other methods seem more likely to introduce discrepancies rather than
  * prevent them.
  */
 const textTransformer = (text: string) => {
-  const lang = detect(text);
+  const lang = detectLanguage(text);
 
-  console.info(lang);
+  console.info(`${text} : ${lang}`);
 
   return lang === 'eng'
     ? processEnglishText(text).trim()
@@ -47,25 +51,67 @@ const textTransformer = (text: string) => {
 };
 
 /**
+ * https://rateyourmusic.com/wiki/RYM:Capitalization
+ *
  * Note: this won't capture the parts-of-speech exceptions for words like 'but'.
  * I attempted to do this with the 'compromise' library but it proved unsufficiently sophisticated
- * to recognize non-conjunction contexts of 'but' etc. More exhaustive NLP libraries would surely
+ * to recognize non-conjunction contexts of 'but' etc. More extensive NLP libraries would surely
  * incur too much overhead for the purpose of the extension.
  */
 function processEnglishText(text: string) {
-  const words = text.split(' ').map((w) => w.trim());
+  let processedText = text;
 
-  return words.map((word, i) => {
-    let temp = word;
+  const words = text.split(' ');
 
-    if (i === 0 || i === words.length - 1 || ENG_ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
-      temp = word.slice(0, 1).toUpperCase() + word.slice(1);
-    } else if (ENG_DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
-      temp = word.toLowerCase();
-    }
+  // Sections 1/2: Always Capitalize and Do Not Capitalize
+  processedText = words
+    .map((word) => word.trim())
+    .map((word, i) => {
+      let temp = word;
 
-    return temp;
-  }).join(' ');
+      if (i === 0 || i === words.length - 1 || ENG_ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
+        temp = word.slice(0, 1).toUpperCase() + word.slice(1);
+      } else if (ENG_DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
+        temp = word.toLowerCase();
+      }
+
+      return temp;
+    }).join(' ');
+
+  // 3.1: Major punctuation
+  processedText = processedText.split(/([:?!—()"])/g)
+    .map((section) => {
+      let temp = section;
+
+      // capitalize first alphabetical char within each section
+      for (let i = 0; i < section.length; i++) {
+        if (/[a-zA-Z]/.test(section[i])) {
+          temp = section.slice(0, i) + section[i].toUpperCase() + section.slice(i + 1);
+        }
+      }
+
+      return temp;
+    }).join('');
+
+  // 3.2: Hyphens and 3.3: Acronyms + Abbreviations
+  processedText = processedText.split(' ')
+    .map((word) => {
+      let temp = word;
+
+      if (/[a-zA-Z]+-[a-zA-Z]+/.test(word)) { // hyphen
+        const matches = word.match(/([a-zA-Z]+)-([a-zA-Z]+)/);
+
+        if (matches.length > 1 && !ENG_DO_NOT_CAPITALIZE.includes(matches[1])) {
+          temp = `${matches[0]}-${matches[1].toUpperCase()}`;
+        }
+      } else if (/([a-zA-Z]\.){2,}/.test(word)) { // acronym
+        temp = word.toUpperCase();
+      }
+
+      return temp;
+    }).join(' ');
+
+  return processedText;
 }
 
 const countriesTransformer = (str: string) => str.split(/\s|,|&|(?: and )/)
