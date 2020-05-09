@@ -31,7 +31,10 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
 };
 
 /**
- * Uses a heuristic to gauge likelihood of the given text being English or not.
+ * Uses a heuristic NLP library (franc) to gauge likelihood of the given text being English or not.
+ * Note that the library is geared specifically to large documents and is not reliable
+ * for short sentences (i.e. most titles), so a min length filter is applied, along with an ENG
+ * probability conditional.
  *
  * Applies static capitalization rules to English text.
  *
@@ -41,11 +44,17 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
  * prevent them.
  */
 const textTransformer = (text: string) => {
-  const lang = detectLanguage(text);
+  if (_.isEmpty(text)) return text;
 
-  console.info(`${text} : ${lang}`);
+  const results = detectLanguage.all(text, { minLength: 25 }) as Array<[number, string]>;
 
-  return lang === 'eng'
+  const topLanguage = results[0][1] ?? 'und';
+  const eng = results.find((r) => r[1] === 'eng');
+  const engProb = eng ? eng[0] : 0.0;
+
+  console.info(`${text} : ${topLanguage}`);
+
+  return topLanguage === 'eng' || topLanguage === 'und' || engProb > 0.5
     ? processEnglishText(text).trim()
     : text.trim();
 };

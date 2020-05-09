@@ -43,8 +43,25 @@ test('english text transform', () => {
       expected: 'The Boy With the X-Ray Eyes',
     },
     {
+      input: 'The Go-gos',
+      expected: 'The Go-Gos',
+    },
+    {
       input: 'r.e.m.',
       expected: 'R.E.M.',
+    },
+  ];
+
+  pairs.forEach((pair) => {
+    expect(Transformers.textTransformer(pair.input).toBe(pair.expected));
+  });
+});
+
+test('non english text transform', () => {
+  const pairs = [
+    {
+      input: 'Tyhjyyden sakramentti',
+      expected: 'Tyhjyyden sakramentti',
     },
   ];
 
