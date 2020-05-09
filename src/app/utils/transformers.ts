@@ -1,12 +1,13 @@
 // @ts-ignore
 import detectLanguage from 'franc-min';
+import nlp from 'compromise';
 import _ from 'lodash';
 
 import { RegexMap } from '../types';
 import { countryCodes } from './constants';
 
 const ENG_ALWAYS_CAPITALIZE = [
-  'be', 'been', 'am', 'are', 'is', 'was', 'were', 'if', 'as', 'so', 'he', 'she', 'we', 'it',
+  'be', 'been', 'am', 'are', 'is', 'was', 'were', 'if', 'as', 'he', 'she', 'we', 'it',
   'into', 'from', 'with', 'upon',
 ];
 
@@ -17,6 +18,7 @@ const ENG_DO_NOT_CAPITALIZE = [
   'versus', 'vs.', 'v.',
   'etc.', 'etc',
   "o'", "n'",
+  'to', // assumes non-infinitive
 ];
 
 const MONTH_ABBREVIATIONS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -31,28 +33,28 @@ const regexMapTransformerFactory = (maps: Array<RegexMap>, def: string) => (s: s
 };
 
 /**
- * Uses a heuristic NLP library (franc) to gauge likelihood of the given text being English or not.
+ * Uses a NLP heuristic (franc) to gauge likelihood of the given text being English or not.
  * Note that the library is geared specifically to large documents and is not reliable
- * for short sentences (i.e. most titles), so a min length filter is applied, along with an ENG
+ * for short sentences (i.e. most titles), so a min length filter is applied, along with an English
  * probability conditional.
  *
  * Applies static capitalization rules to English text.
  *
- * Skips non-English text altogether because in most cases the text we are pruning data from
+ * Does not transform non-English text because in most cases the text we are pruning data from
  * will be more accurate than any programmatic transformation is capable of without sophisticated
  * NLP techniques, and any other methods seem more likely to introduce discrepancies rather than
  * prevent them.
  */
-const textTransformer = (text: string) => {
+const textCapitalizationTransformer = (text: string) => {
   if (_.isEmpty(text)) return text;
 
-  const results = detectLanguage.all(text, { minLength: 25 }) as Array<[number, string]>;
+  const results = detectLanguage.all(text, { minLength: 20 }) as Array<[string, number]>;
 
-  const topLanguage = results[0][1] ?? 'und';
-  const eng = results.find((r) => r[1] === 'eng');
-  const engProb = eng ? eng[0] : 0.0;
+  const topLanguage = results[0][0] ?? 'und';
+  const eng = results.find((r) => r[0] === 'eng');
+  const engProb = eng ? eng[1] : 0.0;
 
-  console.info(`${text} : ${topLanguage}`);
+  // console.info(`${text}: ${topLanguage}, eng: ${engProb}`);
 
   return topLanguage === 'eng' || topLanguage === 'und' || engProb > 0.5
     ? processEnglishText(text).trim()
@@ -62,24 +64,34 @@ const textTransformer = (text: string) => {
 /**
  * https://rateyourmusic.com/wiki/RYM:Capitalization
  *
- * Note: this won't capture the parts-of-speech exceptions for words like 'but'.
- * I attempted to do this with the 'compromise' library but it proved unsufficiently sophisticated
- * to recognize non-conjunction contexts of 'but' etc. More extensive NLP libraries would surely
- * incur too much overhead for the purpose of the extension.
+ * Note: this won't capture the context-sensitive parts-of-speech exceptions for words like 'but'.
  */
 function processEnglishText(text: string) {
-  let processedText = text;
+  let processedText = text.trim();
 
   const words = text.split(' ');
 
-  // Sections 1/2: Always Capitalize and Do Not Capitalize
+  // word rules
   processedText = words
     .map((word) => word.trim())
     .map((word, i) => {
+      if (_.isEmpty(word)) return word;
+
       let temp = word;
 
+      // needs to be lowercase or else will be assumed proper noun
+      const result = nlp(word.toLowerCase()).out('tags');
+      const pos = !_.isEmpty(result) ? _.flatten([_.head(Object.values(_.head(result)))]) : [];
+
+      // dynamic parts-of-speech parsing
+      // note: doesn't include subordinating conjunctions or "so"-as-adjective
+      if (pos.some((p) => ['Noun', 'Verb', 'Adverb', 'Adjective', 'Pronoun'].includes(p))) {
+        temp = word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase();
+      }
+
+      // static parsing
       if (i === 0 || i === words.length - 1 || ENG_ALWAYS_CAPITALIZE.includes(word.toLowerCase())) {
-        temp = word.slice(0, 1).toUpperCase() + word.slice(1);
+        temp = word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase();
       } else if (ENG_DO_NOT_CAPITALIZE.includes(word.toLowerCase())) {
         temp = word.toLowerCase();
       }
@@ -88,31 +100,49 @@ function processEnglishText(text: string) {
     }).join(' ');
 
   // 3.1: Major punctuation
-  processedText = processedText.split(/([:?!—()"])/g)
-    .map((section) => {
-      let temp = section;
+  const sections = processedText.split(/([:?!—()"])/g);
+  if (sections.length > 1) {
+    let temp = '';
 
-      // capitalize first alphabetical char within each section
-      for (let i = 0; i < section.length; i++) {
-        if (/[a-zA-Z]/.test(section[i])) {
-          temp = section.slice(0, i) + section[i].toUpperCase() + section.slice(i + 1);
+    for (let i = 0; i < sections.length; i++) {
+      temp += sections[i];
+
+      if (/[:?!—()"]/.test(sections[i])) {
+        const s = sections[i + 1];
+
+        if (s) {
+          // capitalize first alphabetical char within each section immediately
+          // following a 'major punctuation' char
+          let foundAlpha = false;
+
+          for (let j = 0; j < s.length; j++) {
+            if (!foundAlpha && /[a-zA-Z]/.test(s[j])) {
+              temp += s[j].toUpperCase();
+              foundAlpha = true;
+            } else {
+              temp += s[j];
+            }
+          }
+
+          i++;
         }
       }
+    }
 
-      return temp;
-    }).join('');
+    processedText = temp;
+  }
 
   // 3.2: Hyphens and 3.3: Acronyms + Abbreviations
   processedText = processedText.split(' ')
     .map((word) => {
       let temp = word;
 
-      if (/[a-zA-Z]+-[a-zA-Z]+/.test(word)) { // hyphen
-        const matches = word.match(/([a-zA-Z]+)-([a-zA-Z]+)/);
+      if (/([a-zA-Z]+-[a-zA-Z]+)+/.test(word)) { // hyphen
+        const parts = word.split('-');
 
-        if (matches.length > 1 && !ENG_DO_NOT_CAPITALIZE.includes(matches[1])) {
-          temp = `${matches[0]}-${matches[1].toUpperCase()}`;
-        }
+        temp = parts.map((p) => (ENG_DO_NOT_CAPITALIZE.includes(p.toLowerCase())
+          ? p
+          : `${p.slice(0, 1).toUpperCase()}${p.slice(1).toLowerCase()}`)).join('-');
       } else if (/([a-zA-Z]\.){2,}/.test(word)) { // acronym
         temp = word.toUpperCase();
       }
@@ -207,7 +237,7 @@ const parseTrackDuration = (str: string) => {
 
 export default {
   regexMapTransformerFactory,
-  textTransformer,
+  textCapitalizationTransformer,
   countriesTransformer,
   parseLabel,
   parseCatalogId,
