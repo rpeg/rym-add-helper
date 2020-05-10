@@ -231,8 +231,10 @@ const parseTrackTitle = (str: string) => {
 };
 
 const parseTrackDuration = (str: string) => {
-  const matches = str.match(/\d+:\d+/ig);
-  return matches ? _.last(matches).trim() : str;
+  const matches = str.match(/\d+/ig);
+  return matches.length > 1
+    ? matches.slice(1).join(':')
+    : `00:${matches[0] ?? '00'}`;
 };
 
 export default {
