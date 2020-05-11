@@ -4,6 +4,8 @@ import _ from 'lodash';
 import { FormData, Formats } from './types';
 
 const fillOutForm = (data: FormData) => {
+  if ($('#notes').val() !== '') return; // guard against postback
+
   const {
     url,
     title,
@@ -100,7 +102,7 @@ const fillOutForm = (data: FormData) => {
     };
 
     tracks.forEach((track, i) => {
-      const newRow = baseRow.clone(true, true);
+      const newRow = baseRow.clone(true);
       counter++;
 
       $('#track_num').val(counter);
@@ -150,7 +152,7 @@ const fillOutForm = (data: FormData) => {
 
 window.addEventListener('message', ({ data }) => {
   $(document).ready(() => {
-    if (data.formData && !data.isFilled) {
+    if (data.formData) {
       fillOutForm(data.formData);
     }
   });
