@@ -117,3 +117,11 @@ test('non english text transform', () => {
     expect(Transformers.textCapitalizationTransformer(pair.input)).toBe(pair.expected);
   });
 });
+
+test('duration parsing', () => {
+  expect(Transformers.parseTrackDuration(' 54:39')).toBe('54:39');
+  expect(Transformers.parseTrackDuration(' 54:39 ')).toBe('54:39');
+  expect(Transformers.parseTrackDuration('4:36')).toBe('04:36');
+  expect(Transformers.parseTrackDuration(':36')).toBe('00:36');
+  expect(Transformers.parseTrackDuration('02:54:39')).toBe('174:39');
+});
