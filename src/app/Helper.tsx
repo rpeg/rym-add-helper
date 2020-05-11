@@ -44,7 +44,7 @@ const artist : Field = {
   selector: '',
   label: 'artist',
   default: '',
-  dataTransformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textCapitalizationTransformer],
 };
 
 const title : Field = {
@@ -52,7 +52,7 @@ const title : Field = {
   selector: '',
   label: 'title',
   default: '',
-  dataTransformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textCapitalizationTransformer],
 };
 
 const type : Field = {
@@ -339,7 +339,7 @@ const trackTitles : Field = {
   label: 'a track title',
   default: [],
   uneditable: true,
-  dataTransformers: [Transformers.textTransformer],
+  dataTransformers: [Transformers.textCapitalizationTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
 
