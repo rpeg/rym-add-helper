@@ -111,7 +111,7 @@ const format : Field = {
   dataTransformers: [Transformers.regexMapTransformerFactory(
     [
       {
-        regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(album)|(gatefold)/,
+        regex: /(vinyl)|(?:(?<!\w)LP(?!\w))|(gatefold)/,
         mapTo: Formats.Vinyl,
       },
       {
