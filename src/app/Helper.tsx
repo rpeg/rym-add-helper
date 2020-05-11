@@ -119,7 +119,7 @@ const format : Field = {
         mapTo: Formats.CD,
       },
       {
-        regex: /(?<!\w)((?:mp3)|(?:streaming)|(?:download)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)/,
+        regex: /(?<!\w)((?:mp3)|(?:streaming)|(?:download)|(?:digital)|(?:(?:f|a)lac)|(?:ogg))(?!\w)|(?:file)|(?:wav)/,
         mapTo: Formats.DigitalFile,
       },
       {
