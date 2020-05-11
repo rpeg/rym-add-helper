@@ -230,9 +230,34 @@ const parseTrackTitle = (str: string) => {
   return str;
 };
 
+/**
+ * RYM formats time as MM:SS. Hours are transformed to minutes.
+ */
 const parseTrackDuration = (str: string) => {
-  const matches = str.match(/\d+:\d+/ig);
-  return matches ? _.last(matches).trim() : str;
+  if (/^\d\d:\d\d$/.test(str.trim())) {
+    return str.trim();
+  }
+
+  if (/^\d:\d\d$/.test(str.trim())) {
+    return `0${str.trim()}`;
+  }
+
+  const matches = str.match(/\d+/ig);
+
+  if (matches.length === 3) { // contains hours section
+    const hours = parseInt(matches[0], 10) ?? 0;
+    return `${hours * 60 + parseInt(matches[1], 10) ?? 0}:${matches[2]}`;
+  }
+
+  if (matches.length > 1) {
+    return matches.slice(1).join(':').trim();
+  }
+
+  if (matches.length === 1) {
+    return `00:${matches[0]}`;
+  }
+
+  return str.trim();
 };
 
 export default {
