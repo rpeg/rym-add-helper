@@ -232,14 +232,17 @@ const parseTrackTitle = (str: string) => {
 
 /**
  * RYM formats time as MM:SS. Hours are transformed to minutes.
+ * Remove leading zero to prevent '00:00' bug.
  */
 const parseTrackDuration = (str: string) => {
   if (/^\d\d:\d\d$/.test(str.trim())) {
-    return str.trim();
+    return str[0] === '0'
+      ? str.slice(1).trim()
+      : str.trim();
   }
 
   if (/^\d:\d\d$/.test(str.trim())) {
-    return `0${str.trim()}`;
+    return str.trim();
   }
 
   const matches = str.match(/\d+/ig);
@@ -254,7 +257,7 @@ const parseTrackDuration = (str: string) => {
   }
 
   if (matches.length === 1) {
-    return `00:${matches[0]}`;
+    return `0:${matches[0]}`;
   }
 
   return str.trim();
