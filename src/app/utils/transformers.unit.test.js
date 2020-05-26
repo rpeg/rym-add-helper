@@ -119,9 +119,11 @@ test('non english text transform', () => {
 });
 
 test('duration parsing', () => {
-  expect(Transformers.parseTrackDuration(' 54:39')).toBe('54:39');
-  expect(Transformers.parseTrackDuration(' 54:39 ')).toBe('54:39');
-  expect(Transformers.parseTrackDuration('4:36')).toBe('4:36');
-  expect(Transformers.parseTrackDuration(':36')).toBe('0:36');
-  expect(Transformers.parseTrackDuration('02:54:39')).toBe('174:39');
+  expect(Transformers.trackDurationTransformer(' 54:39')).toBe('54:39');
+  expect(Transformers.trackDurationTransformer(' 54:39 ')).toBe('54:39');
+  expect(Transformers.trackDurationTransformer('4:36')).toBe('4:36');
+  expect(Transformers.trackDurationTransformer('07:48')).toBe('7:48');
+  expect(Transformers.trackDurationTransformer('08:53')).toBe('8:53');
+  expect(Transformers.trackDurationTransformer(':36')).toBe('0:36');
+  expect(Transformers.trackDurationTransformer('02:54:39')).toBe('174:39');
 });

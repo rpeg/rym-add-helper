@@ -11,7 +11,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import parseDomain from 'parse-domain';
 
-import './style.scss';
+import './style.css';
 
 import { useWindowEvent, useDocumentEvent } from './utils/hooks';
 import Transformers from './utils/transformers';
@@ -349,6 +349,7 @@ const trackDurations : Field = {
   label: 'a track duration',
   default: [],
   uneditable: true,
+  dataTransformers: [Transformers.trackDurationTransformer],
   selectorTransformer: Transformers.removeNthChild,
 };
 
@@ -732,7 +733,7 @@ const Helper = ({ storedTemplate }: { storedTemplate?: Template }) => {
     const matches = getSelectorMatches(selector);
 
     const uniqf = field.uniqueFromTransformer
-    && field.uniqueFromTransformer.uniqueFrom.some((f) => f.selector === field.selector)
+      && field.uniqueFromTransformer.uniqueFrom.some((f) => f.selector === field.selector)
       ? field.uniqueFromTransformer.transform
       : function (val: any) { return val; };
 
