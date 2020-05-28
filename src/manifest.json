@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["https://rateyourmusic.com/releases/ac?artist_id=*"],
-      "css": ["style.scss"],
+      "css": ["style.css"],
       "js": ["chrome/content.js"]
     }
   ],
