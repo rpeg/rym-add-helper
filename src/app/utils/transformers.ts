@@ -196,6 +196,8 @@ const dateTransformer = (date: string) => {
  * Remove leading zero to prevent '00:00' bug.
  */
 const trackDurationTransformer = (str: string) => {
+  if (str.trim() === '') return str.trim(); // no duration present
+
   if (/^\d\d:\d\d$/.test(str.trim())) {
     return str[0] === '0'
       ? str.slice(1).trim()
@@ -208,16 +210,16 @@ const trackDurationTransformer = (str: string) => {
 
   const matches = str.match(/\d+/ig);
 
-  if (matches.length === 3) { // contains hours section
+  if (matches && matches.length === 3) { // contains hours section
     const hours = parseInt(matches[0], 10) ?? 0;
     return `${hours * 60 + parseInt(matches[1], 10) ?? 0}:${matches[2]}`;
   }
 
-  if (matches.length > 1) {
+  if (matches && matches.length > 1) {
     return matches.slice(1).join(':').trim();
   }
 
-  if (matches.length === 1) {
+  if (matches && matches.length === 1) {
     return `0:${matches[0]}`;
   }
 
