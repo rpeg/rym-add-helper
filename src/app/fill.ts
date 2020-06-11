@@ -104,6 +104,7 @@ const fillOutForm = (data: FormData) => {
     tracks.forEach((track, i) => {
       const newRow = baseRow.clone(true);
       counter++;
+      window.counter = counter; // update global variable to allow for 'Advanced' view
 
       $('#track_num').val(counter);
 
