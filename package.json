@@ -57,7 +57,7 @@
     "franc-min": "5.0.0",
     "immutability-helper": "3.0.2",
     "jquery": "3.5.0",
-    "lodash": "4.17.15",
+    "lodash": "4.17.21",
     "parse-domain": "2.3.4",
     "preact": "10.4.0"
   }
